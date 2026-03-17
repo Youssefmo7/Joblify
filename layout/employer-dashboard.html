@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joblify - Employer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --color-primary: #fd366e; --color-bg: #f4f5f7; }
+        body { background-color: var(--color-bg); }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { primary: '#fd366e', surface: '#ffffff', border: '#e8ecf1' }, fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="text-gray-800 font-sans min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-surface border-b border-border sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold tracking-tight text-gray-900 border-r border-border pr-4 mr-4">Joblify</a>
+                    <span class="text-lg font-semibold text-gray-600">Employer Center</span>
+                </div>
+                <div class="flex items-center">
+                    <a href="create-job.html" class="bg-primary hover:bg-pink-600 text-white text-sm font-medium py-2 px-4 rounded-lg mr-6">Post a Job</a>
+                    <div class="h-8 w-8 bg-gray-200 rounded-lg flex items-center justify-center border border-border">
+                        <span class="font-bold text-gray-600">G</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex gap-6">
+
+        <!-- Left Sidebar -->
+        <div class="w-64 hidden md:block flex-shrink-0">
+            <div class="bg-surface rounded-xl border border-border overflow-hidden">
+                <div class="p-6 border-b border-border text-center">
+                    <div class="h-16 w-16 bg-gray-100 rounded-lg mx-auto flex items-center justify-center text-2xl font-bold text-gray-600 mb-3 border border-border">G</div>
+                    <h2 class="text-lg font-bold text-gray-900">Google Inc.</h2>
+                    <a href="#" class="text-xs text-primary font-medium hover:underline">Edit Company Profile</a>
+                </div>
+                <nav class="p-2 space-y-1">
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium bg-pink-50 text-primary rounded-lg">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> Overview
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> Active Jobs <span class="ml-auto bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">3</span>
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> Candidates <span class="ml-auto bg-primary text-white py-0.5 px-2 rounded-full text-xs">14</span>
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Analytics
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg> Billing
+                    </a>
+                </nav>
+            </div>
+            <div class="mt-6 bg-surface rounded-xl border border-border p-4 shadow-sm text-center">
+                <h3 class="text-sm font-bold">Need proactive talent?</h3>
+                <p class="text-xs text-gray-500 mt-1 mb-4">Search our resume database for specific skills.</p>
+                <button class="block w-full py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50">Search Talent</button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div class="flex-1 space-y-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+                <select class="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    <option>Last 30 Days</option>
+                    <option>Last 7 Days</option>
+                    <option>All Time</option>
+                </select>
+            </div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-surface rounded-xl border border-border p-5">
+                    <p class="text-sm font-medium text-gray-500">Active Jobs</p>
+                    <p class="mt-2 text-3xl font-bold text-gray-900">3</p>
+                </div>
+                <div class="bg-surface rounded-xl border border-border p-5">
+                    <p class="text-sm font-medium text-gray-500">Total Views</p>
+                    <p class="mt-2 text-3xl font-bold text-blue-600">8,409</p>
+                </div>
+                <div class="bg-surface rounded-xl border border-border p-5">
+                    <p class="text-sm font-medium text-gray-500">Total Applicants</p>
+                    <p class="mt-2 text-3xl font-bold text-primary">142</p>
+                </div>
+                <div class="bg-surface rounded-xl border border-border p-5">
+                    <p class="text-sm font-medium text-gray-500">Unreviewed</p>
+                    <p class="mt-2 text-3xl font-bold text-yellow-600">14</p>
+                </div>
+            </div>
+
+            <!-- Active Listings -->
+            <div class="bg-surface rounded-xl border border-border overflow-hidden">
+                <div class="px-6 py-4 border-b border-border flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900">Active Job Listings</h3>
+                    <a href="#" class="text-sm text-primary font-medium hover:underline">View All</a>
+                </div>
+                <ul class="divide-y divide-border">
+                    <li class="p-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <h4 class="text-base font-bold text-gray-900">Senior Frontend Engineer</h4>
+                                <div class="flex items-center mt-1 space-x-2 text-sm text-gray-500">
+                                    <span>Engineering &bull; Mountain View, CA (Remote)</span>
+                                    <span>&bull;</span>
+                                    <span class="text-green-600 font-medium">Active</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center px-4 border-r border-border">
+                                    <p class="text-xl font-bold text-gray-900">14</p>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">New</p>
+                                </div>
+                                <div class="text-center px-4 border-r border-border">
+                                    <p class="text-xl font-bold text-gray-900">45</p>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">Total</p>
+                                </div>
+                                <div class="pl-2 flex space-x-2">
+                                    <button class="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-pink-600">Review</button>
+                                    <button class="px-3 py-1.5 border border-border text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Edit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="p-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <h4 class="text-base font-bold text-gray-900">Product Manager</h4>
+                                <div class="flex items-center mt-1 space-x-2 text-sm text-gray-500">
+                                    <span>Product &bull; New York, NY (Hybrid)</span>
+                                    <span>&bull;</span>
+                                    <span class="text-green-600 font-medium">Active</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center px-4 border-r border-border">
+                                    <p class="text-xl font-bold text-gray-900">0</p>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">New</p>
+                                </div>
+                                <div class="text-center px-4 border-r border-border">
+                                    <p class="text-xl font-bold text-gray-900">89</p>
+                                    <p class="text-xs text-gray-500 uppercase tracking-wide">Total</p>
+                                </div>
+                                <div class="pl-2 flex space-x-2">
+                                    <button class="px-3 py-1.5 border border-primary text-primary text-sm font-medium rounded-lg hover:bg-pink-50">Review</button>
+                                    <button class="px-3 py-1.5 border border-border text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Edit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Candidate Review Queue -->
+            <div class="bg-surface rounded-xl border border-border overflow-hidden">
+                <div class="px-6 py-4 border-b border-border flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900">Candidates to Review <span class="ml-2 bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-0.5 rounded-full">14 New</span></h3>
+                </div>
+                <div class="divide-y divide-border">
+                    <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center">
+                            <img src="https://i.pravatar.cc/150?img=33" class="h-10 w-10 rounded-full border border-gray-200">
+                            <div class="ml-3">
+                                <p class="text-sm font-bold text-gray-900">Alice Smith</p>
+                                <p class="text-xs text-gray-500">Applied for: Senior Frontend Engineer</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md">Reject</button>
+                            <button class="px-3 py-1 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">Accept &amp; Pay</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center">
+                            <img src="https://i.pravatar.cc/150?img=12" class="h-10 w-10 rounded-full border border-gray-200">
+                            <div class="ml-3">
+                                <p class="text-sm font-bold text-gray-900">Bob Taylor</p>
+                                <p class="text-xs text-gray-500">Applied for: Senior Frontend Engineer</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md">Reject</button>
+                            <button class="px-3 py-1 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">Accept &amp; Pay</button>
+                        </div>
+                    </div>
+                    <div class="p-4 text-center bg-gray-50">
+                        <a href="#" class="text-sm font-medium text-primary hover:underline">View 12 more candidates</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

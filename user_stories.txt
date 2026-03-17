@@ -1,0 +1,50 @@
+1. Candidate User Stories
+●​ Account Creation: As a candidate, I want to register and create an account so that I
+can manage my job applications and profile.
+●​ Job Discovery: As a candidate, I want to search for jobs by keywords, location, and
+category so that I can find relevant opportunities.
+●​ Advanced Filtering: As a candidate, I want to filter job results by experience level,
+salary range, and post date to narrow down my search.
+●​ Application Submission: As a candidate, I want to apply for a job by uploading my
+resume or providing my contact details (email/phone) directly to the employer.
+●​ Profile Management: As a candidate, I want to manage my profile and track the
+status of my applications so that I can apply for new jobs or cancel existing ones.
+●​ LinkedIn Integration (Bonus): As a candidate, I want to connect my profile with
+LinkedIn to automatically fill out application forms.
+●​ Real-time Alerts (Bonus): As a candidate, I want to receive notifications regarding
+the status of my job applications.
+
+2. Employer User Stories
+●​ Employer Onboarding: As an employer, I want to register and create a company
+account to start posting vacancies.
+●​ Job Creation: As an employer, I want to create detailed job listings including titles,
+descriptions, requirements, and benefits.
+●​ Job Categorization: As an employer, I want to tag my job posts with categories
+(Programming, Management), locations, and tech stacks.
+●​ Work Type Specification: As an employer, I want to specify if a job is remote,
+onsite, or hybrid and set an application deadline.
+●​ Branding: As an employer, I want to upload our company logo to our job postings to
+improve brand visibility.
+●​ Listing Management: As an employer, I want to edit and manage my active job
+listings.
+●​ Candidate Review: As an employer, I want to review submitted applications and
+either accept or reject candidates.
+●​ Social Interaction: As an employer, I want to be able to comment on job postings to
+engage with potential candidates.
+●​ Performance Tracking (Bonus): As an employer, I want to access analytics to see
+how many users have applied to my postings.
+●​ Secure Payment (Bonus): As an employer, I want to pay for the service (via PayPal
+or Stripe) after I approve a candidate.
+●​ Sourcing Talent (Bonus): As an employer, I want to search a resume database for
+specific skills to find candidates proactively.
+
+3. Admin User Stories
+●​ Quality Control: As an admin, I want to approve or reject job postings submitted by
+employers to ensure they meet platform standards.
+●​ Platform Oversight: As an admin, I want to monitor overall platform activity and user
+behavior to maintain a healthy ecosystem.
+
+●​ Content Moderation (Bonus): As an admin, I want to remove inappropriate or "bad"
+comments from the platform.
+
+
