@@ -55,9 +55,8 @@ const router = createRouter({
     {
       path: "/admin",
       name: "Admin",
-      component: LayoutPage,
+      component: () => import("@/views/Admin.vue"),
       alias: ["/admin-dashboard", "/admin-dashboard.html"],
-      meta: { layoutFile: "admin-dashboard.html" },
     },
     {
       path: "/:pathMatch(.*)*",
