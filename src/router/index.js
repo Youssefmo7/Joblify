@@ -41,9 +41,8 @@ const router = createRouter({
     {
       path: "/candidates",
       name: "Candidates",
-      component: LayoutPage,
+      component: () => import("@/views/Candidates.vue"),
       alias: ["/candidate-dashboard", "/candidate-dashboard.html"],
-      meta: { layoutFile: "candidate-dashboard.html" },
     },
     {
       path: "/employers",
