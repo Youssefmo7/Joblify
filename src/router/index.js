@@ -1,9 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "@/views/Home.vue";
-import Jobs from "@/views/Jobs.vue";
-import Candidates from "@/views/Candidates.vue";
-import Employers from "@/views/Employers.vue";
-import Admin from "@/views/Admin.vue";
+import LayoutPage from "@/views/LayoutPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,27 +7,61 @@ const router = createRouter({
     {
       path: "/",
       name: "Home",
-      component: Home,
+      component: LayoutPage,
+      alias: ["/index.html", "/home"],
+      meta: { layoutFile: "index.html" },
     },
     {
       path: "/jobs",
       name: "Jobs",
-      component: Jobs,
+      component: LayoutPage,
+      meta: { layoutFile: "index.html" },
+    },
+    {
+      path: "/job-details",
+      name: "JobDetails",
+      component: LayoutPage,
+      alias: ["/job-details.html"],
+      meta: { layoutFile: "job-details.html" },
+    },
+    {
+      path: "/login",
+      name: "LoginRegister",
+      component: LayoutPage,
+      alias: ["/login-register", "/login-register.html"],
+      meta: { layoutFile: "login-register.html" },
+    },
+    {
+      path: "/create-job",
+      name: "CreateJob",
+      component: LayoutPage,
+      alias: ["/create-job.html"],
+      meta: { layoutFile: "create-job.html" },
     },
     {
       path: "/candidates",
       name: "Candidates",
-      component: Candidates,
+      component: LayoutPage,
+      alias: ["/candidate-dashboard", "/candidate-dashboard.html"],
+      meta: { layoutFile: "candidate-dashboard.html" },
     },
     {
       path: "/employers",
       name: "Employers",
-      component: Employers,
+      component: LayoutPage,
+      alias: ["/employer-dashboard", "/employer-dashboard.html"],
+      meta: { layoutFile: "employer-dashboard.html" },
     },
     {
       path: "/admin",
       name: "Admin",
-      component: Admin,
+      component: LayoutPage,
+      alias: ["/admin-dashboard", "/admin-dashboard.html"],
+      meta: { layoutFile: "admin-dashboard.html" },
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      redirect: "/",
     },
   ],
 });
