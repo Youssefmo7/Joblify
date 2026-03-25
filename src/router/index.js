@@ -49,9 +49,8 @@ const router = createRouter({
         {
             path: '/create-job',
             name: 'CreateJob',
-            component: LayoutPage,
+            component: () => import('@/views/CreateJob.vue'),
             alias: ['/create-job.html'],
-            meta: { layoutFile: 'create-job.html' },
         },
         {
             path: '/candidates',

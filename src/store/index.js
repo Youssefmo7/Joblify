@@ -367,5 +367,18 @@ export const useAppStore = defineStore('app', {
                 (c) => c.id !== commentId
             );
         },
+
+        // employer actions 
+        addJob(jobData) {
+            const newJob = {
+                id: this.jobs.length + 1,
+                postedAt: 'Just now',
+                applicantsCount: 0,
+                status: 'pending',
+                ...jobData,
+            };
+            this.jobs.unshift(newJob);
+            return newJob;
+        },
     },
 });
