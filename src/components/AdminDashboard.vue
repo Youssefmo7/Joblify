@@ -24,6 +24,18 @@
           Review job quality and moderate flagged content before backend
           integration.
         </p>
+        <div class="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-md"
+            @click="resetModeration"
+          >
+            Reset Admin State
+          </button>
+          <p v-if="actionMessage" class="text-xs font-medium text-emerald-700">
+            {{ actionMessage }}
+          </p>
+        </div>
       </section>
 
       <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -55,6 +67,39 @@
           <p class="text-sm font-medium text-slate-500">Flagged Comments</p>
           <p class="mt-2 text-3xl font-bold text-rose-600">
             {{ store.flaggedCommentsCount }}
+          </p>
+        </article>
+      </section>
+
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <article class="bg-white rounded-xl border border-slate-200 p-5">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Approval Rate
+          </p>
+          <p class="mt-2 text-2xl font-bold text-emerald-700">
+            {{ store.approvalRatePercent }}%
+          </p>
+        </article>
+        <article class="bg-white rounded-xl border border-slate-200 p-5">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Admin Actions (24h)
+          </p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">
+            {{ store.actionsLast24h }}
+          </p>
+        </article>
+        <article class="bg-white rounded-xl border border-slate-200 p-5">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Top Flag Reason
+          </p>
+          <p class="mt-2 text-sm font-semibold text-rose-700">
+            {{ topFlagReason }}
           </p>
         </article>
       </section>
@@ -99,6 +144,22 @@
                   <span>&bull;</span>
                   <span>{{ job.submittedTime }}</span>
                 </div>
+                <p class="mt-2 text-xs text-slate-600">
+                  {{ job.location }} | {{ job.workType }} | {{ job.salary }}
+                </p>
+                <label
+                  :for="`review-note-${job.id}`"
+                  class="mt-3 block text-xs text-slate-500"
+                >
+                  Review note (optional)
+                </label>
+                <textarea
+                  :id="`review-note-${job.id}`"
+                  v-model="reviewNotes[job.id]"
+                  rows="2"
+                  class="mt-1 w-full max-w-lg rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+                  placeholder="Write a short admin note for this decision"
+                ></textarea>
               </div>
               <div class="flex gap-2">
                 <button
@@ -141,11 +202,46 @@
         </header>
 
         <div
-          v-if="store.flaggedCommentsCount"
+          class="px-6 py-3 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center gap-2"
+        >
+          <label class="text-xs text-slate-500" for="reason-filter"
+            >Reason</label
+          >
+          <select
+            id="reason-filter"
+            v-model="reasonFilter"
+            class="text-xs rounded-md border border-slate-300 px-2 py-1 bg-white"
+          >
+            <option value="all">All reasons</option>
+            <option
+              v-for="reason in reasonOptions"
+              :key="reason"
+              :value="reason"
+            >
+              {{ reason }}
+            </option>
+          </select>
+
+          <label class="text-xs text-slate-500 ml-2" for="window-filter"
+            >Flagged</label
+          >
+          <select
+            id="window-filter"
+            v-model="timeFilter"
+            class="text-xs rounded-md border border-slate-300 px-2 py-1 bg-white"
+          >
+            <option value="all">Any time</option>
+            <option value="24h">Last 24 hours</option>
+            <option value="7d">Last 7 days</option>
+          </select>
+        </div>
+
+        <div
+          v-if="filteredModerationQueue.length"
           class="divide-y divide-slate-200"
         >
           <article
-            v-for="comment in store.moderationQueue"
+            v-for="comment in filteredModerationQueue"
             :key="comment.id"
             class="p-5"
           >
@@ -156,6 +252,8 @@
               <span>Author: {{ comment.author }}</span>
               <span>&bull;</span>
               <span>Job: {{ comment.jobTitle }}</span>
+              <span>&bull;</span>
+              <span>Flagged: {{ formatDate(comment.flaggedAt) }}</span>
               <span>&bull;</span>
               <span class="text-rose-600 font-medium"
                 >Reason: {{ comment.flaggedReason }}</span
@@ -174,7 +272,7 @@
         </div>
 
         <p v-else class="p-6 text-sm text-slate-500">
-          No flagged comments remaining.
+          No flagged comments match the current filters.
         </p>
       </section>
 
@@ -210,35 +308,183 @@
           </p>
         </article>
       </section>
+
+      <section class="bg-white rounded-xl border border-slate-200 p-5">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Scope Coverage
+        </p>
+        <ul class="mt-3 text-sm text-slate-700 list-disc list-inside space-y-1">
+          <li>Quality control: approve and reject pending jobs.</li>
+          <li>
+            Platform oversight: key dashboard metrics and reviewed totals.
+          </li>
+          <li>Content moderation: remove flagged comments.</li>
+        </ul>
+      </section>
+
+      <section class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between">
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Admin Activity Timeline
+          </p>
+          <p class="text-xs text-slate-500">
+            {{ store.activityLog.length }} events
+          </p>
+        </div>
+
+        <div v-if="store.activityLog.length" class="mt-4 space-y-3">
+          <article
+            v-for="entry in store.activityLog"
+            :key="entry.id"
+            class="rounded-lg border border-slate-200 p-3"
+          >
+            <p class="text-sm font-semibold text-slate-800">
+              {{ formatActivityTitle(entry) }}
+            </p>
+            <p class="mt-1 text-xs text-slate-500">{{ entry.meta }}</p>
+            <p class="mt-1 text-xs text-slate-400">
+              {{ formatDate(entry.createdAt) }}
+            </p>
+          </article>
+        </div>
+        <p v-else class="mt-4 text-sm text-slate-500">
+          No admin activity yet. Approve/reject jobs or remove comments to build
+          timeline.
+        </p>
+      </section>
     </main>
   </div>
 </template>
 
 <script>
+import { computed, onMounted, ref } from "vue";
 import { useAppStore } from "@/store";
 
 export default {
   name: "AdminDashboard",
   setup() {
     const store = useAppStore();
+    const reviewNotes = ref({});
+    const actionMessage = ref("");
+    const reasonFilter = ref("all");
+    const timeFilter = ref("all");
+    let messageTimer = null;
+
+    const reasonOptions = computed(() =>
+      Object.keys(store.moderationReasonsCount),
+    );
+
+    const filteredModerationQueue = computed(() => {
+      const now = Date.now();
+
+      return store.moderationQueue.filter((comment) => {
+        const reasonPass =
+          reasonFilter.value === "all" ||
+          comment.flaggedReason === reasonFilter.value;
+
+        let timePass = true;
+        if (timeFilter.value !== "all") {
+          const createdAt = new Date(comment.flaggedAt || 0).getTime();
+          if (!Number.isFinite(createdAt) || !createdAt) {
+            timePass = false;
+          } else if (timeFilter.value === "24h") {
+            timePass = createdAt >= now - 24 * 60 * 60 * 1000;
+          } else if (timeFilter.value === "7d") {
+            timePass = createdAt >= now - 7 * 24 * 60 * 60 * 1000;
+          }
+        }
+
+        return reasonPass && timePass;
+      });
+    });
+
+    const topFlagReason = computed(() => {
+      const entries = Object.entries(store.moderationReasonsCount);
+      if (!entries.length) return "No active flags";
+
+      const [reason, count] = entries.sort((a, b) => b[1] - a[1])[0];
+      return `${reason} (${count})`;
+    });
+
+    const showMessage = (message) => {
+      actionMessage.value = message;
+      if (messageTimer) window.clearTimeout(messageTimer);
+      messageTimer = window.setTimeout(() => {
+        actionMessage.value = "";
+      }, 2500);
+    };
+
+    onMounted(() => {
+      store.initAdminState();
+    });
+
+    const formatDate = (value) => {
+      if (!value) return "Unknown";
+
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return "Unknown";
+
+      return date.toLocaleString();
+    };
+
+    const formatActivityTitle = (entry) => {
+      if (entry.type === "job_approved") {
+        return `Approved job: ${entry.title}`;
+      }
+
+      if (entry.type === "job_rejected") {
+        return `Rejected job: ${entry.title}`;
+      }
+
+      if (entry.type === "comment_removed") {
+        return `Removed flagged comment: ${entry.title}`;
+      }
+
+      return "Admin action";
+    };
 
     const approveJob = (jobId) => {
+      store.setJobReviewNote(jobId, reviewNotes.value[jobId] || "");
       store.approveJob(jobId);
+      delete reviewNotes.value[jobId];
+      showMessage("Job approved successfully.");
     };
 
     const rejectJob = (jobId) => {
+      store.setJobReviewNote(jobId, reviewNotes.value[jobId] || "");
       store.rejectJob(jobId);
+      delete reviewNotes.value[jobId];
+      showMessage("Job rejected successfully.");
     };
 
     const removeComment = (commentId) => {
       store.removeFlaggedComment(commentId);
+      showMessage("Flagged comment removed.");
+    };
+
+    const resetModeration = () => {
+      reviewNotes.value = {};
+      store.resetAdminModerationState();
+      showMessage("Admin moderation state reset.");
     };
 
     return {
       store,
+      reviewNotes,
+      actionMessage,
+      reasonFilter,
+      timeFilter,
+      reasonOptions,
+      filteredModerationQueue,
+      topFlagReason,
       approveJob,
       rejectJob,
       removeComment,
+      resetModeration,
+      formatDate,
+      formatActivityTitle,
     };
   },
 };
