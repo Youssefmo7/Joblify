@@ -72,7 +72,7 @@ const routes = [
         path: '/employer/post-job',
         name: 'post-job',
         component: PostJobView,
-        meta: { requiresAuth: true, role: 'employer' },
+        meta: { requiresAuth: true, role: 'employer', hideNavbar: true },
     },
     // {
     //     path: '/employer/jobs/:id/edit',
