@@ -56,95 +56,23 @@
       "createdAt": "2024-12-01T00:00:00Z"
     },
     {
-      "name": "Mahmoud Ramadan",
-      "email": "mahmoud55@gmail.com",
-      "password": "123456",
-      "role": "candidate",
-      "title": "Front End",
-      "avatar": "",
-      "skills": [],
-      "savedJobs": [],
-      "profileViews": 0,
-      "createdAt": "2026-03-28T06:41:11.500Z",
-      "id": "bPiL6l9elPw"
-    },
-    {
-      "name": "Mahmoud",
-      "email": "mahmoud@gmail.com",
-      "password": "123456",
-      "role": "employer",
-      "companyName": "Mahmoud",
-      "website": "http://www.fb.com",
-      "avatar": "",
-      "skills": [],
-      "savedJobs": [],
-      "profileViews": 0,
-      "createdAt": "2026-03-28T06:58:27.548Z",
-      "id": "2SlE6xXHBY8"
-    },
-    {
-      "name": "Mahmoud Abbas",
-      "email": "abbas@gmail.dd",
-      "password": "123456",
-      "role": "candidate",
-      "title": "Backend",
-      "avatar": "",
-      "skills": [],
-      "savedJobs": [
-        "2",
-        "1"
-      ],
-      "profileViews": 0,
-      "createdAt": "2026-03-28T14:11:18.668Z",
-      "id": "K59FD4zsYUk",
-      "phone": "",
-      "linkedin": "",
-      "resumeUrl": ""
-    },
-    {
-      "name": "abbas",
-      "email": "abbas@gmail.com",
-      "password": "123456",
-      "role": "candidate",
-      "title": "doctor",
-      "avatar": "https://www.triatlon.dk/wp-content/uploads/2016/05/dummy-profile-pic-male.jpg",
-      "skills": [
-        "Html",
-        "css",
-        "js",
-        "bootstrap"
-      ],
-      "savedJobs": [],
-      "profileViews": 0,
-      "createdAt": "2026-03-28T14:27:18.476Z",
-      "id": "j06oyHCOEO0",
-      "phone": "",
-      "linkedin": "",
-      "resumeUrl": ""
-    },
-    {
       "name": "Ali",
-      "email": "ali@gmail.com",
+      "email": "alikh20@gmail.com",
       "password": "123456",
       "role": "candidate",
-      "title": "Engineer",
-      "avatar": "",
+      "title": "Frontend",
+      "avatar": "/pics/pp.png",
       "skills": [],
-      "savedJobs": [
-        "3"
-      ],
+      "savedJobs": [],
       "profileViews": 0,
-      "createdAt": "2026-03-28T15:19:03.095Z",
-      "id": "LsEb3gW6aVk",
-      "phone": "",
-      "linkedin": "",
-      "resumeUrl": "/resumes/Lab 1.pdf"
+      "createdAt": "2026-03-28T18:47:32.184Z",
+      "id": "mPnOcsky66k"
     }
   ],
   "jobs": [
     {
       "id": "1",
-      "employerId": "2",
+      "employerId": 2,
       "title": "Senior Frontend Engineer",
       "company": "Google",
       "companyLogo": "/logos/google.png",
@@ -178,13 +106,13 @@
       ],
       "deadline": "2026-04-30T23:59:59Z",
       "status": "approved",
-      "applicantsCount": 14,
+      "applicantsCount": 17,
       "promoted": false,
       "createdAt": "2026-03-24T12:00:00Z"
     },
     {
       "id": "2",
-      "employerId": "3",
+      "employerId": 3,
       "title": "Product Designer",
       "company": "Stripe",
       "companyLogo": "/logos/stripe.jpg",
@@ -224,7 +152,7 @@
     },
     {
       "id": "3",
-      "employerId": "2",
+      "employerId": 2,
       "title": "Backend Engineer - Python",
       "company": "Google",
       "companyLogo": "/logos/google.png",
@@ -257,63 +185,30 @@
         "Gym membership"
       ],
       "deadline": "2026-04-20T23:59:59Z",
-      "status": "approved",
+      "status": "pending",
       "applicantsCount": 0,
       "promoted": false,
       "createdAt": "2026-03-27T14:00:00Z"
-    },
-    {
-      "title": "asd",
-      "description": "asfd",
-      "category": "Design",
-      "location": "af",
-      "workType": "Remote",
-      "deadline": "2026-04-01T00:00:00.000Z",
-      "experienceLevel": "Senior Level",
-      "skills": [
-        "sdf"
-      ],
-      "salary": "$120k – $254k / yr",
-      "responsibilities": [
-        "asfd"
-      ],
-      "requirements": [
-        "sdfs"
-      ],
-      "benefits": [
-        "sdfs"
-      ],
-      "company": "Google",
-      "companyInitial": "G",
-      "companyBg": "bg-gray-100",
-      "companyText": "text-gray-600",
-      "logo": "/logos/google.png",
-      "status": "pending",
-      "employerId": "2",
-      "applicantsCount": 0,
-      "promoted": false,
-      "createdAt": "2026-03-28T17:35:57.805Z",
-      "id": "pRAyaUQH03Q"
     }
   ],
   "applications": [
     {
       "id": "1",
-      "jobId": "1",
-      "candidateId": "1",
-      "employerId": "2",
+      "jobId": 1,
+      "candidateId": 1,
+      "employerId": 2,
       "applyMethod": "resume",
       "resumeUrl": "/resumes/jane_doe_cv.pdf",
       "coverNote": "I am excited to apply for this role at Google.",
-      "status": "accepted",
+      "status": "pending",
       "createdAt": "2026-03-25T10:00:00Z",
-      "updatedAt": "2026-03-28T16:06:28.791Z"
+      "updatedAt": "2026-03-25T10:00:00Z"
     },
     {
       "id": "2",
-      "jobId": "2",
-      "candidateId": "1",
-      "employerId": "3",
+      "jobId": 2,
+      "candidateId": 1,
+      "employerId": 3,
       "applyMethod": "contact",
       "contactEmail": "jane@example.com",
       "contactPhone": "+1 555 0101",
@@ -321,6 +216,48 @@
       "status": "accepted",
       "createdAt": "2026-03-20T08:30:00Z",
       "updatedAt": "2026-03-22T11:00:00Z"
+    },
+    {
+      "jobId": 1,
+      "candidateId": 0,
+      "employerId": 2,
+      "applyMethod": "resume",
+      "status": "pending",
+      "coverNote": "",
+      "resumeUrl": "/resumes/Lab 1.pdf",
+      "contactEmail": null,
+      "contactPhone": null,
+      "createdAt": "2026-03-28T18:47:44.993Z",
+      "updatedAt": "2026-03-28T18:47:44.993Z",
+      "id": "5U0ZmtKkp40"
+    },
+    {
+      "jobId": 1,
+      "candidateId": 0,
+      "employerId": 2,
+      "applyMethod": "resume",
+      "status": "pending",
+      "coverNote": "",
+      "resumeUrl": "/resumes/Lab 1.pdf",
+      "contactEmail": null,
+      "contactPhone": null,
+      "createdAt": "2026-03-28T18:50:18.180Z",
+      "updatedAt": "2026-03-28T18:50:18.180Z",
+      "id": "EyKZUFo2uJA"
+    },
+    {
+      "jobId": 1,
+      "candidateId": 0,
+      "employerId": 2,
+      "applyMethod": "contact",
+      "status": "pending",
+      "coverNote": "",
+      "resumeUrl": null,
+      "contactEmail": "alikh20@gmail.com",
+      "contactPhone": "e",
+      "createdAt": "2026-03-28T18:53:51.507Z",
+      "updatedAt": "2026-03-28T18:53:51.508Z",
+      "id": "qTtzwj-Q8MU"
     }
   ],
   "comments": [
@@ -345,64 +282,34 @@
       "createdAt": "2026-03-25T16:30:00Z"
     },
     {
-      "jobId": "1",
-      "userId": "bPiL6l9elPw",
+      "jobId": 1,
+      "userId": null,
       "userRole": "candidate",
-      "userName": "Mahmoud Ramadan",
-      "text": "d",
+      "userName": "Ali",
+      "text": "dd",
       "status": "visible",
-      "createdAt": "2026-03-28T06:41:45.045Z",
-      "id": "VF85on3KUaQ"
+      "createdAt": "2026-03-28T18:50:02.865Z",
+      "id": "Pxgzn0QRT0s"
     },
     {
-      "jobId": "2",
-      "userId": "bPiL6l9elPw",
+      "jobId": 1,
+      "userId": null,
       "userRole": "candidate",
-      "userName": "Mahmoud Ramadan",
-      "text": "W",
+      "userName": "Ali",
+      "text": "nicer",
       "status": "visible",
-      "createdAt": "2026-03-28T06:45:27.552Z",
-      "id": "TW7MHNN2deQ"
+      "createdAt": "2026-03-28T18:50:09.484Z",
+      "id": "i1gTsTo3U4c"
     },
     {
-      "jobId": "2",
-      "userId": "bPiL6l9elPw",
+      "jobId": 1,
+      "userId": null,
       "userRole": "candidate",
-      "userName": "Mahmoud Ramadan",
-      "text": "Good",
+      "userName": "Ali",
+      "text": "dd",
       "status": "visible",
-      "createdAt": "2026-03-28T06:45:36.769Z",
-      "id": "7vt-5LYQ5tY"
-    },
-    {
-      "jobId": "1",
-      "userId": "bPiL6l9elPw",
-      "userRole": "candidate",
-      "userName": "Mahmoud Ramadan",
-      "text": "gg",
-      "status": "visible",
-      "createdAt": "2026-03-28T06:45:54.821Z",
-      "id": "1rWAegJnpCQ"
-    },
-    {
-      "jobId": "1",
-      "userId": "2SlE6xXHBY8",
-      "userRole": "employer",
-      "userName": "Mahmoud",
-      "text": "sas",
-      "status": "visible",
-      "createdAt": "2026-03-28T08:52:28.773Z",
-      "id": "pppw9nECAcc"
-    },
-    {
-      "jobId": "2",
-      "userId": "K59FD4zsYUk",
-      "userRole": "candidate",
-      "userName": "Mahmoud Abbas",
-      "text": "T",
-      "status": "visible",
-      "createdAt": "2026-03-28T14:11:42.906Z",
-      "id": "DEcsAtEoeEw"
+      "createdAt": "2026-03-28T18:54:40.379Z",
+      "id": "kUnRLwQpmng"
     }
   ],
   "notifications": [
@@ -421,22 +328,6 @@
       "message": "Jane Doe applied for Senior Frontend Engineer.",
       "read": true,
       "createdAt": "2026-03-25T10:00:00Z"
-    },
-    {
-      "userId": 1,
-      "type": "application_accepted",
-      "message": "Your application for job #1 was accepted!",
-      "read": false,
-      "createdAt": "2026-03-28T16:06:28.820Z",
-      "id": "7ciRTgm413c"
-    },
-    {
-      "userId": 2,
-      "type": "job_approved",
-      "message": "Your job posting \"Backend Engineer - Python\" has been approved and is now live.",
-      "read": false,
-      "createdAt": "2026-03-28T14:16:11.886Z",
-      "id": "DC7It2CzgBU"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

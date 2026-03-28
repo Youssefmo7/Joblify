@@ -34,7 +34,7 @@
             <p>
                 No {{ activeTab === 'all' ? '' : activeTab }} applications yet.
             </p>
-            <RouterLink to="/" class="state__link">Browse jobs →</RouterLink>
+            <RouterLink to="/" class="state__link">Browse jobs</RouterLink>
         </div>
 
         <!-- Application cards -->

@@ -21,13 +21,13 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         // ── REGISTER ──────────────────────────────────────────────
         async register(payload) {
-            // payload: { name, email, password, role, ...extras }
             this.loading = true;
             this.error = null;
             try {
-                // Check if email already exists
                 const { data: existing } = await axios.get(
-                    `${BASE_URL}/users?email=${payload.email}`
+                    `${BASE_URL}/users?email=${encodeURIComponent(
+                        payload.email
+                    )}`
                 );
                 if (existing.length > 0) {
                     this.error = 'An account with this email already exists.';
@@ -36,7 +36,7 @@ export const useAuthStore = defineStore('auth', {
 
                 const newUser = {
                     ...payload,
-                    avatar: '',
+                    avatar: '/pics/pp.png',
                     skills: [],
                     savedJobs: [],
                     profileViews: 0,
@@ -63,11 +63,9 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
             try {
                 const { data: users } = await axios.get(
-                    `${BASE_URL}/users?email=${email}&password=${password}`
+                    `${BASE_URL}/users?email=${encodeURIComponent(email)}`
                 );
-                // NOTE: json-server has no real auth — password check is naive.
-                // In production, use hashed passwords + a real backend.
-                if (users.length === 0) {
+                if (users.length === 0 || users[0].password !== password) {
                     this.error = 'Invalid email or password.';
                     return false;
                 }
@@ -92,9 +90,16 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const { data: updated } = await axios.patch(
-                    `${BASE_URL}/users/${this.user.id}`,
-                    updates
+                const userId = Number(this.user.id);
+
+                // Merge current user data with updates first,
+                // then use PUT to replace the full record.
+                // json-server v1 dropped PATCH support — PUT is the safe choice.
+                const merged = { ...this.user, ...updates, id: userId };
+
+                const { data: updated } = await axios.put(
+                    `${BASE_URL}/users/${userId}`,
+                    merged
                 );
                 this._saveSession(updated);
                 return true;
@@ -106,7 +111,7 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        // ── SAVE JOB (candidate bookmarks) ───────────────────────
+        // ── SAVE JOB (candidate bookmarks) ────────────────────────
         async toggleSaveJob(jobId) {
             if (!this.user) return;
             const saved = this.user.savedJobs || [];
@@ -120,8 +125,10 @@ export const useAuthStore = defineStore('auth', {
 
         // ── INTERNAL: persist session ─────────────────────────────
         _saveSession(user) {
-            this.user = user;
-            localStorage.setItem('joblify_user', JSON.stringify(user));
+            // Normalize id to Number so all requests use a clean numeric value
+            const normalized = { ...user, id: Number(user.id) };
+            this.user = normalized;
+            localStorage.setItem('joblify_user', JSON.stringify(normalized));
         },
     },
 });

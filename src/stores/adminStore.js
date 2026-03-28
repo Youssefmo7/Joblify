@@ -5,9 +5,9 @@ const BASE_URL = 'http://localhost:3000';
 
 export const useAdminStore = defineStore('admin', {
     state: () => ({
-        pendingJobs: [], // jobs awaiting approval
-        allUsers: [], // for platform monitoring
-        allComments: [], // for comment moderation
+        pendingJobs: [],
+        allUsers: [],
+        allComments: [],
         stats: {
             totalUsers: 0,
             totalJobs: 0,
@@ -30,7 +30,7 @@ export const useAdminStore = defineStore('admin', {
     },
 
     actions: {
-        // ── LOAD DASHBOARD DATA ───────────────────────────────────
+        // ── LOAD DASHBOARD ────────────────────────────────────────
         async loadDashboard() {
             this.loading = true;
             this.error = null;
@@ -68,18 +68,22 @@ export const useAdminStore = defineStore('admin', {
             this.loading = true;
             this.error = null;
             try {
-                await axios.patch(`${BASE_URL}/jobs/${jobId}`, {
+                const { data: job } = await axios.get(
+                    `${BASE_URL}/jobs/${Number(jobId)}`
+                );
+
+                // PUT: send full job object with updated status
+                await axios.put(`${BASE_URL}/jobs/${Number(jobId)}`, {
+                    ...job,
+                    id: Number(jobId),
                     status: 'approved',
                 });
+
                 this.pendingJobs = this.pendingJobs.filter(
                     (j) => j.id !== jobId
                 );
                 this.stats.pendingCount = this.pendingJobs.length;
 
-                // Notify the employer
-                const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
-                );
                 await axios.post(`${BASE_URL}/notifications`, {
                     userId: job.employerId,
                     type: 'job_approved',
@@ -101,19 +105,23 @@ export const useAdminStore = defineStore('admin', {
             this.loading = true;
             this.error = null;
             try {
-                await axios.patch(`${BASE_URL}/jobs/${jobId}`, {
+                const { data: job } = await axios.get(
+                    `${BASE_URL}/jobs/${Number(jobId)}`
+                );
+
+                // PUT: send full job object with updated status + reason
+                await axios.put(`${BASE_URL}/jobs/${Number(jobId)}`, {
+                    ...job,
+                    id: Number(jobId),
                     status: 'rejected',
                     rejectionReason: reason,
                 });
+
                 this.pendingJobs = this.pendingJobs.filter(
                     (j) => j.id !== jobId
                 );
                 this.stats.pendingCount = this.pendingJobs.length;
 
-                // Notify the employer
-                const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
-                );
                 await axios.post(`${BASE_URL}/notifications`, {
                     userId: job.employerId,
                     type: 'job_rejected',
@@ -134,18 +142,26 @@ export const useAdminStore = defineStore('admin', {
             }
         },
 
-        // ── REMOVE COMMENT (bonus) ────────────────────────────────
+        // ── HIDE COMMENT ──────────────────────────────────────────
         async hideComment(commentId) {
             this.loading = true;
             this.error = null;
             try {
-                await axios.patch(`${BASE_URL}/comments/${commentId}`, {
-                    status: 'hidden',
-                });
                 const index = this.allComments.findIndex(
                     (c) => c.id === commentId
                 );
-                if (index !== -1) this.allComments[index].status = 'hidden';
+                if (index === -1) throw new Error('Comment not found');
+
+                const merged = {
+                    ...this.allComments[index],
+                    id: Number(commentId),
+                    status: 'hidden',
+                };
+                await axios.put(
+                    `${BASE_URL}/comments/${Number(commentId)}`,
+                    merged
+                );
+                this.allComments[index].status = 'hidden';
                 return true;
             } catch (err) {
                 this.error = 'Could not hide comment.';
@@ -160,13 +176,21 @@ export const useAdminStore = defineStore('admin', {
             this.loading = true;
             this.error = null;
             try {
-                await axios.patch(`${BASE_URL}/comments/${commentId}`, {
-                    status: 'visible',
-                });
                 const index = this.allComments.findIndex(
                     (c) => c.id === commentId
                 );
-                if (index !== -1) this.allComments[index].status = 'visible';
+                if (index === -1) throw new Error('Comment not found');
+
+                const merged = {
+                    ...this.allComments[index],
+                    id: Number(commentId),
+                    status: 'visible',
+                };
+                await axios.put(
+                    `${BASE_URL}/comments/${Number(commentId)}`,
+                    merged
+                );
+                this.allComments[index].status = 'visible';
                 return true;
             } catch (err) {
                 this.error = 'Could not restore comment.';
@@ -176,7 +200,7 @@ export const useAdminStore = defineStore('admin', {
             }
         },
 
-        // ── FETCH ALL COMMENTS (for moderation panel) ─────────────
+        // ── FETCH COMMENTS ────────────────────────────────────────
         async fetchComments() {
             this.loading = true;
             this.error = null;

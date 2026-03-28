@@ -54,61 +54,63 @@
                         Post a job
                     </RouterLink>
 
-                    <!-- Notification bell -->
-                    <button
-                        class="navbar__icon-btn"
-                        @click.stop="toggleNotifications"
-                        aria-label="Notifications"
-                    >
-                        <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                    <!-- Notification bell — wrapped in position:relative so dropdown anchors correctly -->
+                    <div class="navbar__bell-wrap">
+                        <button
+                            class="navbar__icon-btn"
+                            @click.stop="toggleNotifications"
+                            aria-label="Notifications"
                         >
-                            <path
-                                d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
-                            />
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                        </svg>
-                        <span v-if="unreadCount > 0" class="navbar__badge">
-                            {{ unreadCount }}
-                        </span>
-                    </button>
+                            <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+                                />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                            <span v-if="unreadCount > 0" class="navbar__badge">
+                                {{ unreadCount }}
+                            </span>
+                        </button>
 
-                    <!-- Notifications dropdown -->
-                    <div
-                        v-if="showNotifications"
-                        class="navbar__dropdown navbar__dropdown--notifs"
-                        @click.stop
-                    >
-                        <div class="navbar__dropdown-header">
-                            <span>Notifications</span>
-                            <button class="link-btn" @click="markAllRead">
-                                Mark all read
-                            </button>
-                        </div>
+                        <!-- Notifications dropdown -->
                         <div
-                            v-if="notifications.length === 0"
-                            class="navbar__dropdown-empty"
+                            v-if="showNotifications"
+                            class="navbar__dropdown navbar__dropdown--notifs"
+                            @click.stop
                         >
-                            No notifications yet
-                        </div>
-                        <div
-                            v-for="n in notifications"
-                            :key="n.id"
-                            :class="['notif-item', { unread: !n.read }]"
-                            @click="markRead(n)"
-                        >
-                            <span class="notif-item__dot" v-if="!n.read" />
-                            <p class="notif-item__msg">{{ n.message }}</p>
-                            <p class="notif-item__time">
-                                {{ timeAgo(n.createdAt) }}
-                            </p>
+                            <div class="navbar__dropdown-header">
+                                <span>Notifications</span>
+                                <button class="link-btn" @click="markAllRead">
+                                    Mark all read
+                                </button>
+                            </div>
+                            <div
+                                v-if="notifications.length === 0"
+                                class="navbar__dropdown-empty"
+                            >
+                                No notifications yet
+                            </div>
+                            <div
+                                v-for="n in notifications"
+                                :key="n.id"
+                                :class="['notif-item', { unread: !n.read }]"
+                                @click="markRead(n)"
+                            >
+                                <span v-if="!n.read" class="notif-item__dot" />
+                                <p class="notif-item__msg">{{ n.message }}</p>
+                                <p class="notif-item__time">
+                                    {{ timeAgo(n.createdAt) }}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -129,96 +131,88 @@
                             </span>
                         </button>
 
-                        <transition name="dropdown">
-                            <div
-                                v-if="showUserMenu"
-                                class="navbar__dropdown"
-                                @click.stop
-                            >
-                                <div class="navbar__dropdown-header">
-                                    <span>
-                                        {{ authStore.currentUser?.name }}
-                                    </span>
-                                    <span class="role-badge">
-                                        {{ authStore.currentUser?.role }}
-                                    </span>
-                                </div>
-
-                                <!-- Candidate links -->
-                                <template v-if="authStore.isCandidate">
-                                    <RouterLink
-                                        to="/profile"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        My profile
-                                    </RouterLink>
-
-                                    <RouterLink
-                                        to="/my-applications"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        My applications
-                                    </RouterLink>
-                                </template>
-
-                                <!-- Employer links -->
-                                <template v-if="authStore.isEmployer">
-                                    <RouterLink
-                                        to="/employer/dashboard"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        My dashboard
-                                    </RouterLink>
-
-                                    <RouterLink
-                                        to="/employer/post-job"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        Post a job
-                                    </RouterLink>
-                                </template>
-
-                                <!-- Admin links -->
-                                <template v-if="authStore.isAdmin">
-                                    <RouterLink
-                                        to="/admin"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        Admin dashboard
-                                    </RouterLink>
-
-                                    <RouterLink
-                                        to="/admin/pending-jobs"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        Pending jobs
-                                    </RouterLink>
-
-                                    <RouterLink
-                                        to="/admin/moderation"
-                                        class="navbar__dropdown-item"
-                                        @click="closeUserMenu"
-                                    >
-                                        Moderation
-                                    </RouterLink>
-                                </template>
-
-                                <div class="navbar__dropdown-divider" />
-
-                                <button
-                                    class="navbar__dropdown-item danger"
-                                    @click="handleLogout"
-                                >
-                                    Sign out
-                                </button>
+                        <!-- User menu dropdown -->
+                        <div
+                            v-if="showUserMenu"
+                            class="navbar__dropdown"
+                            @click.stop
+                        >
+                            <div class="navbar__dropdown-header">
+                                <span>{{ authStore.currentUser?.name }}</span>
+                                <span class="role-badge">
+                                    {{ authStore.currentUser?.role }}
+                                </span>
                             </div>
-                        </transition>
+
+                            <!-- Candidate links -->
+                            <template v-if="authStore.isCandidate">
+                                <RouterLink
+                                    to="/profile"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    My profile
+                                </RouterLink>
+                                <RouterLink
+                                    to="/my-applications"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    My applications
+                                </RouterLink>
+                            </template>
+
+                            <!-- Employer links -->
+                            <template v-if="authStore.isEmployer">
+                                <RouterLink
+                                    to="/employer/dashboard"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    My dashboard
+                                </RouterLink>
+                                <RouterLink
+                                    to="/employer/post-job"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    Post a job
+                                </RouterLink>
+                            </template>
+
+                            <!-- Admin links -->
+                            <template v-if="authStore.isAdmin">
+                                <RouterLink
+                                    to="/admin"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    Admin dashboard
+                                </RouterLink>
+                                <RouterLink
+                                    to="/admin/pending-jobs"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    Pending jobs
+                                </RouterLink>
+                                <RouterLink
+                                    to="/admin/moderation"
+                                    class="navbar__dropdown-item"
+                                    @click="closeUserMenu"
+                                >
+                                    Moderation
+                                </RouterLink>
+                            </template>
+
+                            <div class="navbar__dropdown-divider" />
+                            <button
+                                class="navbar__dropdown-item danger"
+                                @click="handleLogout"
+                            >
+                                Sign out
+                            </button>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -267,8 +261,8 @@ async function loadNotifications() {
         notifications.value = data.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
-    } catch (_) {
-        return;
+    } catch (e) {
+        console.log(e);
     }
 }
 
@@ -291,11 +285,6 @@ function toggleNotifications() {
     if (showNotifications.value) loadNotifications();
 }
 
-// function closeNotifications() {
-//     showNotifications.value = false;
-// }
-
-// ── User menu ─────────────────────────────────────────────────
 function toggleUserMenu() {
     showUserMenu.value = !showUserMenu.value;
     showNotifications.value = false;
@@ -322,42 +311,10 @@ function timeAgo(dateStr) {
     return `${days}d ago`;
 }
 
-// ── Click outside handling ───────────────────────────────────
-function handleClickOutside(event) {
-    // Close dropdowns if clicking outside of them
-    const target = event.target;
-
-    // Check if click is outside notifications
-    if (showNotifications.value) {
-        const notifDropdown = document.querySelector(
-            '.navbar__dropdown--notifs'
-        );
-        const notifButton = document.querySelector('.navbar__icon-btn');
-        if (
-            notifDropdown &&
-            !notifDropdown.contains(target) &&
-            notifButton &&
-            !notifButton.contains(target)
-        ) {
-            showNotifications.value = false;
-        }
-    }
-
-    // Check if click is outside user menu
-    if (showUserMenu.value) {
-        const userDropdown = document.querySelector(
-            '.navbar__avatar-wrap .navbar__dropdown'
-        );
-        const avatarButton = document.querySelector('.navbar__avatar');
-        if (
-            userDropdown &&
-            !userDropdown.contains(target) &&
-            avatarButton &&
-            !avatarButton.contains(target)
-        ) {
-            showUserMenu.value = false;
-        }
-    }
+// ── Click outside — closes both dropdowns ─────────────────────
+function handleClickOutside() {
+    showNotifications.value = false;
+    showUserMenu.value = false;
 }
 
 onMounted(() => {
@@ -444,6 +401,7 @@ onUnmounted(() => {
 .navbar__link:hover {
     color: var(--color-text-primary);
 }
+
 .navbar__btn {
     font-size: 13px;
     font-weight: 500;
@@ -460,57 +418,11 @@ onUnmounted(() => {
     opacity: 0.88;
 }
 
-/* Logout button */
-.navbar__logout-btn {
+/* Bell wrapper — gives the notifications dropdown a proper anchor */
+.navbar__bell-wrap {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    background: var(--color-background-secondary);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-}
-.navbar__logout-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 100%;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    transition: width 0.3s ease;
-    z-index: 0;
-}
-.navbar__logout-btn:hover::before {
-    width: 100%;
-}
-.navbar__logout-btn:hover {
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
-}
-.navbar__logout-btn svg,
-.navbar__logout-btn span {
-    position: relative;
-    z-index: 1;
-}
-.navbar__logout-btn svg {
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-.navbar__logout-btn:hover svg {
-    transform: translateX(2px);
-}
-.navbar__logout-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
 
 /* Icon button (bell) */
@@ -524,10 +436,12 @@ onUnmounted(() => {
     align-items: center;
     padding: 6px;
     border-radius: 8px;
+    transition: background 0.15s;
 }
 .navbar__icon-btn:hover {
     background: var(--color-background-secondary);
 }
+
 .navbar__badge {
     position: absolute;
     top: 2px;
@@ -573,25 +487,25 @@ onUnmounted(() => {
     color: var(--color-text-secondary);
 }
 
-/* Dropdown */
+/* Dropdown — shared styles for both menus */
 .navbar__dropdown {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    background: #534ab7;
-    color: white;
+    background: var(--color-background-primary);
     border: 1px solid var(--color-border-secondary);
     border-radius: var(--border-radius-lg);
     min-width: 220px;
-    z-index: 100;
+    z-index: 200;
     overflow: hidden;
-    border-radius: 5px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 .navbar__dropdown--notifs {
     min-width: 300px;
     max-height: 380px;
     overflow-y: auto;
 }
+
 .navbar__dropdown-header {
     display: flex;
     justify-content: space-between;
@@ -619,6 +533,7 @@ onUnmounted(() => {
     cursor: pointer;
     text-align: left;
     box-sizing: border-box;
+    transition: background 0.1s;
 }
 .navbar__dropdown-item:hover {
     background: var(--color-background-secondary);
@@ -653,6 +568,7 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 4px;
     position: relative;
+    transition: background 0.1s;
 }
 .notif-item:hover {
     background: var(--color-background-secondary);
@@ -682,6 +598,7 @@ onUnmounted(() => {
     margin: 0;
     padding-left: 8px;
 }
+
 .link-btn {
     background: none;
     border: none;
@@ -692,14 +609,9 @@ onUnmounted(() => {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-    .navbar__logout-btn span {
-        display: none;
-    }
-    .navbar__logout-btn {
-        padding: 8px;
-        min-width: 36px;
-        justify-content: center;
+@media (max-width: 640px) {
+    .navbar__search {
+        max-width: 200px;
     }
 }
 </style>

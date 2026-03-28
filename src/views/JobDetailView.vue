@@ -60,6 +60,14 @@
             </div>
         </div>
 
+        <!-- Apply panel — renders inline below the header, no overlay -->
+        <ApplyModal
+            v-if="showApply"
+            :job="job"
+            @close="showApply = false"
+            @success="handleApplySuccess"
+        />
+
         <!-- Body -->
         <div class="detail-body">
             <div class="detail-main">
@@ -220,14 +228,6 @@
                 </div>
             </aside>
         </div>
-
-        <!-- Apply modal -->
-        <ApplyModal
-            v-if="showApply"
-            :job="job"
-            @close="showApply = false"
-            @success="handleApplySuccess"
-        />
     </div>
 
     <!-- Loading / not found -->
@@ -275,8 +275,10 @@ const visibleComments = computed(() =>
 
 // ── Data loading ──────────────────────────────────────────────
 async function loadComments() {
+    // Cast to Number — json-server stores jobId as a number,
+    // route.params.id is always a string, causing a type mismatch with no results.
     const { data } = await axios.get(
-        `${BASE_URL}/comments?jobId=${route.params.id}`
+        `${BASE_URL}/comments?jobId=${Number(route.params.id)}`
     );
     comments.value = data;
 }
@@ -286,7 +288,7 @@ async function postComment() {
     postingComment.value = true;
     try {
         const { data } = await axios.post(`${BASE_URL}/comments`, {
-            jobId: job.value.id,
+            jobId: Number(job.value.id), // always store as number
             userId: authStore.currentUser.id,
             userRole: authStore.currentUser.role,
             userName: authStore.currentUser.name,
@@ -296,17 +298,22 @@ async function postComment() {
         });
         comments.value.push(data);
         newComment.value = '';
+    } catch (err) {
+        console.error('Failed to post comment', err);
     } finally {
         postingComment.value = false;
     }
 }
 
 async function hideComment(commentId) {
-    await axios.patch(`${BASE_URL}/comments/${commentId}`, {
+    const c = comments.value.find((c) => c.id === commentId);
+    if (!c) return;
+    await axios.put(`${BASE_URL}/comments/${Number(commentId)}`, {
+        ...c,
+        id: Number(commentId),
         status: 'hidden',
     });
-    const c = comments.value.find((c) => c.id === commentId);
-    if (c) c.status = 'hidden';
+    c.status = 'hidden';
 }
 
 function handleApplySuccess() {
