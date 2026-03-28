@@ -1,14 +1,12 @@
 <template>
-  <EmployerDashboard />
+  <div>
+    <!-- This view is deprecated. The employer dashboard is at /employer/dashboard (DashboardView.vue) -->
+    <RouterLink to="/employer/dashboard">Go to Employer Dashboard</RouterLink>
+  </div>
 </template>
 
 <script>
-import EmployerDashboard from '@/components/EmployerDashboard.vue'
-
 export default {
-  name: 'Employers',
-  components: {
-    EmployerDashboard
-  }
+  name: 'Employers'
 }
 </script>

@@ -1,65 +1,249 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Active Job Listings</h1>
+  <div class="active-jobs">
+    <header class="section-header">
+      <h1 class="section-title">Active Job Listings</h1>
+      <RouterLink to="/employer/post-job" class="cta-btn">
+        + Post a Job
+      </RouterLink>
+    </header>
+
+    <div v-if="jobsStore.loading" class="state-msg">Loading jobs…</div>
+
+    <div v-else-if="myJobs.length === 0" class="state-msg empty">
+      <p class="main">No jobs found.</p>
+      <p class="sub">Post your first job to get started!</p>
     </div>
 
-    <div class="bg-white rounded-xl border overflow-hidden" style="border-color: #e8ecf1">
-      <ul class="divide-y" style="border-color: #e8ecf1">
-        <li v-for="job in store.activeJobs" :key="job.id" class="p-6 hover:bg-gray-50 transition-colors">
-          <div class="flex flex-col md:flex-row md:items-center justify-between">
-            <div class="mb-4 md:mb-0">
-              <h4 class="text-base font-bold text-gray-900">{{ job.title }}</h4>
-              <div class="flex items-center mt-1 space-x-2 text-sm text-gray-500">
-                <span>{{ job.category }} &bull; {{ job.location }} ({{ job.workType }})</span>
-                <span>&bull;</span>
-                <span class="text-green-600 font-medium capitalize">{{ job.status }}</span>
-              </div>
-              <p class="text-sm text-gray-500 mt-2 line-clamp-2">{{ job.description }}</p>
-            </div>
-            <div class="flex items-center space-x-4 flex-shrink-0">
-              <div class="text-center px-4 border-r" style="border-color: #e8ecf1">
-                <p class="text-xl font-bold text-gray-900">{{ getNewApplicants(job.id) }}</p>
-                <p class="text-xs text-gray-500 uppercase tracking-wide">New</p>
-              </div>
-              <div class="text-center px-4 border-r" style="border-color: #e8ecf1">
-                <p class="text-xl font-bold text-gray-900">{{ job.applicantsCount }}</p>
-                <p class="text-xs text-gray-500 uppercase tracking-wide">Total</p>
-              </div>
-              <div class="pl-2 flex space-x-2">
-                <button @click="$emit('navigate', 'candidates')" class="px-3 py-1.5 text-white text-sm font-medium rounded-lg hover:opacity-90" style="background-color: #fd366e">Review</button>
-                <button class="px-3 py-1.5 border text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50" style="border-color: #e8ecf1">Edit</button>
-              </div>
+    <div v-else class="jobs-list">
+      <div v-for="job in myJobs" :key="job.id" class="job-item">
+        <div class="job-item__main">
+          <div class="job-item__info">
+            <h4 class="job-item__title">{{ job.title }}</h4>
+            <div class="job-item__meta">
+              <span>{{ job.category }}</span>
+              <span class="dot">&bull;</span>
+              <span>{{ job.location }}</span>
+              <span class="dot">&bull;</span>
+              <span :class="['badge', `badge--${job.workType}`]">
+                {{ formatWorkType(job.workType) }}
+              </span>
+              <span class="dot">&bull;</span>
+              <span :class="['status-text', job.status]">
+                {{ job.status }}
+              </span>
             </div>
           </div>
-        </li>
-      </ul>
-      <div v-if="store.activeJobs.length === 0" class="p-12 text-center text-gray-500">
-        <p class="text-lg font-medium">No active jobs found.</p>
-        <p class="text-sm mt-1">Post your first job to get started!</p>
-        <router-link to="/create-job" class="mt-4 inline-block px-4 py-2 text-white rounded-lg text-sm font-medium" style="background-color: #fd366e">Post a Job</router-link>
+
+          <div class="job-item__stats">
+            <div class="stat-box">
+              <span class="stat-box__val">{{ getNewApplicants(job.id) }}</span>
+              <span class="stat-box__label">New</span>
+            </div>
+            <div class="stat-box divider">
+              <span class="stat-box__val">{{ job.applicantsCount }}</span>
+              <span class="stat-box__label">Total</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="job-item__actions">
+          <RouterLink :to="`/employer/jobs/${job.id}/applicants`" class="action-btn primary">
+            Review Applicants
+          </RouterLink>
+          <button @click="deleteJob(job.id)" class="action-btn outline">
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { useAppStore } from '@/store';
+<script setup>
+import { computed } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
+import { useJobsStore } from '@/stores/jobsStore';
+import { useApplicationsStore } from '@/stores/applicationsStore';
 
-export default {
-  name: 'EmployerActiveJobs',
-  emits: ['navigate'],
+const authStore = useAuthStore();
+const jobsStore = useJobsStore();
+const appsStore = useApplicationsStore();
 
-  data() {
-    return { store: useAppStore() };
-  },
+const myJobs = computed(() => jobsStore.myJobs(authStore.currentUser?.id));
 
-  methods: {
-    getNewApplicants(jobId) {
-      return this.store.applications.filter(
-        (a) => a.jobId === jobId && a.status === 'pending'
-      ).length;
-    },
-  },
-};
+function getNewApplicants(jobId) {
+  return appsStore.applicationsForJob(jobId).filter(a => a.status === 'pending').length;
+}
+
+function formatWorkType(t) {
+  return { remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid' }[t] || t;
+}
+
+async function deleteJob(id) {
+  if (confirm('Delete this job posting?')) {
+    await jobsStore.deleteJob(id);
+  }
+}
 </script>
+
+<style scoped>
+.active-jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ── List ── */
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.job-item {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.2s;
+}
+.job-item:hover { border-color: var(--color-border-secondary); }
+
+.job-item__main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.job-item__info { flex: 1; }
+.job-item__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+.job-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+.dot { color: var(--color-border-tertiary); }
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 500;
+}
+.badge--remote { background: #e1f5ee; color: #0f6e56; }
+.badge--onsite { background: #e6f1fb; color: #185fa5; }
+.badge--hybrid { background: #faeeda; color: #854f0b; }
+
+.status-text {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.status-text.approved { color: #22c55e; }
+.status-text.pending { color: #f59e0b; }
+.status-text.rejected { color: #ef4444; }
+
+.job-item__stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.stat-box {
+  padding: 0 16px;
+  text-align: center;
+}
+.stat-box.divider { border-left: 1px solid var(--color-border-tertiary); }
+.stat-box__val {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.stat-box__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.05em;
+}
+
+.job-item__actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-tertiary);
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border-radius: var(--border-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.action-btn.primary {
+  background: #e8246a;
+  color: #fff;
+  border: none;
+}
+.action-btn.primary:hover { opacity: 0.9; }
+.action-btn.outline {
+  background: none;
+  border: 1px solid var(--color-border-tertiary);
+  color: var(--color-text-secondary);
+}
+.action-btn.outline:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.cta-btn {
+  padding: 8px 20px;
+  background: #e8246a;
+  color: #fff;
+  border-radius: var(--border-radius-md);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.state-msg {
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+}
+.state-msg.empty .main {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.state-msg.empty .sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+</style>

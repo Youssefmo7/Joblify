@@ -86,7 +86,7 @@
   "jobs": [
     {
       "id": "1",
-      "employerId": 2,
+      "employerId": "2",
       "title": "Senior Frontend Engineer",
       "company": "Google",
       "companyLogo": "/logos/google.png",
@@ -126,7 +126,7 @@
     },
     {
       "id": "2",
-      "employerId": 3,
+      "employerId": "3",
       "title": "Product Designer",
       "company": "Stripe",
       "companyLogo": "/logos/stripe.jpg",
@@ -166,7 +166,7 @@
     },
     {
       "id": "3",
-      "employerId": 2,
+      "employerId": "2",
       "title": "Backend Engineer - Python",
       "company": "Google",
       "companyLogo": "/logos/google.png",
@@ -208,21 +208,21 @@
   "applications": [
     {
       "id": "1",
-      "jobId": 1,
-      "candidateId": 1,
-      "employerId": 2,
+      "jobId": "1",
+      "candidateId": "1",
+      "employerId": "2",
       "applyMethod": "resume",
       "resumeUrl": "/resumes/jane_doe_cv.pdf",
       "coverNote": "I am excited to apply for this role at Google.",
-      "status": "pending",
+      "status": "accepted",
       "createdAt": "2026-03-25T10:00:00Z",
-      "updatedAt": "2026-03-25T10:00:00Z"
+      "updatedAt": "2026-03-28T16:06:28.791Z"
     },
     {
       "id": "2",
-      "jobId": 2,
-      "candidateId": 1,
-      "employerId": 3,
+      "jobId": "2",
+      "candidateId": "1",
+      "employerId": "3",
       "applyMethod": "contact",
       "contactEmail": "jane@example.com",
       "contactPhone": "+1 555 0101",
@@ -320,6 +320,14 @@
       "message": "Jane Doe applied for Senior Frontend Engineer.",
       "read": true,
       "createdAt": "2026-03-25T10:00:00Z"
+    },
+    {
+      "userId": 1,
+      "type": "application_accepted",
+      "message": "Your application for job #1 was accepted!",
+      "read": false,
+      "createdAt": "2026-03-28T16:06:28.820Z",
+      "id": "7ciRTgm413c"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
