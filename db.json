@@ -1,0 +1,326 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "password": "hashed_password",
+      "role": "candidate",
+      "title": "Frontend Developer at Tech Inc.",
+      "avatar": "/avatars/jane.jpg",
+      "phone": "+1 555 0101",
+      "linkedin": "https://linkedin.com/in/janedoe",
+      "skills": [
+        "Vue.js",
+        "React",
+        "TypeScript"
+      ],
+      "resumeUrl": "/resumes/jane_doe_cv.pdf",
+      "profileViews": 47,
+      "savedJobs": [
+        2
+      ],
+      "createdAt": "2025-01-10T09:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Google LLC",
+      "email": "hiring@google.com",
+      "password": "hashed_password",
+      "role": "employer",
+      "companyName": "Google",
+      "companyLogo": "/logos/google.png",
+      "website": "https://google.com",
+      "phone": "+1 650 253 0000",
+      "createdAt": "2025-01-05T08:00:00Z"
+    },
+    {
+      "id": "3",
+      "name": "Stripe Inc.",
+      "email": "jobs@stripe.com",
+      "password": "hashed_password",
+      "role": "employer",
+      "companyName": "Stripe",
+      "companyLogo": "/logos/stripe.png",
+      "website": "https://stripe.com",
+      "phone": "+1 415 000 1234",
+      "createdAt": "2025-01-06T10:00:00Z"
+    },
+    {
+      "id": "4",
+      "name": "Admin User",
+      "email": "admin@joblify.com",
+      "password": "hashed_password",
+      "role": "admin",
+      "avatar": "/avatars/admin.jpg",
+      "createdAt": "2024-12-01T00:00:00Z"
+    },
+    {
+      "name": "Mahmoud Ramadan",
+      "email": "mahmoud55@gmail.com",
+      "password": "123456",
+      "role": "candidate",
+      "title": "Front End",
+      "avatar": "",
+      "skills": [],
+      "savedJobs": [],
+      "profileViews": 0,
+      "createdAt": "2026-03-28T06:41:11.500Z",
+      "id": "bPiL6l9elPw"
+    },
+    {
+      "name": "Mahmoud",
+      "email": "mahmoud@gmail.com",
+      "password": "123456",
+      "role": "employer",
+      "companyName": "Mahmoud",
+      "website": "http://www.fb.com",
+      "avatar": "",
+      "skills": [],
+      "savedJobs": [],
+      "profileViews": 0,
+      "createdAt": "2026-03-28T06:58:27.548Z",
+      "id": "2SlE6xXHBY8"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "1",
+      "employerId": 2,
+      "title": "Senior Frontend Engineer",
+      "company": "Google",
+      "companyLogo": "/logos/google.png",
+      "description": "We are looking for an experienced Frontend Engineer with deep knowledge of Vue.js to join our core team. You will be responsible for building high-quality UI components.",
+      "responsibilities": [
+        "Build reusable Vue.js components",
+        "Collaborate with design and backend teams",
+        "Optimize performance of web applications"
+      ],
+      "requirements": [
+        "3+ years of Vue.js or React experience",
+        "Strong CSS/HTML skills",
+        "Experience with REST APIs"
+      ],
+      "skills": [
+        "Vue.js",
+        "TypeScript",
+        "CSS"
+      ],
+      "category": "programming",
+      "location": "Mountain View, CA",
+      "workType": "remote",
+      "salaryMin": 140000,
+      "salaryMax": 200000,
+      "salaryCurrency": "USD",
+      "experienceLevel": "senior",
+      "benefits": [
+        "Health insurance",
+        "Stock options",
+        "Free meals"
+      ],
+      "deadline": "2026-04-30T23:59:59Z",
+      "status": "approved",
+      "applicantsCount": 14,
+      "promoted": false,
+      "createdAt": "2026-03-24T12:00:00Z"
+    },
+    {
+      "id": "2",
+      "employerId": 3,
+      "title": "Product Designer",
+      "company": "Stripe",
+      "companyLogo": "/logos/stripe.jpg",
+      "description": "Stripe is hiring a Product Designer to bring high-quality execution and visual logic to the dashboard experience.",
+      "responsibilities": [
+        "Own design of key product surfaces",
+        "Collaborate closely with engineering",
+        "Build and maintain the design system"
+      ],
+      "requirements": [
+        "4+ years of product design experience",
+        "Strong Figma skills",
+        "Experience with SaaS products"
+      ],
+      "skills": [
+        "Design",
+        "Figma",
+        "Prototyping"
+      ],
+      "category": "design",
+      "location": "San Francisco, CA",
+      "workType": "hybrid",
+      "salaryMin": 120000,
+      "salaryMax": 160000,
+      "salaryCurrency": "USD",
+      "experienceLevel": "mid",
+      "benefits": [
+        "Remote-friendly",
+        "Equity",
+        "Learning budget"
+      ],
+      "deadline": "2026-05-15T23:59:59Z",
+      "status": "approved",
+      "applicantsCount": 8,
+      "promoted": true,
+      "createdAt": "2026-03-19T09:30:00Z"
+    },
+    {
+      "id": "3",
+      "employerId": 2,
+      "title": "Backend Engineer - Python",
+      "company": "Google",
+      "companyLogo": "/logos/google.png",
+      "description": "Join our infrastructure team to build scalable backend services.",
+      "responsibilities": [
+        "Design and build Python microservices",
+        "Optimize database queries",
+        "Write unit and integration tests"
+      ],
+      "requirements": [
+        "3+ years Python experience",
+        "Knowledge of distributed systems",
+        "Experience with PostgreSQL"
+      ],
+      "skills": [
+        "Python",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "category": "programming",
+      "location": "New York, NY",
+      "workType": "onsite",
+      "salaryMin": 130000,
+      "salaryMax": 180000,
+      "salaryCurrency": "USD",
+      "experienceLevel": "mid",
+      "benefits": [
+        "Health insurance",
+        "401k",
+        "Gym membership"
+      ],
+      "deadline": "2026-04-20T23:59:59Z",
+      "status": "pending",
+      "applicantsCount": 0,
+      "promoted": false,
+      "createdAt": "2026-03-27T14:00:00Z"
+    }
+  ],
+  "applications": [
+    {
+      "id": "1",
+      "jobId": 1,
+      "candidateId": 1,
+      "employerId": 2,
+      "applyMethod": "resume",
+      "resumeUrl": "/resumes/jane_doe_cv.pdf",
+      "coverNote": "I am excited to apply for this role at Google.",
+      "status": "pending",
+      "createdAt": "2026-03-25T10:00:00Z",
+      "updatedAt": "2026-03-25T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "jobId": 2,
+      "candidateId": 1,
+      "employerId": 3,
+      "applyMethod": "contact",
+      "contactEmail": "jane@example.com",
+      "contactPhone": "+1 555 0101",
+      "coverNote": "",
+      "status": "accepted",
+      "createdAt": "2026-03-20T08:30:00Z",
+      "updatedAt": "2026-03-22T11:00:00Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "jobId": 1,
+      "userId": 1,
+      "userRole": "candidate",
+      "userName": "Jane Doe",
+      "text": "Does this role sponsor visas?",
+      "status": "visible",
+      "createdAt": "2026-03-25T15:00:00Z"
+    },
+    {
+      "id": "2",
+      "jobId": 1,
+      "userId": 2,
+      "userRole": "employer",
+      "userName": "Google LLC",
+      "text": "Yes, we do sponsor H1-B visas for qualified candidates.",
+      "status": "visible",
+      "createdAt": "2026-03-25T16:30:00Z"
+    },
+    {
+      "jobId": "1",
+      "userId": "bPiL6l9elPw",
+      "userRole": "candidate",
+      "userName": "Mahmoud Ramadan",
+      "text": "d",
+      "status": "visible",
+      "createdAt": "2026-03-28T06:41:45.045Z",
+      "id": "VF85on3KUaQ"
+    },
+    {
+      "jobId": "2",
+      "userId": "bPiL6l9elPw",
+      "userRole": "candidate",
+      "userName": "Mahmoud Ramadan",
+      "text": "W",
+      "status": "visible",
+      "createdAt": "2026-03-28T06:45:27.552Z",
+      "id": "TW7MHNN2deQ"
+    },
+    {
+      "jobId": "2",
+      "userId": "bPiL6l9elPw",
+      "userRole": "candidate",
+      "userName": "Mahmoud Ramadan",
+      "text": "Good",
+      "status": "visible",
+      "createdAt": "2026-03-28T06:45:36.769Z",
+      "id": "7vt-5LYQ5tY"
+    },
+    {
+      "jobId": "1",
+      "userId": "bPiL6l9elPw",
+      "userRole": "candidate",
+      "userName": "Mahmoud Ramadan",
+      "text": "gg",
+      "status": "visible",
+      "createdAt": "2026-03-28T06:45:54.821Z",
+      "id": "1rWAegJnpCQ"
+    },
+    {
+      "jobId": "1",
+      "userId": "2SlE6xXHBY8",
+      "userRole": "employer",
+      "userName": "Mahmoud",
+      "text": "sas",
+      "status": "visible",
+      "createdAt": "2026-03-28T08:52:28.773Z",
+      "id": "pppw9nECAcc"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "1",
+      "userId": 1,
+      "type": "application_accepted",
+      "message": "Your application for Product Designer at Stripe was accepted!",
+      "read": false,
+      "createdAt": "2026-03-22T11:00:00Z"
+    },
+    {
+      "id": "2",
+      "userId": 2,
+      "type": "new_application",
+      "message": "Jane Doe applied for Senior Frontend Engineer.",
+      "read": true,
+      "createdAt": "2026-03-25T10:00:00Z"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
