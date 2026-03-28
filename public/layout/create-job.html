@@ -54,148 +54,295 @@
             </div>
         </div>
 
-        <form class="space-y-6">
-            <!-- Job Title -->
-            <div class="bg-surface rounded-xl border border-border p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Title <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. Senior Frontend Engineer">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Description <span class="text-red-500">*</span></label>
-                        <textarea rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="Describe the role, responsibilities, and what the candidate will be working on..."></textarea>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form id="jobForm" class="space-y-6">
+            <!-- Step 1: Job Details -->
+            <div id="step1" class="step-content space-y-6">
+                <div class="bg-surface rounded-xl border border-border p-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Basic Information</h2>
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
-                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white">
-                                <option value="">Select a category</option>
-                                <option>Programming</option>
-                                <option>Design</option>
-                                <option>Management</option>
-                                <option>Marketing</option>
-                                <option>Sales</option>
-                                <option>Other</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Title <span class="text-red-500">*</span></label>
+                            <input type="text" id="jobTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. Senior Frontend Engineer">
+                            <p id="error-jobTitle" class="text-xs text-red-500 mt-1 hidden">Job title is required</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Location <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. Mountain View, CA">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Description <span class="text-red-500">*</span></label>
+                            <textarea id="jobDescription" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="Describe the role, responsibilities, and what the candidate will be working on..."></textarea>
+                            <p id="error-jobDescription" class="text-xs text-red-500 mt-1 hidden">Description is required</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                                <select id="jobCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white">
+                                    <option value="">Select a category</option>
+                                    <option>Programming</option>
+                                    <option>Design</option>
+                                    <option>Management</option>
+                                    <option>Marketing</option>
+                                    <option>Sales</option>
+                                    <option>Other</option>
+                                </select>
+                                <p id="error-jobCategory" class="text-xs text-red-500 mt-1 hidden">Category is required</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Location <span class="text-red-500">*</span></label>
+                                <input type="text" id="jobLocation" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. Mountain View, CA">
+                                <p id="error-jobLocation" class="text-xs text-red-500 mt-1 hidden">Location is required</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Work Type & Deadline -->
-            <div class="bg-surface rounded-xl border border-border p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Work Type &amp; Deadline</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Work Type <span class="text-red-500">*</span></label>
-                        <div class="flex gap-3">
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="work_type" class="sr-only peer" checked>
-                                <div class="peer-checked:ring-2 peer-checked:ring-primary peer-checked:border-primary border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50">
-                                    <p class="text-sm font-semibold text-gray-900">Remote</p>
-                                    <p class="text-xs text-gray-500 mt-1">Work from anywhere</p>
-                                </div>
-                            </label>
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="work_type" class="sr-only peer">
-                                <div class="peer-checked:ring-2 peer-checked:ring-primary peer-checked:border-primary border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50">
-                                    <p class="text-sm font-semibold text-gray-900">On-site</p>
-                                    <p class="text-xs text-gray-500 mt-1">Office based</p>
-                                </div>
-                            </label>
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="work_type" class="sr-only peer">
-                                <div class="peer-checked:ring-2 peer-checked:ring-primary peer-checked:border-primary border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50">
-                                    <p class="text-sm font-semibold text-gray-900">Hybrid</p>
-                                    <p class="text-xs text-gray-500 mt-1">Mix of both</p>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-surface rounded-xl border border-border p-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Work Type &amp; Deadline</h2>
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline <span class="text-red-500">*</span></label>
-                            <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Work Type <span class="text-red-500">*</span></label>
+                            <div class="flex gap-3">
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="work_type" value="Remote" class="sr-only peer" checked>
+                                    <div class="peer-checked:ring-2 peer-checked:ring-primary peer-checked:border-primary border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50">
+                                        <p class="text-sm font-semibold text-gray-900">Remote</p>
+                                        <p class="text-xs text-gray-500 mt-1">Work from anywhere</p>
+                                    </div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="work_type" value="On-site" class="sr-only peer">
+                                    <div class="peer-checked:ring-2 peer-checked:ring-primary peer-checked:border-primary border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50">
+                                        <p class="text-sm font-semibold text-gray-900">On-site</p>
+                                        <p class="text-xs text-gray-500 mt-1">Office based</p>
+                                    </div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="work_type" value="Hybrid" class="sr-only peer">
+                                    <div class="peer-checked:ring-2 peer-checked:ring-primary peer-checked:border-primary border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50">
+                                        <p class="text-sm font-semibold text-gray-900">Hybrid</p>
+                                        <p class="text-xs text-gray-500 mt-1">Mix of both</p>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline <span class="text-red-500">*</span></label>
+                                <input type="date" id="jobDeadline" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                                <p id="error-jobDeadline" class="text-xs text-red-500 mt-1 hidden">Deadline is required</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                                <select id="experienceLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white">
+                                    <option>Entry Level</option>
+                                    <option>Mid Level</option>
+                                    <option selected>Senior Level</option>
+                                    <option>Director</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="button" onclick="nextStep(2)" class="px-8 py-2.5 bg-primary hover:bg-pink-600 text-white font-medium rounded-lg text-sm">Next: Requirements</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Requirements & Overview (Wait, let's merge overview into Step 1 as Description and Keep Step 2 for detailed requirements) -->
+            <div id="step2" class="step-content space-y-6 hidden">
+                <div class="bg-surface rounded-xl border border-border p-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Requirements &amp; Benefits</h2>
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
-                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary bg-white">
-                                <option>Entry Level</option>
-                                <option>Mid Level</option>
-                                <option selected>Senior Level</option>
-                                <option>Director</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tech Stack & Tags -->
-            <div class="bg-surface rounded-xl border border-border p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Tech Stack &amp; Tags</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tech Stack</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. Vue.js, TypeScript, GraphQL (comma-separated)">
-                        <div class="flex gap-2 mt-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Vue.js <button class="ml-1.5 text-gray-400 hover:text-gray-600">&times;</button></span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">TypeScript <button class="ml-1.5 text-gray-400 hover:text-gray-600">&times;</button></span>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Min (e.g. 140000)">
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Max (e.g. 200000)">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Requirements & Benefits -->
-            <div class="bg-surface rounded-xl border border-border p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Requirements &amp; Benefits</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
-                        <textarea rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="List the job requirements (one per line)..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
-                        <textarea rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="List the benefits offered (one per line)..."></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Company Branding -->
-            <div class="bg-surface rounded-xl border border-border p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Company Branding</h2>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
-                    <div class="flex items-center space-x-4">
-                        <div class="h-16 w-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                            <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Requirements <span class="text-red-500">*</span></label>
+                            <textarea id="jobRequirements" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="List the job requirements (one per line)..."></textarea>
+                            <p id="error-jobRequirements" class="text-xs text-red-500 mt-1 hidden">Please list at least one requirement</p>
                         </div>
                         <div>
-                            <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Upload Logo</button>
-                            <p class="text-xs text-gray-500 mt-1">PNG, JPG or SVG. Max 2MB.</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
+                            <textarea id="jobBenefits" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="List the benefits offered (one per line)..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tech Stack</label>
+                            <input type="text" id="techStack" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. Vue.js, TypeScript, GraphQL (comma-separated)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input type="number" id="salaryMin" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Min (e.g. 140000)">
+                                <input type="number" id="salaryMax" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Max (e.g. 200000)">
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div class="flex justify-between pt-4">
+                    <button type="button" onclick="prevStep(1)" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50">Back</button>
+                    <button type="button" onclick="nextStep(3)" class="px-8 py-2.5 bg-primary hover:bg-pink-600 text-white font-medium rounded-lg text-sm">Next: Finalize</button>
+                </div>
             </div>
 
-            <!-- Actions -->
-            <div class="flex justify-between items-center pt-4">
-                <button type="button" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50">Save as Draft</button>
-                <button type="button" class="px-8 py-2.5 bg-primary hover:bg-pink-600 text-white font-medium rounded-lg text-sm">Publish Job</button>
+            <!-- Step 3: Branding & Preview -->
+            <div id="step3" class="step-content space-y-6 hidden">
+                <div class="bg-surface rounded-xl border border-border p-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Company Branding</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
+                        <div class="flex items-center space-x-4">
+                            <div id="logoPreview" class="h-16 w-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                                <svg id="logoPlaceholder" class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <img id="logoImg" class="hidden h-full w-full object-cover" />
+                            </div>
+                            <div>
+                                <button type="button" onclick="document.getElementById('logoInput').click()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Upload Logo</button>
+                                <input type="file" id="logoInput" class="hidden" accept="image/*" onchange="handleLogoChange(this)" />
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG or SVG. Max 2MB.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                    <h2 class="text-lg font-bold text-blue-900 mb-2">Review Summary</h2>
+                    <p class="text-sm text-blue-700 mb-4">Please review your job posting details before publishing. You can still go back to make changes.</p>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>Title:</strong> <span id="summary-title">-</span></p>
+                        <p><strong>Location:</strong> <span id="summary-location">-</span></p>
+                        <p><strong>Work Type:</strong> <span id="summary-workType">-</span></p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between pt-4">
+                    <button type="button" onclick="prevStep(2)" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50">Back</button>
+                    <button type="button" id="publishJobBtn" class="px-8 py-2.5 bg-primary hover:bg-pink-600 text-white font-medium rounded-lg text-sm">Publish Job</button>
+                </div>
             </div>
         </form>
     </div>
+
+    <script>
+        let currentStep = 1;
+        let companyLogoUrl = '';
+
+        function updateProgress() {
+            for (let i = 1; i <= 3; i++) {
+                const circle = document.querySelector(`.flex.items-center:nth-child(${i*2 - 1}) .rounded-full`);
+                const text = document.querySelector(`.flex.items-center:nth-child(${i*2 - 1}) .ml-2`);
+                
+                if (i < currentStep) {
+                    circle.classList.replace('bg-primary', 'bg-green-500');
+                    circle.classList.replace('bg-gray-200', 'bg-green-500');
+                    circle.innerHTML = '✓';
+                    text.classList.replace('text-gray-500', 'text-gray-900');
+                } else if (i === currentStep) {
+                    circle.classList.replace('bg-green-500', 'bg-primary');
+                    circle.classList.replace('bg-gray-200', 'bg-primary');
+                    circle.classList.replace('text-gray-500', 'text-white');
+                    circle.innerHTML = i;
+                    text.classList.replace('text-gray-500', 'text-gray-900');
+                } else {
+                    circle.classList.replace('bg-primary', 'bg-gray-200');
+                    circle.classList.replace('bg-green-500', 'bg-gray-200');
+                    circle.classList.replace('text-white', 'text-gray-500');
+                    circle.innerHTML = i;
+                    text.classList.replace('text-gray-900', 'text-gray-500');
+                }
+            }
+        }
+
+        function validateStep1() {
+            let isValid = true;
+            const fields = ['jobTitle', 'jobDescription', 'jobCategory', 'jobLocation', 'jobDeadline'];
+            fields.forEach(f => {
+                const val = document.getElementById(f).value.trim();
+                const error = document.getElementById(`error-${f}`);
+                if (!val) {
+                    error.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    error.classList.add('hidden');
+                }
+            });
+            return isValid;
+        }
+
+        function validateStep2() {
+            const reqs = document.getElementById('jobRequirements').value.trim();
+            const error = document.getElementById('error-jobRequirements');
+            if (!reqs) {
+                error.classList.remove('hidden');
+                return false;
+            }
+            error.classList.add('hidden');
+            return true;
+        }
+
+        function nextStep(step) {
+            if (currentStep === 1 && !validateStep1()) return;
+            if (currentStep === 2 && !validateStep2()) return;
+
+            if (step === 3) {
+                document.getElementById('summary-title').innerText = document.getElementById('jobTitle').value;
+                document.getElementById('summary-location').innerText = document.getElementById('jobLocation').value;
+                document.getElementById('summary-workType').innerText = document.querySelector('input[name="work_type"]:checked').value;
+            }
+
+            document.getElementById(`step${currentStep}`).classList.add('hidden');
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            currentStep = step;
+            updateProgress();
+            window.scrollTo(0, 0);
+        }
+
+        function prevStep(step) {
+            document.getElementById(`step${currentStep}`).classList.add('hidden');
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            currentStep = step;
+            updateProgress();
+            window.scrollTo(0, 0);
+        }
+
+        function handleLogoChange(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    companyLogoUrl = e.target.result;
+                    document.getElementById('logoPlaceholder').classList.add('hidden');
+                    const img = document.getElementById('logoImg');
+                    img.src = companyLogoUrl;
+                    img.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('publishJobBtn').addEventListener('click', () => {
+            const store = window.parent.appStore;
+            if (!store) {
+                alert('Store not found. Please refresh the page.');
+                return;
+            }
+
+            const jobData = {
+                title: document.getElementById('jobTitle').value,
+                description: document.getElementById('jobDescription').value,
+                category: document.getElementById('jobCategory').value,
+                location: document.getElementById('jobLocation').value,
+                workType: document.querySelector('input[name="work_type"]:checked').value,
+                deadline: document.getElementById('jobDeadline').value,
+                experienceLevel: document.getElementById('experienceLevel').value,
+                techStack: document.getElementById('techStack').value.split(',').map(s => s.trim()).filter(s => s),
+                salary: `$${document.getElementById('salaryMin').value || 0}k – $${document.getElementById('salaryMax').value || 0}k / yr`,
+                requirements: document.getElementById('jobRequirements').value.split('\n').filter(r => r.trim()),
+                benefits: document.getElementById('jobBenefits').value.split('\n').filter(b => b.trim()),
+                company: store.currentUser.name,
+                companyInitial: store.currentUser.name.charAt(0),
+                companyBg: companyLogoUrl ? '' : 'bg-gray-100',
+                companyText: companyLogoUrl ? '' : 'text-gray-600',
+                logo: companyLogoUrl
+            };
+
+            store.addJob(jobData);
+            window.parent.location.href = '/employers'; 
+        });
+    </script>
 </body>
 </html>
