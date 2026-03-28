@@ -90,7 +90,7 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const userId = Number(this.user.id);
+                const userId = this.user.id;
 
                 // Merge current user data with updates first,
                 // then use PUT to replace the full record.
@@ -104,6 +104,7 @@ export const useAuthStore = defineStore('auth', {
                 this._saveSession(updated);
                 return true;
             } catch (err) {
+                console.error("Update Error Details:", err.response);
                 this.error = 'Could not update profile.';
                 return false;
             } finally {
@@ -126,7 +127,7 @@ export const useAuthStore = defineStore('auth', {
         // ── INTERNAL: persist session ─────────────────────────────
         _saveSession(user) {
             // Normalize id to Number so all requests use a clean numeric value
-            const normalized = { ...user, id: Number(user.id) };
+            const normalized = { ...user };
             this.user = normalized;
             localStorage.setItem('joblify_user', JSON.stringify(normalized));
         },
