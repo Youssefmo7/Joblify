@@ -1,22 +1,14 @@
 <template>
-  <div class="admin">
-    <AdminDashboard />
-  </div>
+  <AdminDashboard />
 </template>
 
 <script>
-import AdminDashboard from '@/components/AdminDashboard.vue'
+import AdminDashboard from "@/components/AdminDashboard.vue";
 
 export default {
-  name: 'Admin',
+  name: "Admin",
   components: {
-    AdminDashboard
-  }
-}
+    AdminDashboard,
+  },
+};
 </script>
-
-<style scoped>
-.admin {
-  padding: 20px;
-}
-</style>
