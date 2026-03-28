@@ -431,6 +431,7 @@
       "id": "7ciRTgm413c"
     },
     {
+      "userId": 2,
       "type": "job_approved",
       "message": "Your job posting \"Backend Engineer - Python\" has been approved and is now live.",
       "read": false,
