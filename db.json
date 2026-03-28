@@ -67,6 +67,22 @@
       "profileViews": 0,
       "createdAt": "2026-03-28T18:47:32.184Z",
       "id": "mPnOcsky66k"
+    },
+    {
+      "name": "test one two",
+      "email": "test@gmail.com",
+      "password": "123456",
+      "role": "candidate",
+      "title": "frontend develper",
+      "avatar": "/pics/pp.png",
+      "skills": [],
+      "savedJobs": [],
+      "profileViews": 0,
+      "createdAt": "2026-03-28T19:43:20.104Z",
+      "id": "M4-QYTvcsX8",
+      "phone": "01287382389",
+      "linkedin": "",
+      "resumeUrl": ""
     }
   ],
   "jobs": [
@@ -106,7 +122,7 @@
       ],
       "deadline": "2026-04-30T23:59:59Z",
       "status": "approved",
-      "applicantsCount": 17,
+      "applicantsCount": 18,
       "promoted": false,
       "createdAt": "2026-03-24T12:00:00Z"
     },
@@ -258,6 +274,20 @@
       "createdAt": "2026-03-28T18:53:51.507Z",
       "updatedAt": "2026-03-28T18:53:51.508Z",
       "id": "qTtzwj-Q8MU"
+    },
+    {
+      "jobId": 1,
+      "candidateId": null,
+      "employerId": 2,
+      "applyMethod": "resume",
+      "status": "pending",
+      "coverNote": "lab",
+      "resumeUrl": "/resumes/Lab6.pdf",
+      "contactEmail": null,
+      "contactPhone": null,
+      "createdAt": "2026-03-28T19:47:54.121Z",
+      "updatedAt": "2026-03-28T19:47:54.121Z",
+      "id": "mHwJuFP-Z4o"
     }
   ],
   "comments": [
