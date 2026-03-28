@@ -1,455 +1,552 @@
 <template>
-    <div class="job-card">
-        <!-- Header row -->
-        <div class="job-card__header">
-            <div class="job-card__logo">
-                <img
-                    v-if="job.companyLogo"
-                    :src="job.companyLogo"
-                    :alt="job.company"
-                />
-                <span v-else class="job-card__logo-fallback">
-                    {{ job.company[0] }}
-                </span>
-            </div>
-
-            <div class="job-card__meta">
-                <h2 class="job-card__title" @click="goToJob">
-                    {{ job.title }}
-                </h2>
-                <p class="job-card__company">{{ job.company }}</p>
-                <p class="job-card__location">
-                    {{ job.location }}
-                    <span class="job-card__dot">•</span>
-                    <span
-                        :class="[
-                            'job-card__badge',
-                            `job-card__badge--${job.workType}`,
-                        ]"
-                    >
-                        {{ formatWorkType(job.workType) }}
-                    </span>
-                    <span
-                        v-if="job.promoted"
-                        class="job-card__badge job-card__badge--promoted"
-                    >
-                        Promoted
-                    </span>
+    <div class="apply-panel">
+        <!-- Panel header -->
+        <div class="apply-panel__header">
+            <div>
+                <h2 class="apply-panel__title">Apply for {{ job.title }}</h2>
+                <p class="apply-panel__sub">
+                    {{ job.company }} · {{ job.location }}
                 </p>
             </div>
-
-            <!-- Options menu (employer only) -->
             <button
-                v-if="isOwner"
-                class="job-card__menu-btn"
-                @click.stop="toggleMenu"
-                aria-label="Job options"
+                class="apply-panel__close"
+                @click="$emit('close')"
+                aria-label="Close"
             >
-                ···
+                <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
             </button>
-            <div v-if="menuOpen && isOwner" class="job-card__dropdown">
-                <button @click="$router.push(`/employer/jobs/${job.id}/edit`)">
-                    Edit
-                </button>
-                <button
-                    @click="$router.push(`/employer/jobs/${job.id}/applicants`)"
-                >
-                    View applicants
-                </button>
-                <button class="danger" @click="handleDelete">Delete</button>
-            </div>
         </div>
 
-        <!-- Salary + skill tags -->
-        <div class="job-card__tags">
-            <span v-if="job.salaryMin" class="job-card__salary">
-                ${{ formatSalary(job.salaryMin) }} – ${{
-                    formatSalary(job.salaryMax)
-                }}/yr
-            </span>
-            <span
-                v-for="skill in job.skills.slice(0, 3)"
-                :key="skill"
-                class="job-card__skill"
+        <!-- Method toggle -->
+        <div class="apply-panel__methods">
+            <button
+                :class="['method-btn', { active: method === 'resume' }]"
+                @click="method = 'resume'"
             >
-                {{ skill }}
-            </span>
+                <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                Upload resume
+            </button>
+            <button
+                :class="['method-btn', { active: method === 'contact' }]"
+                @click="method = 'contact'"
+            >
+                <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path
+                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.29 6.29l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+                    />
+                </svg>
+                Share contact info
+            </button>
         </div>
 
-        <!-- Description preview -->
-        <p class="job-card__description">
-            {{ truncate(job.description, 140) }}
-        </p>
+        <!-- ── Resume method ── -->
+        <div v-if="method === 'resume'" class="apply-panel__section">
+            <label class="field-label">Resume (PDF)</label>
 
-        <!-- Footer row -->
-        <div class="job-card__footer">
-            <span class="job-card__posted">
-                {{ timeAgo(job.createdAt) }} •
-                {{ job.applicantsCount }} applicant{{
-                    job.applicantsCount !== 1 ? 's' : ''
-                }}
-            </span>
-
-            <div class="job-card__actions">
-                <!-- Save button (candidate only) -->
-                <button
-                    v-if="authStore.isCandidate"
-                    class="job-card__save"
-                    :class="{ saved: isSaved }"
-                    @click.stop="handleSave"
+            <!-- Saved resume from profile -->
+            <div v-if="resumeUrl && !newFile" class="saved-resume">
+                <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                 >
-                    {{ isSaved ? 'Saved' : 'Save' }}
-                </button>
-
-                <!-- Apply / Applied -->
-                <button
-                    v-if="authStore.isCandidate"
-                    class="job-card__apply"
-                    :class="{ applied: hasApplied }"
-                    :disabled="hasApplied"
-                    @click.stop="$emit('apply', job)"
-                >
-                    {{ hasApplied ? 'Applied' : 'Apply Now' }}
-                </button>
-
-                <!-- Employer: pending badge -->
-                <span
-                    v-if="isOwner && job.status === 'pending'"
-                    class="job-card__status pending"
-                >
-                    Pending approval
+                    <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span class="saved-resume__name">
+                    {{ resumeUrl.split('/').pop() }}
                 </span>
-                <span
-                    v-if="isOwner && job.status === 'rejected'"
-                    class="job-card__status rejected"
+                <button class="text-btn" @click="clearFile">Change file</button>
+            </div>
+
+            <!-- Upload zone -->
+            <div
+                v-else
+                :class="['upload-zone', { 'upload-zone--filled': newFile }]"
+                @click="$refs.fileInput.click()"
+            >
+                <svg
+                    v-if="!newFile"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="opacity: 0.4"
                 >
-                    Rejected
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span v-if="!newFile" class="upload-zone__text">
+                    Click to upload PDF
+                    <span class="upload-zone__hint">— max 5MB</span>
+                </span>
+                <span v-else class="upload-zone__filled-name">
+                    {{ newFile.name }}
                 </span>
             </div>
+            <input
+                ref="fileInput"
+                type="file"
+                accept=".pdf"
+                style="display: none"
+                @change="onFileChange"
+            />
+
+            <p v-if="method === 'resume' && !canSubmit" class="field-warn">
+                Please upload a resume to continue.
+            </p>
+        </div>
+
+        <!-- ── Contact method ── -->
+        <div v-if="method === 'contact'" class="apply-panel__section">
+            <div class="field-group">
+                <label class="field-label">Email</label>
+                <input
+                    v-model="contactEmail"
+                    class="field-input"
+                    type="email"
+                    placeholder="your@email.com"
+                />
+            </div>
+            <div class="field-group">
+                <label class="field-label">Phone</label>
+                <input
+                    v-model="contactPhone"
+                    class="field-input"
+                    type="tel"
+                    placeholder="+1 555 000 0000"
+                />
+            </div>
+            <p class="field-hint">
+                Your details will be shared directly with {{ job.company }}.
+            </p>
+            <p v-if="method === 'contact' && !canSubmit" class="field-warn">
+                Please fill in both email and phone.
+            </p>
+        </div>
+
+        <!-- ── Cover note ── -->
+        <div class="apply-panel__section">
+            <label class="field-label">
+                Cover note
+                <span class="field-label__opt">optional</span>
+            </label>
+            <textarea
+                v-model="coverNote"
+                class="field-input field-textarea"
+                rows="3"
+                placeholder="Say something to stand out…"
+            />
+        </div>
+
+        <!-- Error message -->
+        <p v-if="errorMsg" class="apply-panel__error">{{ errorMsg }}</p>
+
+        <!-- Actions -->
+        <div class="apply-panel__actions">
+            <button class="btn-cancel" @click="$emit('close')">Cancel</button>
+            <button
+                class="btn-submit"
+                :disabled="!canSubmit || submitting"
+                @click="handleSubmit"
+            >
+                <span v-if="submitting" class="spinner" />
+                {{ submitting ? 'Submitting…' : 'Submit application' }}
+            </button>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
 
 const props = defineProps({
     job: { type: Object, required: true },
 });
+const emit = defineEmits(['close', 'success']);
 
-const emit = defineEmits(['apply', 'deleted']);
-
-const router = useRouter();
 const authStore = useAuthStore();
-const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
-const menuOpen = ref(false);
 
-const isOwner = computed(
-    () =>
-        authStore.isEmployer &&
-        authStore.currentUser?.id === props.job.employerId
-);
+const method = ref('resume');
+const newFile = ref(null);
+const resumeUrl = ref(authStore.currentUser?.resumeUrl || '');
+const contactEmail = ref(authStore.currentUser?.email || '');
+const contactPhone = ref(authStore.currentUser?.phone || '');
+const coverNote = ref('');
+const submitting = ref(false);
+const errorMsg = ref('');
 
-const isSaved = computed(() =>
-    authStore.currentUser?.savedJobs?.includes(props.job.id)
-);
+const canSubmit = computed(() => {
+    if (method.value === 'resume') return !!(newFile.value || resumeUrl.value);
+    return !!(contactEmail.value.trim() && contactPhone.value.trim());
+});
 
-const hasApplied = computed(
-    () =>
-        authStore.isCandidate &&
-        appsStore.hasApplied(props.job.id, authStore.currentUser?.id)
-);
-
-function goToJob() {
-    router.push(`/jobs/${props.job.id}`);
+function onFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    newFile.value = file;
+    resumeUrl.value = `/resumes/${file.name}`;
 }
 
-function toggleMenu() {
-    menuOpen.value = !menuOpen.value;
+function clearFile() {
+    newFile.value = null;
+    resumeUrl.value = '';
 }
 
-async function handleSave() {
-    await authStore.toggleSaveJob(props.job.id);
-}
+async function handleSubmit() {
+    errorMsg.value = '';
+    submitting.value = true;
+    const user = authStore.currentUser;
+    const payload =
+        method.value === 'resume'
+            ? { resumeUrl: resumeUrl.value, coverNote: coverNote.value }
+            : {
+                  contactEmail: contactEmail.value,
+                  contactPhone: contactPhone.value,
+                  coverNote: coverNote.value,
+              };
 
-async function handleDelete() {
-    if (confirm('Delete this job posting?')) {
-        await jobsStore.deleteJob(props.job.id);
-        emit('deleted', props.job.id);
+    try {
+        const ok = await appsStore.applyToJob(
+            props.job.id,
+            user.id,
+            props.job.employerId,
+            method.value,
+            payload
+        );
+        if (ok) emit('success');
+        else
+            errorMsg.value =
+                appsStore.error || 'Could not submit. Please try again.';
+    } catch {
+        errorMsg.value = 'Something went wrong. Please try again.';
+    } finally {
+        submitting.value = false;
     }
-    menuOpen.value = false;
-}
-
-// ── Formatters ────────────────────────────────────────────────
-function formatWorkType(type) {
-    return (
-        { remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid' }[type] || type
-    );
-}
-
-function formatSalary(n) {
-    return n >= 1000 ? `${Math.round(n / 1000)}k` : n;
-}
-
-function truncate(text, max) {
-    return text?.length > max ? text.slice(0, max) + '…' : text;
-}
-
-function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (mins < 60) return `Posted ${mins} minute${mins !== 1 ? 's' : ''} ago`;
-    if (hours < 24) return `Posted ${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    return `Posted ${days} day${days !== 1 ? 's' : ''} ago`;
 }
 </script>
 
 <style scoped>
-.job-card {
+/* ── Panel container — inline block, no fixed, no backdrop ── */
+.apply-panel {
     background: var(--color-background-primary);
-    border: 1px solid var(--color-border-tertiary);
+    border: 1px solid var(--color-border-secondary);
     border-radius: var(--border-radius-lg);
-    padding: 20px;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    transition: box-shadow 0.15s;
-    position: relative;
-}
-.job-card:hover {
-    border-color: var(--color-border-secondary);
+    overflow: hidden;
+    /* Subtle top accent line matching the brand */
+    border-top: 3px solid #e8246a;
 }
 
-/* Header */
-.job-card__header {
+/* ── Header ── */
+.apply-panel__header {
     display: flex;
-    gap: 14px;
+    justify-content: space-between;
     align-items: flex-start;
+    padding: 20px 20px 0;
 }
-.job-card__logo {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--color-background-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.job-card__logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-.job-card__logo-fallback {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-}
-.job-card__meta {
-    flex: 1;
-}
-.job-card__title {
+.apply-panel__title {
     font-size: 16px;
     font-weight: 500;
     color: var(--color-text-primary);
-    cursor: pointer;
     margin: 0 0 2px;
-    line-height: 1.3;
 }
-.job-card__title:hover {
-    text-decoration: underline;
-}
-.job-card__company {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    margin: 0 0 4px;
-}
-.job-card__location {
+.apply-panel__sub {
     font-size: 12px;
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
     margin: 0;
+}
+.apply-panel__close {
+    background: none;
+    border: none;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+.apply-panel__close:hover {
+    color: var(--color-text-primary);
+}
+
+/* ── Method toggle ── */
+.apply-panel__methods {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px 0;
+}
+.method-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 6px;
-    flex-wrap: wrap;
-}
-.job-card__dot {
-    color: var(--color-border-secondary);
-}
-
-/* Badges */
-.job-card__badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 99px;
-    font-weight: 500;
-}
-.job-card__badge--remote {
-    background: #e1f5ee;
-    color: #0f6e56;
-}
-.job-card__badge--onsite {
-    background: #e6f1fb;
-    color: #185fa5;
-}
-.job-card__badge--hybrid {
-    background: #faeeda;
-    color: #854f0b;
-}
-.job-card__badge--promoted {
-    background: #eeedfe;
-    color: #534ab7;
-}
-
-/* Tags row */
-.job-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-.job-card__salary {
-    font-size: 12px;
-    font-weight: 500;
-    background: #e1f5ee;
-    color: #0f6e56;
-    padding: 3px 10px;
-    border-radius: 99px;
-}
-.job-card__skill {
-    font-size: 12px;
-    background: var(--color-background-secondary);
-    color: var(--color-text-secondary);
-    padding: 3px 10px;
-    border-radius: 99px;
-    border: 1px solid var(--color-border-tertiary);
-}
-
-/* Description */
-.job-card__description {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    line-height: 1.6;
-    margin: 0;
-}
-
-/* Footer */
-.job-card__footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.job-card__posted {
-    font-size: 12px;
-    color: var(--color-text-tertiary);
-}
-.job-card__actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-.job-card__save {
-    font-size: 13px;
-    padding: 7px 16px;
-    border-radius: 8px;
+    padding: 8px 10px;
     border: 1px solid var(--color-border-secondary);
-    background: transparent;
+    border-radius: var(--border-radius-md);
+    background: none;
+    font-size: 13px;
     color: var(--color-text-secondary);
     cursor: pointer;
     transition: all 0.15s;
 }
-.job-card__save:hover,
-.job-card__save.saved {
-    border-color: #534ab7;
-    color: #534ab7;
+.method-btn.active {
     background: #eeedfe;
+    border-color: #7f77dd;
+    color: #3c3489;
+    font-weight: 500;
 }
-.job-card__apply {
+
+/* ── Sections ── */
+.apply-panel__section {
+    padding: 16px 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ── Field styles ── */
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.field-label {
     font-size: 13px;
     font-weight: 500;
-    padding: 7px 18px;
-    border-radius: 8px;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.field-label__opt {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-text-tertiary);
+}
+.field-input {
+    padding: 9px 12px;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+.field-input:focus {
+    border-color: #534ab7;
+}
+.field-textarea {
+    resize: vertical;
+    min-height: 72px;
+    font-family: inherit;
+}
+.field-hint {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    margin: 0;
+}
+.field-warn {
+    font-size: 12px;
+    color: #854f0b;
+    background: #faeeda;
+    padding: 6px 10px;
+    border-radius: var(--border-radius-md);
+    margin: 0;
+}
+
+/* ── Saved resume row ── */
+.saved-resume {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--color-background-secondary);
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    font-size: 13px;
+    color: var(--color-text-primary);
+}
+.saved-resume svg {
+    color: #534ab7;
+    flex-shrink: 0;
+}
+.saved-resume__name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.text-btn {
+    background: none;
     border: none;
+    font-size: 12px;
+    color: #534ab7;
+    cursor: pointer;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* ── Upload zone ── */
+.upload-zone {
+    border: 1.5px dashed var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+.upload-zone:hover {
+    border-color: #534ab7;
+    background: #eeedfe22;
+}
+.upload-zone--filled {
+    border-color: #1d9e75;
+    background: #e1f5ee;
+}
+.upload-zone__text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+.upload-zone__hint {
+    color: var(--color-text-tertiary);
+}
+.upload-zone__filled-name {
+    font-size: 13px;
+    color: #0f6e56;
+    font-weight: 500;
+}
+
+/* ── Error ── */
+.apply-panel__error {
+    margin: 12px 20px 0;
+    font-size: 13px;
+    color: var(--color-text-danger);
+    background: #fcebeb;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-md);
+}
+
+/* ── Actions ── */
+.apply-panel__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    margin-top: 4px;
+    border-top: 1px solid var(--color-border-tertiary);
+}
+.btn-cancel {
+    padding: 9px 20px;
+    background: var(--color-background-secondary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.btn-cancel:hover {
+    border-color: var(--color-border-primary);
+    color: var(--color-text-primary);
+}
+.btn-submit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 22px;
     background: #e8246a;
     color: #fff;
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     transition: opacity 0.15s;
 }
-.job-card__apply:hover {
+.btn-submit:hover:not(:disabled) {
     opacity: 0.88;
 }
-.job-card__apply.applied {
-    background: var(--color-background-secondary);
-    color: var(--color-text-tertiary);
-    cursor: default;
-}
-.job-card__apply:disabled {
+.btn-submit:disabled {
+    opacity: 0.5;
     cursor: default;
 }
 
-/* Status badges */
-.job-card__status {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 99px;
-    font-weight: 500;
+/* ── Spinner ── */
+.spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
 }
-.job-card__status.pending {
-    background: #faeeda;
-    color: #854f0b;
-}
-.job-card__status.rejected {
-    background: #fcebeb;
-    color: #a32d2d;
-}
-
-/* Options menu */
-.job-card__menu-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--color-text-tertiary);
-    cursor: pointer;
-    padding: 0 4px;
-    line-height: 1;
-}
-.job-card__dropdown {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--color-background-primary);
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--border-radius-md);
-    display: flex;
-    flex-direction: column;
-    z-index: 10;
-    min-width: 160px;
-    overflow: hidden;
-}
-.job-card__dropdown button {
-    padding: 10px 16px;
-    text-align: left;
-    font-size: 13px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--color-text-primary);
-}
-.job-card__dropdown button:hover {
-    background: var(--color-background-secondary);
-}
-.job-card__dropdown button.danger {
-    color: var(--color-text-danger);
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>

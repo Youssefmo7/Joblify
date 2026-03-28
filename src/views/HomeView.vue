@@ -162,13 +162,20 @@
 
             <!-- Job cards -->
             <div v-else class="feed__list">
-                <JobCard
-                    v-for="job in jobsStore.filteredJobs"
-                    :key="job.id"
-                    :job="job"
-                    @apply="openApplyModal"
-                    @deleted="handleDeleted"
-                />
+                <template v-for="job in jobsStore.filteredJobs" :key="job.id">
+                    <JobCard
+                        :job="job"
+                        @apply="openApplyPanel"
+                        @deleted="handleDeleted"
+                    />
+                    <!-- Apply panel opens inline directly below the card that was clicked -->
+                    <ApplyModal
+                        v-if="applyTarget?.id === job.id"
+                        :job="job"
+                        @close="applyTarget = null"
+                        @success="handleApplySuccess"
+                    />
+                </template>
             </div>
         </main>
 
@@ -211,13 +218,7 @@
             </div>
         </aside>
 
-        <!-- Apply modal -->
-        <ApplyModal
-            v-if="applyTarget"
-            :job="applyTarget"
-            @close="applyTarget = null"
-            @success="handleApplySuccess"
-        />
+        <!-- Apply modal removed — now renders inline below each job card -->
     </div>
 </template>
 
@@ -262,12 +263,10 @@ function toggleWorkType(value) {
     jobsStore.setFilter('workType', current === value ? '' : value);
 }
 
-function openApplyModal(job) {
-    if (!authStore.isLoggedIn) {
-        // redirect to login if not logged in
-        return;
-    }
-    applyTarget.value = job;
+function openApplyPanel(job) {
+    if (!authStore.isLoggedIn) return;
+    // toggle: clicking Apply on the same job closes the panel
+    applyTarget.value = applyTarget.value?.id === job.id ? null : job;
 }
 
 function handleApplySuccess() {
@@ -275,9 +274,8 @@ function handleApplySuccess() {
 }
 
 function handleDeleted(jobId) {
-    console.log(jobId);
-
     // jobsStore already removed it locally
+    console.log(jobId);
 }
 
 onMounted(async () => {

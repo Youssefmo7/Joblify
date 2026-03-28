@@ -512,10 +512,10 @@
 
                     <!-- Logout section -->
                     <div class="danger-zone">
-                        <h3 class="danger-zone__title">Sign out</h3>
-                        <p class="danger-zone__sub">
+                        <!-- <h3 class="danger-zone__title">Sign out</h3> -->
+                        <!-- <p class="danger-zone__sub">
                             You'll be redirected to the login page.
-                        </p>
+                        </p> -->
                         <button class="logout-btn-full" @click="handleLogout">
                             <svg
                                 width="15"
@@ -533,7 +533,7 @@
                                 <polyline points="16 17 21 12 16 7" />
                                 <line x1="21" y1="12" x2="9" y2="12" />
                             </svg>
-                            Sign out of Joblify
+                            Sign out
                         </button>
                     </div>
                 </div>

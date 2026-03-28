@@ -153,9 +153,14 @@ export const useJobsStore = defineStore('jobs', {
             this.loading = true;
             this.error = null;
             try {
-                const { data } = await axios.patch(
-                    `${BASE_URL}/jobs/${jobId}`,
-                    updates
+                // Fetch the current job first so PUT sends the full object
+                const { data: existing } = await axios.get(
+                    `${BASE_URL}/jobs/${Number(jobId)}`
+                );
+                const merged = { ...existing, ...updates, id: Number(jobId) };
+                const { data } = await axios.put(
+                    `${BASE_URL}/jobs/${Number(jobId)}`,
+                    merged
                 );
                 const index = this.jobs.findIndex((j) => j.id === jobId);
                 if (index !== -1) this.jobs[index] = data;

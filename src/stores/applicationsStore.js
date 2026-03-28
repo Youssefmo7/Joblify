@@ -5,25 +5,21 @@ const BASE_URL = 'http://localhost:3000';
 
 export const useApplicationsStore = defineStore('applications', {
     state: () => ({
-        applications: [], // all loaded applications
+        applications: [],
         loading: false,
         error: null,
     }),
 
     getters: {
-        // All applications submitted by a specific candidate
         myApplications: (state) => (candidateId) =>
             state.applications.filter((a) => a.candidateId === candidateId),
 
-        // All applications received for a specific job (employer view)
         applicationsForJob: (state) => (jobId) =>
             state.applications.filter((a) => a.jobId === jobId),
 
-        // All applications across all of an employer's jobs
         applicationsForEmployer: (state) => (employerId) =>
             state.applications.filter((a) => a.employerId === employerId),
 
-        // Check if a specific candidate already applied to a job
         hasApplied: (state) => (jobId, candidateId) =>
             state.applications.some(
                 (a) => a.jobId === jobId && a.candidateId === candidateId
@@ -55,7 +51,6 @@ export const useApplicationsStore = defineStore('applications', {
                 const { data } = await axios.get(
                     `${BASE_URL}/applications?jobId=${jobId}`
                 );
-                // Merge without duplicating
                 data.forEach((incoming) => {
                     const exists = this.applications.find(
                         (a) => a.id === incoming.id
@@ -69,13 +64,11 @@ export const useApplicationsStore = defineStore('applications', {
             }
         },
 
-        // ── APPLY: candidate submits application ──────────────────
-        // applyMethod: 'resume' | 'contact'
+        // ── APPLY ─────────────────────────────────────────────────
         async applyToJob(jobId, candidateId, employerId, applyMethod, payload) {
             this.loading = true;
             this.error = null;
             try {
-                // Prevent duplicate applications
                 const { data: existing } = await axios.get(
                     `${BASE_URL}/applications?jobId=${jobId}&candidateId=${candidateId}`
                 );
@@ -85,16 +78,14 @@ export const useApplicationsStore = defineStore('applications', {
                 }
 
                 const newApplication = {
-                    jobId,
-                    candidateId,
-                    employerId,
+                    jobId: Number(jobId),
+                    candidateId: Number(candidateId),
+                    employerId: Number(employerId),
                     applyMethod,
                     status: 'pending',
                     coverNote: payload.coverNote || '',
-                    // Resume method
                     resumeUrl:
                         applyMethod === 'resume' ? payload.resumeUrl : null,
-                    // Contact method
                     contactEmail:
                         applyMethod === 'contact' ? payload.contactEmail : null,
                     contactPhone:
@@ -108,10 +99,7 @@ export const useApplicationsStore = defineStore('applications', {
                     newApplication
                 );
                 this.applications.push(created);
-
-                // Increment applicantsCount on the job
                 await this._incrementApplicantsCount(jobId);
-
                 return true;
             } catch (err) {
                 this.error = 'Could not submit application.';
@@ -121,7 +109,7 @@ export const useApplicationsStore = defineStore('applications', {
             }
         },
 
-        // ── CANCEL: candidate withdraws application ───────────────
+        // ── CANCEL ────────────────────────────────────────────────
         async cancelApplication(applicationId, jobId) {
             this.loading = true;
             this.error = null;
@@ -141,26 +129,30 @@ export const useApplicationsStore = defineStore('applications', {
         },
 
         // ── RESPOND: employer accepts or rejects ──────────────────
-        // newStatus: 'accepted' | 'rejected'
         async respondToApplication(applicationId, newStatus) {
             this.loading = true;
             this.error = null;
             try {
-                const { data: updated } = await axios.patch(
-                    `${BASE_URL}/applications/${applicationId}`,
-                    {
-                        status: newStatus,
-                        updatedAt: new Date().toISOString(),
-                    }
-                );
                 const index = this.applications.findIndex(
                     (a) => a.id === applicationId
                 );
-                if (index !== -1) this.applications[index] = updated;
+                if (index === -1)
+                    throw new Error('Application not found in local state');
 
-                // Create a notification for the candidate (bonus feature)
+                // PUT requires the full object — merge current record with the update
+                const merged = {
+                    ...this.applications[index],
+                    id: Number(applicationId),
+                    status: newStatus,
+                    updatedAt: new Date().toISOString(),
+                };
+
+                const { data: updated } = await axios.put(
+                    `${BASE_URL}/applications/${Number(applicationId)}`,
+                    merged
+                );
+                this.applications[index] = updated;
                 await this._notifyCandidate(updated, newStatus);
-
                 return true;
             } catch (err) {
                 this.error = 'Could not update application status.';
@@ -174,9 +166,11 @@ export const useApplicationsStore = defineStore('applications', {
         async _incrementApplicantsCount(jobId) {
             try {
                 const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
+                    `${BASE_URL}/jobs/${Number(jobId)}`
                 );
-                await axios.patch(`${BASE_URL}/jobs/${jobId}`, {
+                await axios.put(`${BASE_URL}/jobs/${Number(jobId)}`, {
+                    ...job,
+                    id: Number(jobId),
                     applicantsCount: (job.applicantsCount || 0) + 1,
                 });
             } catch (e) {
@@ -187,9 +181,11 @@ export const useApplicationsStore = defineStore('applications', {
         async _decrementApplicantsCount(jobId) {
             try {
                 const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
+                    `${BASE_URL}/jobs/${Number(jobId)}`
                 );
-                await axios.patch(`${BASE_URL}/jobs/${jobId}`, {
+                await axios.put(`${BASE_URL}/jobs/${Number(jobId)}`, {
+                    ...job,
+                    id: Number(jobId),
                     applicantsCount: Math.max(
                         0,
                         (job.applicantsCount || 1) - 1
@@ -200,7 +196,7 @@ export const useApplicationsStore = defineStore('applications', {
             }
         },
 
-        // ── INTERNAL: post a notification for candidate ───────────
+        // ── INTERNAL: notify candidate ────────────────────────────
         async _notifyCandidate(application, status) {
             const messageMap = {
                 accepted: `Your application for job #${application.jobId} was accepted!`,
