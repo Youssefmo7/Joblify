@@ -57,7 +57,7 @@
                     <!-- Notification bell -->
                     <button
                         class="navbar__icon-btn"
-                        @click="toggleNotifications"
+                        @click.stop="toggleNotifications"
                         aria-label="Notifications"
                     >
                         <svg
@@ -84,7 +84,7 @@
                     <div
                         v-if="showNotifications"
                         class="navbar__dropdown navbar__dropdown--notifs"
-                        v-click-outside="closeNotifications"
+                        @click.stop
                     >
                         <div class="navbar__dropdown-header">
                             <span>Notifications</span>
@@ -112,11 +112,30 @@
                         </div>
                     </div>
 
+                    <!-- 
+                    <button class="navbar__logout-btn" @click="handleLogout">
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Logout</span>
+                    </button> -->
+
                     <!-- Avatar + user menu -->
                     <div class="navbar__avatar-wrap">
                         <button
                             class="navbar__avatar"
-                            @click="toggleUserMenu"
+                            @click.stop="toggleUserMenu"
                             aria-label="User menu"
                         >
                             <img
@@ -129,87 +148,96 @@
                             </span>
                         </button>
 
-                        <div
-                            v-if="showUserMenu"
-                            class="navbar__dropdown"
-                            v-click-outside="closeUserMenu"
-                        >
-                            <div class="navbar__dropdown-header">
-                                <span>{{ authStore.currentUser?.name }}</span>
-                                <span class="role-badge">
-                                    {{ authStore.currentUser?.role }}
-                                </span>
-                            </div>
-
-                            <!-- Candidate links -->
-                            <template v-if="authStore.isCandidate">
-                                <RouterLink
-                                    to="/profile"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    My profile
-                                </RouterLink>
-                                <RouterLink
-                                    to="/my-applications"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    My applications
-                                </RouterLink>
-                            </template>
-
-                            <!-- Employer links -->
-                            <template v-if="authStore.isEmployer">
-                                <RouterLink
-                                    to="/employer/dashboard"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    My dashboard
-                                </RouterLink>
-                                <RouterLink
-                                    to="/employer/post-job"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    Post a job
-                                </RouterLink>
-                            </template>
-
-                            <!-- Admin links -->
-                            <template v-if="authStore.isAdmin">
-                                <RouterLink
-                                    to="/admin"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    Admin dashboard
-                                </RouterLink>
-                                <RouterLink
-                                    to="/admin/pending-jobs"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    Pending jobs
-                                </RouterLink>
-                                <RouterLink
-                                    to="/admin/moderation"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    Moderation
-                                </RouterLink>
-                            </template>
-
-                            <div class="navbar__dropdown-divider" />
-                            <button
-                                class="navbar__dropdown-item danger"
-                                @click="handleLogout"
+                        <transition name="dropdown">
+                            <div
+                                v-if="showUserMenu"
+                                class="navbar__dropdown"
+                                @click.stop
                             >
-                                Sign out
-                            </button>
-                        </div>
+                                <div class="navbar__dropdown-header">
+                                    <span>
+                                        {{ authStore.currentUser?.name }}
+                                    </span>
+                                    <span class="role-badge">
+                                        {{ authStore.currentUser?.role }}
+                                    </span>
+                                </div>
+
+                                <!-- Candidate links -->
+                                <template v-if="authStore.isCandidate">
+                                    <RouterLink
+                                        to="/profile"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        My profile
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        to="/my-applications"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        My applications
+                                    </RouterLink>
+                                </template>
+
+                                <!-- Employer links -->
+                                <template v-if="authStore.isEmployer">
+                                    <RouterLink
+                                        to="/employer/dashboard"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        My dashboard
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        to="/employer/post-job"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        Post a job
+                                    </RouterLink>
+                                </template>
+
+                                <!-- Admin links -->
+                                <template v-if="authStore.isAdmin">
+                                    <RouterLink
+                                        to="/admin"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        Admin dashboard
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        to="/admin/pending-jobs"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        Pending jobs
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        to="/admin/moderation"
+                                        class="navbar__dropdown-item"
+                                        @click="closeUserMenu"
+                                    >
+                                        Moderation
+                                    </RouterLink>
+                                </template>
+
+                                <div class="navbar__dropdown-divider" />
+
+                                <button
+                                    class="navbar__dropdown-item danger"
+                                    @click="handleLogout"
+                                >
+                                    Sign out
+                                </button>
+                            </div>
+                        </transition>
                     </div>
                 </template>
             </div>
@@ -218,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
@@ -282,9 +310,9 @@ function toggleNotifications() {
     if (showNotifications.value) loadNotifications();
 }
 
-function closeNotifications() {
-    showNotifications.value = false;
-}
+// function closeNotifications() {
+//     showNotifications.value = false;
+// }
 
 // ── User menu ─────────────────────────────────────────────────
 function toggleUserMenu() {
@@ -313,20 +341,52 @@ function timeAgo(dateStr) {
     return `${days}d ago`;
 }
 
-// ── Click outside directive ───────────────────────────────────
-const vClickOutside = {
-    mounted(el, binding) {
-        el._clickOutside = (e) => {
-            if (!el.contains(e.target)) binding.value();
-        };
-        document.addEventListener('click', el._clickOutside);
-    },
-    unmounted(el) {
-        document.removeEventListener('click', el._clickOutside);
-    },
-};
+// ── Click outside handling ───────────────────────────────────
+function handleClickOutside(event) {
+    // Close dropdowns if clicking outside of them
+    const target = event.target;
 
-onMounted(loadNotifications);
+    // Check if click is outside notifications
+    if (showNotifications.value) {
+        const notifDropdown = document.querySelector(
+            '.navbar__dropdown--notifs'
+        );
+        const notifButton = document.querySelector('.navbar__icon-btn');
+        if (
+            notifDropdown &&
+            !notifDropdown.contains(target) &&
+            notifButton &&
+            !notifButton.contains(target)
+        ) {
+            showNotifications.value = false;
+        }
+    }
+
+    // Check if click is outside user menu
+    if (showUserMenu.value) {
+        const userDropdown = document.querySelector(
+            '.navbar__avatar-wrap .navbar__dropdown'
+        );
+        const avatarButton = document.querySelector('.navbar__avatar');
+        if (
+            userDropdown &&
+            !userDropdown.contains(target) &&
+            avatarButton &&
+            !avatarButton.contains(target)
+        ) {
+            showUserMenu.value = false;
+        }
+    }
+}
+
+onMounted(() => {
+    loadNotifications();
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style scoped>
@@ -419,6 +479,59 @@ onMounted(loadNotifications);
     opacity: 0.88;
 }
 
+/* Logout button */
+.navbar__logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.navbar__logout-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    transition: width 0.3s ease;
+    z-index: 0;
+}
+.navbar__logout-btn:hover::before {
+    width: 100%;
+}
+.navbar__logout-btn:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+.navbar__logout-btn svg,
+.navbar__logout-btn span {
+    position: relative;
+    z-index: 1;
+}
+.navbar__logout-btn svg {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+.navbar__logout-btn:hover svg {
+    transform: translateX(2px);
+}
+.navbar__logout-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
 /* Icon button (bell) */
 .navbar__icon-btn {
     position: relative;
@@ -484,12 +597,14 @@ onMounted(loadNotifications);
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    background: var(--color-background-primary);
+    background: #534ab7;
+    color: white;
     border: 1px solid var(--color-border-secondary);
     border-radius: var(--border-radius-lg);
     min-width: 220px;
     z-index: 100;
     overflow: hidden;
+    border-radius: 5px;
 }
 .navbar__dropdown--notifs {
     min-width: 300px;
@@ -593,5 +708,17 @@ onMounted(loadNotifications);
     font-size: 12px;
     cursor: pointer;
     padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar__logout-btn span {
+        display: none;
+    }
+    .navbar__logout-btn {
+        padding: 8px;
+        min-width: 36px;
+        justify-content: center;
+    }
 }
 </style>
