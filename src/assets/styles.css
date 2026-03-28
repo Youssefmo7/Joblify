@@ -1,11 +1,26 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f4f5f7;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-border-primary: #e2e8f0;
+  --color-border-secondary: #cbd5e1;
+  --color-border-tertiary: #f1f5f9;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+}
+
 /* Global styles for Joblify */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
+  background-color: var(--color-background-tertiary);
 }
 
 #app {
