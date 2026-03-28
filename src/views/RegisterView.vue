@@ -33,16 +33,18 @@
                         placeholder="Jane Doe"
                         required
                     />
+                    <p v-if="errors.name" class="field-error">{{ errors.name }}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email</label>
                     <input
                         v-model="email"
                         class="form-input"
-                        type="email"
                         placeholder="you@example.com"
                         required
-                    />
+                        />
+                        <!-- type="email" -->
+                    <p v-if="errors.email" class="field-error">{{ errors.email }}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
@@ -52,8 +54,11 @@
                         type="password"
                         placeholder="••••••••"
                         required
-                        minlength="6"
-                    />
+                        />
+                        <!-- minlength="6" -->
+                    <p v-if="errors.password" class="field-error">
+                        {{ errors.password }}
+                    </p>
                 </div>
 
                 <!-- Candidate extras -->
@@ -68,6 +73,9 @@
                         type="text"
                         placeholder="Frontend Developer"
                     />
+                    <p v-if="errors.jobTitle" class="field-error">
+                        {{ errors.jobTitle }}
+                    </p>
                 </div>
 
                 <!-- Employer extras -->
@@ -82,17 +90,20 @@
                         type="url"
                         placeholder="https://yourcompany.com"
                     />
+                    <p v-if="errors.website" class="field-error">
+                        {{ errors.website }}
+                    </p>
                 </div>
 
                 <p v-if="authStore.error" class="form-error">
                     {{ authStore.error }}
                 </p>
 
-                <button
-                    class="btn-primary"
-                    type="submit"
-                    :disabled="authStore.loading"
-                >
+            <button
+                class="btn-primary"
+                type="submit"
+                :disabled="authStore.loading"
+            >
                     {{
                         authStore.loading
                             ? 'Creating account…'
@@ -110,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -123,17 +134,95 @@ const email = ref('');
 const password = ref('');
 const jobTitle = ref('');
 const website = ref('');
+const errors = ref({
+    name: '',
+    email: '',
+    password: '',
+    jobTitle: '',
+    website: '',
+});
+
+watch(role, () => {
+    errors.value.jobTitle = '';
+    errors.value.website = '';
+    authStore.error = null;
+});
+
+function validateForm() {
+    const nextErrors = {
+        name: '',
+        email: '',
+        password: '',
+        jobTitle: '',
+        website: '',
+    };
+
+    const trimmedName = name.value.trim();
+    if (!trimmedName) {
+        nextErrors.name = 'Name is required.';
+    } else if (trimmedName.length < 2) {
+        nextErrors.name = 'Name must be at least 2 characters.';
+    }
+
+    const trimmedEmail = email.value.trim();
+    if (!trimmedEmail) {
+        nextErrors.email = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        nextErrors.email = 'Enter a valid email address.';
+    }
+
+    const passwordValue = password.value;
+    if (!passwordValue) {
+        nextErrors.password = 'Password is required.';
+    } else if (passwordValue.length < 8) {
+        nextErrors.password = 'Password must be at least 8 characters.';
+    } else if (!/[a-z]/.test(passwordValue)) {
+        nextErrors.password = 'Password must include a lowercase letter.';
+    } else if (!/[A-Z]/.test(passwordValue)) {
+        nextErrors.password = 'Password must include an uppercase letter.';
+    } else if (!/[0-9]/.test(passwordValue)) {
+        nextErrors.password = 'Password must include a number.';
+    } else if (!/[^A-Za-z0-9]/.test(passwordValue)) {
+        nextErrors.password = 'Password must include a special character.';
+    }
+
+    if (role.value === 'candidate' && jobTitle.value.trim().length > 0) {
+        if (jobTitle.value.trim().length < 2) {
+            nextErrors.jobTitle = 'Job title must be at least 2 characters.';
+        }
+    }
+
+    if (role.value === 'employer' && website.value.trim().length > 0) {
+        try {
+            const url = new URL(website.value.trim());
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                nextErrors.website = 'Website must start with http or https.';
+            }
+        } catch {
+            nextErrors.website = 'Enter a valid website URL.';
+        }
+    }
+
+    errors.value = nextErrors;
+    return Object.values(nextErrors).every((message) => !message);
+}
 
 async function handleRegister() {
+    authStore.error = null;
+    if (!validateForm()) return;
+
     const payload = {
-        name: name.value,
-        email: email.value,
+        name: name.value.trim(),
+        email: email.value.trim(),
         password: password.value,
         role: role.value,
-        ...(role.value === 'candidate' && { title: jobTitle.value }),
+        ...(role.value === 'candidate' &&
+            jobTitle.value.trim() && {
+                title: jobTitle.value.trim(),
+            }),
         ...(role.value === 'employer' && {
-            companyName: name.value,
-            website: website.value,
+            companyName: name.value.trim(),
+            ...(website.value.trim() && { website: website.value.trim() }),
         }),
     };
 
@@ -233,6 +322,11 @@ async function handleRegister() {
 }
 .form-error {
     font-size: 13px;
+    color: var(--color-text-danger);
+    margin: 0;
+}
+.field-error {
+    font-size: 12px;
     color: var(--color-text-danger);
     margin: 0;
 }
