@@ -18,9 +18,7 @@ import PostJobView from '@/views/employer/PostJobView.vue';
 import ApplicantsView from '@/views/employer/ApplicantsView.vue';
 
 // ── Admin views ───────────────────────────────────────────────
-// import AdminDashboard from '@/views/admin/AdminDashboard.vue';
-import PendingJobsView from '@/views/admin/PendingJobsView.vue';
-import ModerationView from '@/views/admin/ModerationView.vue';
+import AdminDashboard from '@/components/AdminDashboard.vue';
 
 const routes = [
     // ── Public ────────────────────────────────────────────────
@@ -88,23 +86,11 @@ const routes = [
     },
 
     // ── Admin ─────────────────────────────────────────────────
-    // {
-    //     path: '/admin',
-    //     name: 'admin-dashboard',
-    //     component: AdminDashboard,
-    //     meta: { requiresAuth: true, role: 'admin' },
-    // },
     {
-        path: '/admin/pending-jobs',
-        name: 'pending-jobs',
-        component: PendingJobsView,
-        meta: { requiresAuth: true, role: 'admin' },
-    },
-    {
-        path: '/admin/moderation',
-        name: 'moderation',
-        component: ModerationView,
-        meta: { requiresAuth: true, role: 'admin' },
+        path: '/admin',
+        name: 'admin-dashboard',
+        component: AdminDashboard,
+        meta: { hideNavbar: true },
     },
 
     // ── Catch-all 404 ─────────────────────────────────────────

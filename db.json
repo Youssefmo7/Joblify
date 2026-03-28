@@ -20,7 +20,8 @@
       "savedJobs": [
         2
       ],
-      "createdAt": "2025-01-10T09:00:00Z"
+      "createdAt": "2025-01-10T09:00:00Z",
+      "banned": true
     },
     {
       "id": "2",
@@ -201,7 +202,7 @@
         "Gym membership"
       ],
       "deadline": "2026-04-20T23:59:59Z",
-      "status": "pending",
+      "status": "approved",
       "applicantsCount": 0,
       "promoted": false,
       "createdAt": "2026-03-27T14:00:00Z"
@@ -298,7 +299,7 @@
       "userRole": "candidate",
       "userName": "Jane Doe",
       "text": "Does this role sponsor visas?",
-      "status": "visible",
+      "status": "hidden",
       "createdAt": "2026-03-25T15:00:00Z"
     },
     {
@@ -308,7 +309,7 @@
       "userRole": "employer",
       "userName": "Google LLC",
       "text": "Yes, we do sponsor H1-B visas for qualified candidates.",
-      "status": "visible",
+      "status": "hidden",
       "createdAt": "2026-03-25T16:30:00Z"
     },
     {
@@ -317,7 +318,7 @@
       "userRole": "candidate",
       "userName": "Ali",
       "text": "dd",
-      "status": "visible",
+      "status": "hidden",
       "createdAt": "2026-03-28T18:50:02.865Z",
       "id": "Pxgzn0QRT0s"
     },
@@ -327,7 +328,7 @@
       "userRole": "candidate",
       "userName": "Ali",
       "text": "nicer",
-      "status": "visible",
+      "status": "hidden",
       "createdAt": "2026-03-28T18:50:09.484Z",
       "id": "i1gTsTo3U4c"
     },
@@ -337,7 +338,7 @@
       "userRole": "candidate",
       "userName": "Ali",
       "text": "dd",
-      "status": "visible",
+      "status": "hidden",
       "createdAt": "2026-03-28T18:54:40.379Z",
       "id": "kUnRLwQpmng"
     }
@@ -358,6 +359,14 @@
       "message": "Jane Doe applied for Senior Frontend Engineer.",
       "read": true,
       "createdAt": "2026-03-25T10:00:00Z"
+    },
+    {
+      "userId": 2,
+      "type": "job_approved",
+      "message": "Your job posting \"Backend Engineer - Python\" has been approved and is now live.",
+      "read": false,
+      "createdAt": "2026-03-28T20:40:45.380Z",
+      "id": "M_zwvG1HC3M"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
