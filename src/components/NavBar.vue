@@ -189,20 +189,6 @@
                                 >
                                     Admin dashboard
                                 </RouterLink>
-                                <RouterLink
-                                    to="/admin/pending-jobs"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    Pending jobs
-                                </RouterLink>
-                                <RouterLink
-                                    to="/admin/moderation"
-                                    class="navbar__dropdown-item"
-                                    @click="closeUserMenu"
-                                >
-                                    Moderation
-                                </RouterLink>
                             </template>
 
                             <div class="navbar__dropdown-divider" />
