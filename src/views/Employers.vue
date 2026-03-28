@@ -1,7 +1,5 @@
 <template>
-  <div class="employers">
-    <EmployerDashboard />
-  </div>
+  <EmployerDashboard />
 </template>
 
 <script>
@@ -14,9 +12,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.employers {
-  padding: 20px;
-}
-</style>

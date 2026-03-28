@@ -262,6 +262,29 @@ export const useAppStore = defineStore('app', {
             );
         },
 
+        // Employer getters
+        activeJobs(state) {
+            return state.jobs.filter((j) => j.status === 'active');
+        },
+        pendingApplications(state) {
+            return state.applications
+                .filter((a) => a.status === 'pending')
+                .map((a) => {
+                    const job = state.jobs.find((j) => j.id === a.jobId);
+                    return {
+                        ...a,
+                        jobTitle: job?.title || 'Unknown Position',
+                        avatar: `https://i.pravatar.cc/150?img=${(a.id % 50) + 1}`,
+                    };
+                });
+        },
+        unreviewedCount(state) {
+            return state.applications.filter((a) => a.status === 'pending').length;
+        },
+        totalApplicants(state) {
+            return state.applications.length;
+        },
+
         myApplications(state) {
             return state.applications
                 .filter((a) => a.candidateId === state.currentUser.id)
@@ -366,6 +389,16 @@ export const useAppStore = defineStore('app', {
             this.moderationQueue = this.moderationQueue.filter(
                 (c) => c.id !== commentId
             );
+        },
+
+        // employer actions
+        acceptApplication(appId) {
+            const app = this.applications.find((a) => a.id === appId);
+            if (app) app.status = 'accepted';
+        },
+        rejectApplication(appId) {
+            const app = this.applications.find((a) => a.id === appId);
+            if (app) app.status = 'rejected';
         },
     },
 });
