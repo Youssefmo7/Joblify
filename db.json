@@ -81,6 +81,64 @@
       "profileViews": 0,
       "createdAt": "2026-03-28T06:58:27.548Z",
       "id": "2SlE6xXHBY8"
+    },
+    {
+      "name": "Mahmoud Abbas",
+      "email": "abbas@gmail.dd",
+      "password": "123456",
+      "role": "candidate",
+      "title": "Backend",
+      "avatar": "",
+      "skills": [],
+      "savedJobs": [
+        "2",
+        "1"
+      ],
+      "profileViews": 0,
+      "createdAt": "2026-03-28T14:11:18.668Z",
+      "id": "K59FD4zsYUk",
+      "phone": "",
+      "linkedin": "",
+      "resumeUrl": ""
+    },
+    {
+      "name": "abbas",
+      "email": "abbas@gmail.com",
+      "password": "123456",
+      "role": "candidate",
+      "title": "doctor",
+      "avatar": "https://www.triatlon.dk/wp-content/uploads/2016/05/dummy-profile-pic-male.jpg",
+      "skills": [
+        "Html",
+        "css",
+        "js",
+        "bootstrap"
+      ],
+      "savedJobs": [],
+      "profileViews": 0,
+      "createdAt": "2026-03-28T14:27:18.476Z",
+      "id": "j06oyHCOEO0",
+      "phone": "",
+      "linkedin": "",
+      "resumeUrl": ""
+    },
+    {
+      "name": "Ali",
+      "email": "ali@gmail.com",
+      "password": "123456",
+      "role": "candidate",
+      "title": "Engineer",
+      "avatar": "",
+      "skills": [],
+      "savedJobs": [
+        "3"
+      ],
+      "profileViews": 0,
+      "createdAt": "2026-03-28T15:19:03.095Z",
+      "id": "LsEb3gW6aVk",
+      "phone": "",
+      "linkedin": "",
+      "resumeUrl": "/resumes/Lab 1.pdf"
     }
   ],
   "jobs": [
@@ -199,7 +257,7 @@
         "Gym membership"
       ],
       "deadline": "2026-04-20T23:59:59Z",
-      "status": "pending",
+      "status": "approved",
       "applicantsCount": 0,
       "promoted": false,
       "createdAt": "2026-03-27T14:00:00Z"
@@ -335,6 +393,16 @@
       "status": "visible",
       "createdAt": "2026-03-28T08:52:28.773Z",
       "id": "pppw9nECAcc"
+    },
+    {
+      "jobId": "2",
+      "userId": "K59FD4zsYUk",
+      "userRole": "candidate",
+      "userName": "Mahmoud Abbas",
+      "text": "T",
+      "status": "visible",
+      "createdAt": "2026-03-28T14:11:42.906Z",
+      "id": "DEcsAtEoeEw"
     }
   ],
   "notifications": [
@@ -361,6 +429,13 @@
       "read": false,
       "createdAt": "2026-03-28T16:06:28.820Z",
       "id": "7ciRTgm413c"
+    },
+    {
+      "type": "job_approved",
+      "message": "Your job posting \"Backend Engineer - Python\" has been approved and is now live.",
+      "read": false,
+      "createdAt": "2026-03-28T14:16:11.886Z",
+      "id": "DC7It2CzgBU"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
