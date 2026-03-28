@@ -6,6 +6,7 @@ import HomeView from '@/views/HomeView.vue';
 import JobDetailView from '@/views/JobDetailView.vue';
 import LoginView from '@/views/LoginView.vue';
 import RegisterView from '@/views/RegisterView.vue';
+import NotFoundView from '@/views/NotFoundView.vue';
 
 // ── Candidate views ───────────────────────────────────────────
 import ProfileView from '@/views/candidate/ProfileView.vue';
@@ -96,7 +97,8 @@ const routes = [
     // ── Catch-all 404 ─────────────────────────────────────────
     {
         path: '/:pathMatch(.*)*',
-        redirect: '/',
+        name: 'not-found',
+        component: NotFoundView,
     },
 ];
 
