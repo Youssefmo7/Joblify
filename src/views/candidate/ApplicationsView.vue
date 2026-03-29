@@ -117,13 +117,25 @@
                         v-if="app.status === 'pending'"
                         class="btn-cancel"
                         :disabled="appsStore.loading"
-                        @click="cancelApp(app)"
+                        @click="openWithdrawConfirm(app)"
                     >
                         Withdraw application
                     </button>
                 </div>
             </div>
         </div>
+
+        <!-- Confirmation Modal -->
+        <ConfirmationModal
+            :is-open="confirmModal.isOpen"
+            title="Withdraw application?"
+            :message="`You're about to withdraw your application for ${confirmModal.jobTitle}. This action cannot be undone.`"
+            confirm-text="Withdraw"
+            cancel-text="Keep application"
+            type="warning"
+            @confirm="handleWithdrawConfirm"
+            @cancel="closeConfirmModal"
+        />
     </div>
 </template>
 
@@ -132,12 +144,19 @@ import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 
 const activeTab = ref('all');
+
+const confirmModal = ref({
+    isOpen: false,
+    app: null,
+    jobTitle: '',
+});
 
 const tabs = [
     { label: 'All', value: 'all' },
@@ -164,9 +183,25 @@ function getJob(jobId) {
     return jobsStore.jobs.find((j) => j.id === jobId) || null;
 }
 
-async function cancelApp(app) {
-    if (!confirm('Withdraw this application?')) return;
-    await appsStore.cancelApplication(app.id, app.jobId);
+function openWithdrawConfirm(app) {
+    const job = getJob(app.jobId);
+    confirmModal.value = {
+        isOpen: true,
+        app: app,
+        jobTitle: job?.title || `Job #${app.jobId}`,
+    };
+}
+
+function closeConfirmModal() {
+    confirmModal.value.isOpen = false;
+}
+
+async function handleWithdrawConfirm() {
+    if (confirmModal.value.app) {
+        const app = confirmModal.value.app;
+        await appsStore.cancelApplication(app.id, app.jobId);
+        closeConfirmModal();
+    }
 }
 
 function formatDate(d) {
