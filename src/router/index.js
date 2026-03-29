@@ -15,6 +15,7 @@ import ApplicationsView from '@/views/candidate/ApplicationsView.vue';
 // ── Employer views ────────────────────────────────────────────
 import EmployerDashboard from '@/views/employer/DashboardView.vue';
 import PostJobView from '@/views/employer/PostJobView.vue';
+import EmployerProfileView from '@/views/employer/ProfileView.vue';
 // import EditJobView from '@/views/employer/EditJobView.vue';
 import ApplicantsView from '@/views/employer/ApplicantsView.vue';
 
@@ -72,6 +73,12 @@ const routes = [
         name: 'post-job',
         component: PostJobView,
         meta: { requiresAuth: true, role: 'employer', hideNavbar: true },
+    },
+    {
+        path: '/employer/profile',
+        name: 'employer-profile',
+        component: EmployerProfileView,
+        meta: { requiresAuth: true, role: 'employer' },
     },
     // {
     //     path: '/employer/jobs/:id/edit',
