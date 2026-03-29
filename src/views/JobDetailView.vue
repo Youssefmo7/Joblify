@@ -48,7 +48,7 @@
                     class="btn-applied"
                     disabled
                 >
-                    Applied
+                    ✓ Applied
                 </button>
                 <button
                     v-if="authStore.isCandidate"
@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <!-- Apply panel — renders inline below the header, no overlay -->
+        <!-- Apply panel — renders inline below the header -->
         <ApplyModal
             v-if="showApply"
             :job="job"
@@ -121,29 +121,42 @@
                     </div>
                 </section>
 
-                <!-- Comments -->
+                <!-- ── Comments ─────────────────────────────────── -->
                 <section class="detail-section">
-                    <h2 class="detail-section__title">Comments</h2>
+                    <h2 class="detail-section__title">
+                        Comments ({{ visibleComments.length }})
+                    </h2>
 
-                    <!-- Post comment -->
+                    <!-- Post comment (logged-in users only) -->
                     <div v-if="authStore.isLoggedIn" class="comment-form">
                         <textarea
                             v-model="newComment"
                             class="comment-form__input"
                             rows="2"
                             placeholder="Ask a question or leave a comment…"
+                            @keydown.ctrl.enter.prevent="postComment"
                         />
-                        <button
-                            class="btn-primary btn-sm"
-                            :disabled="!newComment.trim() || postingComment"
-                            @click="postComment"
-                        >
-                            {{ postingComment ? 'Posting…' : 'Post' }}
-                        </button>
+                        <div class="comment-form__footer">
+                            <span class="comment-form__hint">
+                                Ctrl + Enter to post
+                            </span>
+                            <button
+                                class="btn-primary btn-sm"
+                                :disabled="!newComment.trim() || postingComment"
+                                @click="postComment"
+                            >
+                                {{ postingComment ? 'Posting…' : 'Post' }}
+                            </button>
+                        </div>
                     </div>
                     <p v-else class="comment-guest">
                         <RouterLink to="/login">Sign in</RouterLink>
                         to leave a comment.
+                    </p>
+
+                    <!-- Error -->
+                    <p v-if="commentError" class="comment-error">
+                        {{ commentError }}
                     </p>
 
                     <!-- Comment list -->
@@ -174,11 +187,19 @@
                                 <span class="comment-item__time">
                                     {{ timeAgo(c.createdAt) }}
                                 </span>
-                                <!-- Admin: hide button -->
+                                <!-- Delete own comment -->
+                                <button
+                                    v-if="authStore.currentUser?.id == c.userId"
+                                    class="comment-item__delete"
+                                    @click="deleteComment(c)"
+                                >
+                                    Delete
+                                </button>
+                                <!-- Admin: hide -->
                                 <button
                                     v-if="authStore.isAdmin"
                                     class="comment-item__hide"
-                                    @click="hideComment(c.id)"
+                                    @click="hideComment(c)"
                                 >
                                     Hide
                                 </button>
@@ -255,6 +276,7 @@ const appsStore = useApplicationsStore();
 const showApply = ref(false);
 const newComment = ref('');
 const postingComment = ref(false);
+const commentError = ref('');
 const comments = ref([]);
 
 const job = computed(() => jobsStore.currentJob);
@@ -263,6 +285,7 @@ const isSaved = computed(() =>
     authStore.currentUser?.savedJobs?.includes(job.value?.id)
 );
 
+// FIX: use == (loose equality) so "1" == 1 — handles both numeric and string IDs
 const hasApplied = computed(
     () =>
         authStore.isCandidate &&
@@ -273,22 +296,31 @@ const visibleComments = computed(() =>
     comments.value.filter((c) => c.status === 'visible')
 );
 
-// ── Data loading ──────────────────────────────────────────────
+// ── Load comments ─────────────────────────────────────────────
 async function loadComments() {
-    // Cast to Number — json-server stores jobId as a number,
-    // route.params.id is always a string, causing a type mismatch with no results.
-    const { data } = await axios.get(
-        `${BASE_URL}/comments?jobId=${Number(route.params.id)}`
-    );
-    comments.value = data;
+    try {
+        // FIX: pass the raw route param — do NOT wrap in Number().
+        // Job IDs like "N9w7HxMMTiM" are strings; Number("N9w7HxMMTiM") = NaN
+        // which makes the query return nothing. Use the ID as-is.
+        const jobId = route.params.id;
+        const { data } = await axios.get(`${BASE_URL}/comments?jobId=${jobId}`);
+        comments.value = data;
+    } catch (err) {
+        console.error('Failed to load comments', err);
+    }
 }
 
+// ── Post comment ──────────────────────────────────────────────
 async function postComment() {
     if (!newComment.value.trim()) return;
+    commentError.value = '';
     postingComment.value = true;
     try {
+        // FIX: store jobId as the raw value from the fetched job object,
+        // not from route.params (which is always a string).
+        // This matches whatever type json-server used when the job was created.
         const { data } = await axios.post(`${BASE_URL}/comments`, {
-            jobId: Number(job.value.id), // always store as number
+            jobId: job.value.id,
             userId: authStore.currentUser.id,
             userRole: authStore.currentUser.role,
             userName: authStore.currentUser.name,
@@ -299,21 +331,35 @@ async function postComment() {
         comments.value.push(data);
         newComment.value = '';
     } catch (err) {
+        commentError.value = 'Failed to post comment. Please try again.';
         console.error('Failed to post comment', err);
     } finally {
         postingComment.value = false;
     }
 }
 
-async function hideComment(commentId) {
-    const c = comments.value.find((c) => c.id === commentId);
-    if (!c) return;
-    await axios.put(`${BASE_URL}/comments/${Number(commentId)}`, {
-        ...c,
-        id: Number(commentId),
-        status: 'hidden',
-    });
-    c.status = 'hidden';
+// ── Delete own comment ────────────────────────────────────────
+async function deleteComment(comment) {
+    if (!confirm('Delete this comment?')) return;
+    try {
+        await axios.delete(`${BASE_URL}/comments/${comment.id}`);
+        comments.value = comments.value.filter((c) => c.id !== comment.id);
+    } catch (err) {
+        console.error('Failed to delete comment', err);
+    }
+}
+
+// ── Admin: hide comment ───────────────────────────────────────
+async function hideComment(comment) {
+    try {
+        await axios.put(`${BASE_URL}/comments/${comment.id}`, {
+            ...comment,
+            status: 'hidden',
+        });
+        comment.status = 'hidden';
+    } catch (err) {
+        console.error('Failed to hide comment', err);
+    }
 }
 
 function handleApplySuccess() {
@@ -340,11 +386,13 @@ function timeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr).getTime();
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
+    if (hours < 1) return 'just now';
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
 }
 
 onMounted(async () => {
+    // FIX: pass route.params.id as a string — fetchJob just uses it in the URL
     await jobsStore.fetchJob(route.params.id);
     await loadComments();
     if (authStore.isCandidate) {
@@ -467,6 +515,7 @@ onMounted(async () => {
     border: none;
     border-radius: var(--border-radius-md);
     cursor: pointer;
+    transition: opacity 0.15s;
 }
 .btn-primary:hover:not(:disabled) {
     opacity: 0.88;
@@ -479,6 +528,7 @@ onMounted(async () => {
     padding: 7px 16px;
     font-size: 13px;
 }
+
 .btn-applied {
     padding: 9px 20px;
     background: var(--color-background-secondary);
@@ -592,16 +642,36 @@ onMounted(async () => {
     color: var(--color-text-primary);
     outline: none;
     box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.15s;
 }
 .comment-form__input:focus {
     border-color: #534ab7;
 }
+.comment-form__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.comment-form__hint {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+}
 .comment-guest {
     font-size: 13px;
     color: var(--color-text-secondary);
+    margin-bottom: 16px;
 }
 .comment-guest a {
     color: #534ab7;
+}
+.comment-error {
+    font-size: 13px;
+    color: var(--color-text-danger);
+    background: #fcebeb;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 12px;
 }
 .comment-list {
     display: flex;
@@ -654,6 +724,17 @@ onMounted(async () => {
     color: var(--color-text-tertiary);
     margin-left: auto;
 }
+.comment-item__delete {
+    font-size: 11px;
+    color: var(--color-text-danger);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+.comment-item__delete:hover {
+    text-decoration: underline;
+}
 .comment-item__hide {
     font-size: 11px;
     color: var(--color-text-danger);
@@ -661,6 +742,9 @@ onMounted(async () => {
     border: none;
     cursor: pointer;
     padding: 0;
+}
+.comment-item__hide:hover {
+    text-decoration: underline;
 }
 .comment-item__text {
     font-size: 14px;
