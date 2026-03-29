@@ -16,7 +16,9 @@
               {{ authStore.currentUser?.companyName || authStore.currentUser?.name }}
             </h2>
             <p class="employer-profile__role">Employer Account</p>
-            <button class="edit-profile-btn">Edit Company Profile</button>
+            <RouterLink class="edit-profile-btn" to="/employer/profile">
+              Edit Company Profile
+            </RouterLink>
           </div>
         </div>
 
@@ -291,6 +293,10 @@ onMounted(async () => {
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .edit-profile-btn:hover {
   background: var(--color-background-secondary);

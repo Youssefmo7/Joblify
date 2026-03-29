@@ -25,16 +25,21 @@
     },
     {
       "id": "2",
-      "name": "Google LLC",
-      "email": "hiring@google.com",
+      "name": "swift",
+      "email": "hiring@swift.com",
       "password": "hashed_password",
       "role": "employer",
-      "companyName": "Google",
+      "companyName": "swift",
       "companyLogo": "/logos/google.png",
       "website": "https://google.com",
       "phone": "+1 650 253 0000",
       "createdAt": "2025-01-05T08:00:00Z",
-      "banned": true
+      "banned": true,
+      "socialLinks": {
+        "linkedin": "https://linkedin.com/swift",
+        "twitter": "https://x.com/swift",
+        "facebook": "https://facebook.com/swift"
+      }
     },
     {
       "id": "3",
