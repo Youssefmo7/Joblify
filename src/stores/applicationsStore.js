@@ -20,9 +20,10 @@ export const useApplicationsStore = defineStore('applications', {
         applicationsForEmployer: (state) => (employerId) =>
             state.applications.filter((a) => a.employerId === employerId),
 
+        // FIX: use == (loose equality) so "1" == 1 also matches legacy numeric IDs
         hasApplied: (state) => (jobId, candidateId) =>
             state.applications.some(
-                (a) => a.jobId === jobId && a.candidateId === candidateId
+                (a) => a.jobId == jobId && a.candidateId == candidateId
             ),
     },
 
@@ -32,6 +33,7 @@ export const useApplicationsStore = defineStore('applications', {
             this.loading = true;
             this.error = null;
             try {
+                // FIX: don't cast to Number — candidateId can be a string like "dP-EB-0SqhA"
                 const { data } = await axios.get(
                     `${BASE_URL}/applications?candidateId=${candidateId}`
                 );
@@ -69,6 +71,8 @@ export const useApplicationsStore = defineStore('applications', {
             this.loading = true;
             this.error = null;
             try {
+                // FIX: keep IDs as their original type (string or number).
+                // Do NOT wrap in Number() — json-server stores them as-is.
                 const { data: existing } = await axios.get(
                     `${BASE_URL}/applications?jobId=${jobId}&candidateId=${candidateId}`
                 );
@@ -78,9 +82,10 @@ export const useApplicationsStore = defineStore('applications', {
                 }
 
                 const newApplication = {
-                    jobId: Number(jobId),
-                    candidateId: Number(candidateId),
-                    employerId: Number(employerId),
+                    // FIX: store the raw values without coercion
+                    jobId,
+                    candidateId,
+                    employerId,
                     applyMethod,
                     status: 'pending',
                     coverNote: payload.coverNote || '',
@@ -139,16 +144,14 @@ export const useApplicationsStore = defineStore('applications', {
                 if (index === -1)
                     throw new Error('Application not found in local state');
 
-                // PUT requires the full object — merge current record with the update
                 const merged = {
                     ...this.applications[index],
-                    id: Number(applicationId),
                     status: newStatus,
                     updatedAt: new Date().toISOString(),
                 };
 
                 const { data: updated } = await axios.put(
-                    `${BASE_URL}/applications/${Number(applicationId)}`,
+                    `${BASE_URL}/applications/${applicationId}`,
                     merged
                 );
                 this.applications[index] = updated;
@@ -166,33 +169,31 @@ export const useApplicationsStore = defineStore('applications', {
         async _incrementApplicantsCount(jobId) {
             try {
                 const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${Number(jobId)}`
+                    `${BASE_URL}/jobs/${jobId}`
                 );
-                await axios.put(`${BASE_URL}/jobs/${Number(jobId)}`, {
+                await axios.put(`${BASE_URL}/jobs/${jobId}`, {
                     ...job,
-                    id: Number(jobId),
                     applicantsCount: (job.applicantsCount || 0) + 1,
                 });
             } catch (e) {
-                console.log(e);
+                console.warn('Could not increment applicantsCount', e);
             }
         },
 
         async _decrementApplicantsCount(jobId) {
             try {
                 const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${Number(jobId)}`
+                    `${BASE_URL}/jobs/${jobId}`
                 );
-                await axios.put(`${BASE_URL}/jobs/${Number(jobId)}`, {
+                await axios.put(`${BASE_URL}/jobs/${jobId}`, {
                     ...job,
-                    id: Number(jobId),
                     applicantsCount: Math.max(
                         0,
                         (job.applicantsCount || 1) - 1
                     ),
                 });
             } catch (e) {
-                console.log(e);
+                console.warn('Could not decrement applicantsCount', e);
             }
         },
 
@@ -211,7 +212,7 @@ export const useApplicationsStore = defineStore('applications', {
                     createdAt: new Date().toISOString(),
                 });
             } catch (e) {
-                console.log(e);
+                console.warn('Could not send notification', e);
             }
         },
     },
