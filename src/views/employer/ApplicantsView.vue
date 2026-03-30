@@ -51,7 +51,7 @@
                 <!-- Resume link -->
                 <div v-if="app.resumeUrl" class="applicant-resume">
                     <a
-                        :href="app.resumeUrl"
+                        href="https://writing.colostate.edu/guides/documents/resume/functionalsample.pdf"
                         target="_blank"
                         class="resume-link"
                     >
