@@ -67,14 +67,39 @@
               <span class="metric-label">Pending Review</span>
               <span class="metric-value">{{ pendingCount }}</span>
             </div>
-            <div class="metric-card" @click="activeSection = 'jobs'">
-              <span class="metric-label">All Jobs</span>
-              <span class="metric-value">{{ myJobs.length }}</span>
+            <!--
+            <div class="metric-card" @click="activeSection = 'billing'">
+              <span class="metric-label">Pending Payments</span>
+              <span class="metric-value" :class="{ 'text-danger': unpaidApps.length > 0 }">
+                {{ unpaidApps.length }}
+              </span>
             </div>
+            -->
           </div>
 
           <!-- Quick Actions/Lists Grid -->
           <div class="dashboard-content-grid">
+            <!-- Action Required: Payments -->
+            <section v-if="unpaidApps.length > 0" class="content-block highlight-border">
+              <div class="content-block__header">
+                <h3 class="content-block__title">Action Required: Payments</h3>
+                <button class="text-link" @click="activeSection = 'billing'">Billing History</button>
+              </div>
+              <div class="content-block__body">
+                <div class="item-list">
+                  <div v-for="app in unpaidApps.slice(0, 3)" :key="app.id" class="list-item">
+                    <div class="list-item__info">
+                      <h4 class="list-item__title">Placement Fee: Candidate #{{ app.candidateId }}</h4>
+                      <p class="list-item__sub">For: {{ getJobTitle(app.jobId) }}</p>
+                    </div>
+                    <div class="list-item__actions">
+                      <button class="cta-btn x-small" @click="openPayment(app)">Pay $99.00</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <!-- Recent Jobs -->
             <section class="content-block">
               <div class="content-block__header">
@@ -142,6 +167,18 @@
         <EmployerActiveJobs v-if="activeSection === 'jobs'" />
         <EmployerCandidates v-if="activeSection === 'candidates'" />
         <EmployerAnalytics v-if="activeSection === 'analytics'" />
+        <EmployerBilling v-if="activeSection === 'billing'" />
+
+        <!-- Payment Modal (for Overview section quick actions) -->
+        <PaymentModal
+          v-if="selectedApp"
+          :show="showPaymentModal"
+          :application="selectedApp"
+          :jobTitle="getJobTitle(selectedApp.jobId)"
+          :employerId="employerId"
+          @close="closePayment"
+          @success="onPaymentSuccess"
+        />
       </main>
     </div>
   </div>
@@ -155,6 +192,8 @@ import { useApplicationsStore } from '@/stores/applicationsStore';
 import EmployerActiveJobs from '@/components/employer/EmployerActiveJobs.vue';
 import EmployerCandidates from '@/components/employer/EmployerCandidates.vue';
 import EmployerAnalytics from '@/components/employer/EmployerAnalytics.vue';
+import EmployerBilling from '@/components/employer/EmployerBilling.vue';
+import PaymentModal from '@/components/employer/PaymentModal.vue';
 
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
@@ -177,12 +216,34 @@ const pendingApps = computed(() =>
 );
 const pendingCount = computed(() => pendingApps.value.length);
 
+const unpaidApps = computed(() =>
+  appsStore.applicationsForEmployer(employerId.value).filter(a => a.status === 'accepted' && !a.paid)
+);
+
 const sidebarItems = computed(() => [
   { key: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', badge: null },
   { key: 'jobs', label: 'Active Jobs', icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', badge: myJobs.value.length },
   { key: 'candidates', label: 'Candidates', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', badge: pendingCount.value > 0 ? pendingCount.value : null },
   { key: 'analytics', label: 'Analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', badge: null },
+  { key: 'billing', label: 'Billing', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', badge: null },
 ]);
+
+const showPaymentModal = ref(false);
+const selectedApp = ref(null);
+
+function openPayment(app) {
+  selectedApp.value = app;
+  showPaymentModal.value = true;
+}
+
+function closePayment() {
+  showPaymentModal.value = false;
+  selectedApp.value = null;
+}
+
+function onPaymentSuccess() {
+  closePayment();
+}
 
 function getJobTitle(jobId) {
   const job = jobsStore.jobs.find(j => j.id === jobId || j.id === String(jobId));
@@ -388,6 +449,7 @@ onMounted(async () => {
 }
 .metric-card.highlight .metric-value { color: #e8246a; }
 .metric-card.secondary .metric-value { color: #534ab7; }
+.text-danger { color: #ef4444 !important; }
 
 /* ── Content Grid ── */
 .dashboard-content-grid {
@@ -407,6 +469,10 @@ onMounted(async () => {
   border-radius: var(--border-radius-lg);
   overflow: hidden;
 }
+.content-block.highlight-border {
+  border-color: #fd366e;
+  box-shadow: 0 0 0 1px #fd366e;
+}
 .content-block__header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--color-border-tertiary);
@@ -424,7 +490,7 @@ onMounted(async () => {
   border: none;
   font-size: 13px;
   font-weight: 500;
-  color: #e8246a;
+  color: #fd366e;
   cursor: pointer;
 }
 .text-link:hover { text-decoration: underline; }
@@ -480,7 +546,7 @@ onMounted(async () => {
 .icon-link {
   font-size: 13px;
   font-weight: 500;
-  color: #e8246a;
+  color: #fd366e;
   text-decoration: none;
 }
 
@@ -525,6 +591,22 @@ onMounted(async () => {
   color: #22c55e;
 }
 .btn-sm.accept:hover { background: #bbf7d0; }
+
+.cta-btn.x-small {
+  padding: 4px 12px;
+  background: #fd366e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cta-btn.x-small:hover {
+  background: #e11d48;
+  transform: translateY(-1px);
+}
 
 .empty-state {
   padding: 40px 20px;

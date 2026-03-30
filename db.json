@@ -89,7 +89,7 @@
   "jobs": [
     {
       "id": "1",
-      "employerId": 2,
+      "employerId": "2",
       "title": "Senior Frontend Engineer",
       "company": "Google",
       "companyLogo": "/logos/google.png",
@@ -123,13 +123,13 @@
       ],
       "deadline": "2026-04-30T23:59:59Z",
       "status": "approved",
-      "applicantsCount": 18,
+      "applicantsCount": 3,
       "promoted": false,
       "createdAt": "2026-03-24T12:00:00Z"
     },
     {
       "id": "2",
-      "employerId": 3,
+      "employerId": "3",
       "title": "Product Designer",
       "company": "Stripe",
       "companyLogo": "/logos/stripe.jpg",
@@ -169,7 +169,7 @@
     },
     {
       "id": "3",
-      "employerId": 2,
+      "employerId": "2",
       "title": "Backend Engineer - Python",
       "company": "Google",
       "companyLogo": "/logos/google.png",
@@ -206,26 +206,49 @@
       "applicantsCount": 0,
       "promoted": false,
       "createdAt": "2026-03-27T14:00:00Z"
+    },
+    {
+      "title": "Python Developer",
+      "description": "Python DeveloperPython DeveloperPython Developer",
+      "category": "Programming",
+      "location": "cairo",
+      "workType": "Hybrid",
+      "deadline": "2026-03-31T00:00:00.000Z",
+      "experienceLevel": "Mid Level",
+      "skills": [
+        "Python"
+      ],
+      "salary": "$20000k – $0k / yr",
+      "responsibilities": [
+        "Python DeveloperPython DeveloperPython Developer"
+      ],
+      "requirements": [
+        "Req",
+        "REq"
+      ],
+      "benefits": [
+        "Python Developer",
+        "Python Developer"
+      ],
+      "company": "Google",
+      "companyInitial": "G",
+      "companyBg": "bg-gray-100",
+      "companyText": "text-gray-600",
+      "logo": "/logos/google.png",
+      "status": "pending",
+      "employerId": "2",
+      "applicantsCount": 0,
+      "promoted": false,
+      "createdAt": "2026-03-29T22:17:48.602Z",
+      "id": "QHf_yIxtU9g"
     }
   ],
   "applications": [
     {
-      "id": "1",
-      "jobId": 1,
-      "candidateId": 1,
-      "employerId": 2,
-      "applyMethod": "resume",
-      "resumeUrl": "/resumes/jane_doe_cv.pdf",
-      "coverNote": "I am excited to apply for this role at Google.",
-      "status": "pending",
-      "createdAt": "2026-03-25T10:00:00Z",
-      "updatedAt": "2026-03-25T10:00:00Z"
-    },
-    {
       "id": "2",
       "jobId": 2,
       "candidateId": 1,
-      "employerId": 3,
+      "employerId": "3",
       "applyMethod": "contact",
       "contactEmail": "jane@example.com",
       "contactPhone": "+1 555 0101",
@@ -237,57 +260,44 @@
     {
       "jobId": 1,
       "candidateId": 0,
-      "employerId": 2,
+      "employerId": "2",
       "applyMethod": "resume",
-      "status": "pending",
-      "coverNote": "",
-      "resumeUrl": "/resumes/Lab 1.pdf",
-      "contactEmail": null,
-      "contactPhone": null,
-      "createdAt": "2026-03-28T18:47:44.993Z",
-      "updatedAt": "2026-03-28T18:47:44.993Z",
-      "id": "5U0ZmtKkp40"
-    },
-    {
-      "jobId": 1,
-      "candidateId": 0,
-      "employerId": 2,
-      "applyMethod": "resume",
-      "status": "pending",
+      "status": "accepted",
       "coverNote": "",
       "resumeUrl": "/resumes/Lab 1.pdf",
       "contactEmail": null,
       "contactPhone": null,
       "createdAt": "2026-03-28T18:50:18.180Z",
-      "updatedAt": "2026-03-28T18:50:18.180Z",
-      "id": "EyKZUFo2uJA"
+      "updatedAt": "2026-03-30T00:22:05.754Z",
+      "id": "EyKZUFo2uJA",
+      "paid": true
     },
     {
       "jobId": 1,
-      "candidateId": 0,
-      "employerId": 2,
+      "candidateId": 3,
+      "employerId": "2",
       "applyMethod": "contact",
-      "status": "pending",
+      "status": "accepted",
       "coverNote": "",
       "resumeUrl": null,
       "contactEmail": "alikh20@gmail.com",
       "contactPhone": "e",
       "createdAt": "2026-03-28T18:53:51.507Z",
-      "updatedAt": "2026-03-28T18:53:51.508Z",
+      "updatedAt": "2026-03-30T00:17:23.921Z",
       "id": "qTtzwj-Q8MU"
     },
     {
       "jobId": 1,
-      "candidateId": null,
-      "employerId": 2,
+      "candidateId": 2,
+      "employerId": "2",
       "applyMethod": "resume",
-      "status": "pending",
+      "status": "rejected",
       "coverNote": "lab",
       "resumeUrl": "/resumes/Lab6.pdf",
       "contactEmail": null,
       "contactPhone": null,
       "createdAt": "2026-03-28T19:47:54.121Z",
-      "updatedAt": "2026-03-28T19:47:54.121Z",
+      "updatedAt": "2026-03-30T01:03:23.715Z",
       "id": "mHwJuFP-Z4o"
     }
   ],
@@ -364,9 +374,47 @@
       "userId": 2,
       "type": "job_approved",
       "message": "Your job posting \"Backend Engineer - Python\" has been approved and is now live.",
-      "read": false,
+      "read": true,
       "createdAt": "2026-03-28T20:40:45.380Z",
       "id": "M_zwvG1HC3M"
+    },
+    {
+      "userId": 0,
+      "type": "application_accepted",
+      "message": "Your application for job #1 was accepted!",
+      "read": false,
+      "createdAt": "2026-03-29T23:07:53.425Z",
+      "id": "bjNztZYeoUM"
+    },
+    {
+      "userId": 0,
+      "type": "application_accepted",
+      "message": "Your application for job #1 was accepted!",
+      "read": false,
+      "createdAt": "2026-03-29T23:10:15.932Z",
+      "id": "NTlD-Y9_oDA"
+    },
+    {
+      "userId": 0,
+      "type": "application_accepted",
+      "message": "Your application for job #1 was accepted!",
+      "read": false,
+      "createdAt": "2026-03-30T00:17:23.934Z",
+      "id": "mAlUlllxEq8"
+    }
+  ],
+  "payments": [
+    {
+      "employerId": "2",
+      "applicationId": "5U0ZmtKkp40",
+      "jobId": 1,
+      "candidateId": 0,
+      "amount": 99,
+      "currency": "USD",
+      "method": "stripe",
+      "status": "completed",
+      "createdAt": "2026-03-29T23:08:35.203Z",
+      "id": "RxfRzgnlbeE"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

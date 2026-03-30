@@ -6,6 +6,7 @@ const BASE_URL = 'http://localhost:3000';
 export const useApplicationsStore = defineStore('applications', {
     state: () => ({
         applications: [],
+        payments: [],
         loading: false,
         error: null,
     }),
@@ -19,6 +20,9 @@ export const useApplicationsStore = defineStore('applications', {
 
         applicationsForEmployer: (state) => (employerId) =>
             state.applications.filter((a) => a.employerId === employerId),
+
+        paymentsForEmployer: (state) => (employerId) =>
+            state.payments.filter((p) => p.employerId == employerId),
 
         // FIX: use == (loose equality) so "1" == 1 also matches legacy numeric IDs
         hasApplied: (state) => (jobId, candidateId) =>
@@ -58,9 +62,28 @@ export const useApplicationsStore = defineStore('applications', {
                         (a) => a.id === incoming.id
                     );
                     if (!exists) this.applications.push(incoming);
+                    else {
+                        // Update existing with potential new status/paid info
+                        const idx = this.applications.findIndex(a => a.id === incoming.id);
+                        this.applications[idx] = incoming;
+                    }
                 });
             } catch (err) {
                 this.error = 'Could not load applications for this job.';
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // ── FETCH: payments for employer ──────────────────────────
+        async fetchPayments() {
+            this.loading = true;
+            try {
+                // To avoid json-server type-sensitive query issues, fetch all and filter via getter.
+                const { data } = await axios.get(`${BASE_URL}/payments`);
+                this.payments = data;
+            } catch (err) {
+                console.error('Could not load payments', err);
             } finally {
                 this.loading = false;
             }
@@ -88,6 +111,7 @@ export const useApplicationsStore = defineStore('applications', {
                     employerId,
                     applyMethod,
                     status: 'pending',
+                    paid: false,
                     coverNote: payload.coverNote || '',
                     resumeUrl:
                         applyMethod === 'resume' ? payload.resumeUrl : null,
@@ -159,6 +183,40 @@ export const useApplicationsStore = defineStore('applications', {
                 return true;
             } catch (err) {
                 this.error = 'Could not update application status.';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // ── PROCESS PAYMENT ───────────────────────────────────────
+        async processPayment(paymentData) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data: createdPayment } = await axios.post(`${BASE_URL}/payments`, {
+                    ...paymentData,
+                    status: 'completed',
+                    createdAt: new Date().toISOString(),
+                });
+                this.payments.push(createdPayment);
+
+                // Update application as paid
+                if (paymentData.applicationId) {
+                    const idx = this.applications.findIndex(a => a.id === paymentData.applicationId);
+                    if (idx !== -1) {
+                        const updatedApp = {
+                            ...this.applications[idx],
+                            paid: true,
+                            updatedAt: new Date().toISOString()
+                        };
+                        const { data: savedApp } = await axios.put(`${BASE_URL}/applications/${updatedApp.id}`, updatedApp);
+                        this.applications[idx] = savedApp;
+                    }
+                }
+                return true;
+            } catch (err) {
+                this.error = 'Payment processing failed.';
                 return false;
             } finally {
                 this.loading = false;

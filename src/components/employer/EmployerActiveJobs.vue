@@ -2,9 +2,6 @@
   <div class="active-jobs">
     <header class="section-header">
       <h1 class="section-title">Active Job Listings</h1>
-      <RouterLink to="/employer/post-job" class="cta-btn">
-        + Post a Job
-      </RouterLink>
     </header>
 
     <div v-if="jobsStore.loading" class="state-msg">Loading jobs…</div>
@@ -18,7 +15,7 @@
       <div v-for="job in myJobs" :key="job.id" class="job-item">
         <div class="job-item__main">
           <div class="job-item__info">
-            <h4 class="job-item__title">{{ job.title }}</h4>
+            <RouterLink :to="`/jobs/${job.id}`"><h4 class="job-item__title">{{ job.title }}</h4></RouterLink>
             <div class="job-item__meta">
               <span>{{ job.category }}</span>
               <span class="dot">&bull;</span>
@@ -56,20 +53,35 @@
         </div>
       </div>
     </div>
+    <!-- Delete Confirmation Modal -->
+    <ConfirmationModal
+      :isOpen="showDeleteModal"
+      title="Delete job posting?"
+      message="This action cannot be undone. Are you sure you want to delete this job listing?"
+      confirmText="Delete Job"
+      cancelText="Keep Job"
+      type="error"
+      @confirm="handleConfirmDelete"
+      @cancel="closeDeleteModal"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 
 const myJobs = computed(() => jobsStore.myJobs(authStore.currentUser?.id));
+
+const showDeleteModal = ref(false);
+const jobIdToDelete = ref(null);
 
 function getNewApplicants(jobId) {
   return appsStore.applicationsForJob(jobId).filter(a => a.status === 'pending').length;
@@ -79,10 +91,21 @@ function formatWorkType(t) {
   return { remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid' }[t] || t;
 }
 
-async function deleteJob(id) {
-  if (confirm('Delete this job posting?')) {
-    await jobsStore.deleteJob(id);
+function deleteJob(id) {
+  jobIdToDelete.value = id;
+  showDeleteModal.value = true;
+}
+
+async function handleConfirmDelete() {
+  if (jobIdToDelete.value) {
+    await jobsStore.deleteJob(jobIdToDelete.value);
+    closeDeleteModal();
   }
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false;
+  jobIdToDelete.value = null;
 }
 </script>
 
