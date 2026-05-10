@@ -4,13 +4,11 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-surface rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
             <p class="text-sm font-medium text-gray-500">Total Users</p>
-            <p class="mt-2 text-3xl font-bold text-gray-900">{{ store.stats.totalUsers.toLocaleString() }}</p>
-            <p class="text-xs text-green-600 font-medium mt-1">{{ store.usersGrowth }}</p>
+            <p class="mt-2 text-3xl font-bold text-gray-900">{{ store.stats.totalUsers }}</p>
         </div>
         <div class="bg-surface rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
             <p class="text-sm font-medium text-gray-500">Active Jobs</p>
             <p class="mt-2 text-3xl font-bold text-blue-600">{{ store.activeJobsCount }}</p>
-            <p class="text-xs text-green-600 font-medium mt-1">{{ store.jobsGrowth }}</p>
         </div>
         <div class="bg-surface rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
             <p class="text-sm font-medium text-gray-500">Pending Approval</p>
