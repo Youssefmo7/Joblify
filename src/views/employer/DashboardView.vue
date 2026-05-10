@@ -153,6 +153,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
 import { useCompanyStore } from '@/stores/companyStore';
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 import EmployerActiveJobs from '@/components/employer/EmployerActiveJobs.vue';
 import EmployerCandidates from '@/components/employer/EmployerCandidates.vue';
 import EmployerAnalytics from '@/components/employer/EmployerAnalytics.vue';
@@ -161,6 +162,7 @@ const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 const companyStore = useCompanyStore();
+const analyticsStore = useAnalyticsStore();
 
 const activeSection = ref('overview');
 
@@ -202,6 +204,7 @@ async function respondToApp(appId, status) {
 onMounted(async () => {
   await companyStore.fetchCompany();
   await jobsStore.fetchEmployerJobs();
+  await analyticsStore.fetchAnalytics();
   for (const job of jobsStore.employerJobs) {
     await appsStore.fetchApplicationsForJob(job.id);
   }
