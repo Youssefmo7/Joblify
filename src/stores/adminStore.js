@@ -243,7 +243,7 @@ export const useAdminStore = defineStore('admin', {
             this.error = null;
             try {
                 await client.delete(`/admin/comments/${commentId}`, {
-                    reason,
+                    data: { reason },
                 });
                 this.allComments = this.allComments.filter(
                     (c) => c.id !== commentId

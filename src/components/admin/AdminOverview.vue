@@ -38,9 +38,9 @@
                 <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Recent Activity Shortcut</h3>
             </div>
             <ul class="divide-y divide-border overflow-y-auto max-h-64" v-if="store.activityLog.length > 0">
-                <li class="p-4 flex items-center space-x-3 hover:bg-gray-50 text-sm" v-for="entry in Math.min(store.activityLog.length, 5)" :key="store.activityLog[entry - 1]?.id">
+                <li class="p-4 flex items-center space-x-3 hover:bg-gray-50 text-sm" v-for="entry in recentActivity" :key="entry.id">
                     <span class="h-2 w-2 rounded-full flex-shrink-0 bg-primary"></span>
-                    <span class="text-gray-700 font-medium truncate flex-1">{{ formatActivityTitle(store.activityLog[entry - 1]) }}</span>
+                    <span class="text-gray-700 font-medium truncate flex-1">{{ formatActivityTitle(entry) }}</span>
                 </li>
             </ul>
             <div v-else class="p-8 text-center text-sm text-gray-500 flex-1 flex flex-col justify-center items-center">
@@ -86,20 +86,25 @@ export default {
       }
     };
 
+    const recentActivity = computed(() => store.activityLog.slice(0, 5));
+
     const formatActivityTitle = (entry) => {
-      if (entry.type === "job_approved") return `Approved job: ${entry.title}`;
-      if (entry.type === "job_rejected") return `Rejected job: ${entry.title}`;
-      if (entry.type === "comment_removed") return `Hid comment`;
-      if (entry.type === "comment_restored") return `Restored comment`;
-      if (entry.type === "user_banned") return `Banned suspicious user`;
-      if (entry.type === "user_unbanned") return `Pardoned & unbanned user`;
-      return "Admin action";
+      const type = entry.type || '';
+      if (type === 'job_approved' || type === 'job.approve') return `Approved job: ${entry.title || ''}`;
+      if (type === 'job_rejected' || type === 'job.reject') return `Rejected job: ${entry.title || ''}`;
+      if (type === 'job_pending') return `New pending job: ${entry.title || ''}`;
+      if (type === 'user_registered') return `New user: ${entry.title || ''}`;
+      if (type === 'user.suspend') return `Suspended user: ${entry.title || ''}`;
+      if (type === 'user.activate') return `Activated user: ${entry.title || ''}`;
+      if (type === 'comment.delete') return `Removed comment`;
+      return entry.title || 'Admin action';
     };
 
     return {
       store,
       chartData,
       chartOptions,
+      recentActivity,
       formatActivityTitle
     };
   }
