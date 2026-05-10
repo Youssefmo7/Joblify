@@ -1,115 +1,77 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import client from '@/api/client';
 
-const BASE_URL = 'http://localhost:3000';
+function normalizeComment(apiComment) {
+    return {
+        ...apiComment,
+        text: apiComment.content,
+        userName: apiComment.user?.name || 'Unknown',
+        userId: apiComment.user_id,
+        createdAt: apiComment.created_at,
+        _raw: apiComment,
+    };
+}
 
 export const useCommentsStore = defineStore('comments', {
     state: () => ({
-        comments: [], // all comments fetched for the current job
+        comments: [],
         loading: false,
         error: null,
     }),
 
     getters: {
-        // Only show comments whose status is 'visible'
-        visibleComments: (state) =>
-            state.comments.filter((c) => c.status === 'visible'),
-
-        // All comments for a specific job (already filtered by fetchForJob)
         commentsForJob: (state) => (jobId) =>
-            state.comments.filter((c) => c.jobId == jobId),
+            state.comments.filter((c) => c.job_id == jobId),
     },
 
     actions: {
-        // ── FETCH comments for a single job ───────────────────────
+        // ── FETCH COMMENTS FOR A JOB ──────────────────────────────
         async fetchForJob(jobId) {
             this.loading = true;
             this.error = null;
             try {
-                const { data } = await axios.get(
-                    `${BASE_URL}/comments?jobId=${jobId}`
+                const data = await client.get(`/jobs/${jobId}/comments`);
+                this.comments = (Array.isArray(data) ? data : data.data || []).map(
+                    normalizeComment
                 );
-                this.comments = data;
+                return this.comments;
             } catch (err) {
-                this.error = 'Could not load comments.';
+                this.error = err.message || 'Could not load comments.';
+                return [];
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── POST a new comment ────────────────────────────────────
-        // user: the currentUser object from authStore
-        // text: the comment text string
-        async postComment(jobId, user, text) {
-            if (!text?.trim()) return false;
+        // ── POST A COMMENT ────────────────────────────────────────
+        async postComment(jobId, content) {
+            if (!content?.trim()) return false;
             this.loading = true;
             this.error = null;
             try {
-                const newComment = {
-                    jobId, // keep original type (string or number)
-                    userId: user.id,
-                    userRole: user.role,
-                    userName: user.name,
-                    text: text.trim(),
-                    status: 'visible', // candidates post as visible by default
-                    createdAt: new Date().toISOString(),
-                };
-
-                const { data: created } = await axios.post(
-                    `${BASE_URL}/comments`,
-                    newComment
-                );
-                this.comments.push(created);
+                const data = await client.post(`/jobs/${jobId}/comments`, {
+                    content: content.trim(),
+                });
+                this.comments.push(normalizeComment(data));
                 return true;
             } catch (err) {
-                this.error = 'Could not post comment.';
+                this.error = err.message || 'Could not post comment.';
                 return false;
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── DELETE own comment ────────────────────────────────────
+        // ── DELETE OWN COMMENT ────────────────────────────────────
         async deleteComment(commentId) {
             this.loading = true;
             this.error = null;
             try {
-                await axios.delete(`${BASE_URL}/comments/${commentId}`);
+                await client.delete(`/comments/${commentId}`);
                 this.comments = this.comments.filter((c) => c.id !== commentId);
                 return true;
             } catch (err) {
-                this.error = 'Could not delete comment.';
-                return false;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // ── ADMIN: hide a comment ─────────────────────────────────
-        async hideComment(commentId) {
-            return this._setStatus(commentId, 'hidden');
-        },
-
-        // ── ADMIN: restore a comment ──────────────────────────────
-        async restoreComment(commentId) {
-            return this._setStatus(commentId, 'visible');
-        },
-
-        async _setStatus(commentId, status) {
-            this.loading = true;
-            this.error = null;
-            try {
-                const index = this.comments.findIndex(
-                    (c) => c.id === commentId
-                );
-                if (index === -1) throw new Error('Comment not found');
-
-                const merged = { ...this.comments[index], status };
-                await axios.put(`${BASE_URL}/comments/${commentId}`, merged);
-                this.comments[index].status = status;
-                return true;
-            } catch (err) {
-                this.error = 'Could not update comment.';
+                this.error = err.message || 'Could not delete comment.';
                 return false;
             } finally {
                 this.loading = false;

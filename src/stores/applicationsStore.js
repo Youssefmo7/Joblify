@@ -1,7 +1,22 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import client from '@/api/client';
 
-const BASE_URL = 'http://localhost:3000';
+function normalizeApplication(apiApp) {
+    return {
+        ...apiApp,
+        jobId: apiApp.job?.id,
+        jobTitle: apiApp.job?.title,
+        company: apiApp.job?.company?.name,
+        candidateId: apiApp.user?.id,
+        candidateName: apiApp.user?.name,
+        coverNote: apiApp.cover_letter,
+        resumeUrl: apiApp.resume_url,
+        createdAt: apiApp.created_at,
+        status: apiApp.status,
+        rejectionReason: apiApp.rejection_reason,
+        _raw: apiApp,
+    };
+}
 
 export const useApplicationsStore = defineStore('applications', {
     state: () => ({
@@ -11,16 +26,9 @@ export const useApplicationsStore = defineStore('applications', {
     }),
 
     getters: {
-        myApplications: (state) => (candidateId) =>
-            state.applications.filter((a) => a.candidateId === candidateId),
-
+        myApplications: (state) => state.applications,
         applicationsForJob: (state) => (jobId) =>
-            state.applications.filter((a) => a.jobId === jobId),
-
-        applicationsForEmployer: (state) => (employerId) =>
-            state.applications.filter((a) => a.employerId === employerId),
-
-        // FIX: use == (loose equality) so "1" == 1 also matches legacy numeric IDs
+            state.applications.filter((a) => a.jobId == jobId),
         hasApplied: (state) => (jobId, candidateId) =>
             state.applications.some(
                 (a) => a.jobId == jobId && a.candidateId == candidateId
@@ -28,191 +36,114 @@ export const useApplicationsStore = defineStore('applications', {
     },
 
     actions: {
-        // ── FETCH: candidate's own applications ───────────────────
-        async fetchMyApplications(candidateId) {
+        // ── FETCH OWN APPLICATIONS ────────────────────────────────
+        async fetchMyApplications() {
             this.loading = true;
             this.error = null;
             try {
-                // FIX: don't cast to Number — candidateId can be a string like "dP-EB-0SqhA"
-                const { data } = await axios.get(
-                    `${BASE_URL}/applications?candidateId=${candidateId}`
+                const data = await client.get('/applications');
+                this.applications = (Array.isArray(data) ? data : data.data || []).map(
+                    normalizeApplication
                 );
-                this.applications = data;
+                return this.applications;
             } catch (err) {
-                this.error = 'Could not load your applications.';
+                this.error = err.message || 'Could not load your applications.';
+                return [];
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── FETCH: employer sees applicants for one job ───────────
+        // ── FETCH APPLICATIONS FOR A JOB ──────────────────────────
         async fetchApplicationsForJob(jobId) {
             this.loading = true;
             this.error = null;
             try {
-                const { data } = await axios.get(
-                    `${BASE_URL}/applications?jobId=${jobId}`
+                const data = await client.get(`/jobs/${jobId}/applications`);
+                const list = (Array.isArray(data) ? data : data.data || []).map(
+                    normalizeApplication
                 );
-                data.forEach((incoming) => {
+                // Merge without duplicates
+                list.forEach((incoming) => {
                     const exists = this.applications.find(
                         (a) => a.id === incoming.id
                     );
                     if (!exists) this.applications.push(incoming);
                 });
+                return list;
             } catch (err) {
-                this.error = 'Could not load applications for this job.';
+                this.error = err.message || 'Could not load applications.';
+                return [];
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── APPLY ─────────────────────────────────────────────────
-        async applyToJob(jobId, candidateId, employerId, applyMethod, payload) {
+        // ── APPLY TO JOB ──────────────────────────────────────────
+        async applyToJob(jobId, { resume, coverLetter }) {
             this.loading = true;
             this.error = null;
             try {
-                // FIX: keep IDs as their original type (string or number).
-                // Do NOT wrap in Number() — json-server stores them as-is.
-                const { data: existing } = await axios.get(
-                    `${BASE_URL}/applications?jobId=${jobId}&candidateId=${candidateId}`
-                );
-                if (existing.length > 0) {
-                    this.error = 'You have already applied to this job.';
-                    return false;
+                const formData = new FormData();
+                if (resume) formData.append('resume', resume);
+                if (coverLetter) formData.append('cover_letter', coverLetter);
+
+                const data = await client.post(`/jobs/${jobId}/apply`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+                const normalized = normalizeApplication(data);
+                this.applications.push(normalized);
+                return normalized;
+            } catch (err) {
+                this.error = err.message || 'Could not submit application.';
+                return null;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // ── RESPOND TO APPLICATION ────────────────────────────────
+        async respondToApplication(applicationId, status, rejectionReason = '') {
+            this.loading = true;
+            this.error = null;
+            try {
+                const payload = { status };
+                if (status === 'rejected' && rejectionReason) {
+                    payload.rejection_reason = rejectionReason;
                 }
-
-                const newApplication = {
-                    // FIX: store the raw values without coercion
-                    jobId,
-                    candidateId,
-                    employerId,
-                    applyMethod,
-                    status: 'pending',
-                    coverNote: payload.coverNote || '',
-                    resumeUrl:
-                        applyMethod === 'resume' ? payload.resumeUrl : null,
-                    contactEmail:
-                        applyMethod === 'contact' ? payload.contactEmail : null,
-                    contactPhone:
-                        applyMethod === 'contact' ? payload.contactPhone : null,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                };
-
-                const { data: created } = await axios.post(
-                    `${BASE_URL}/applications`,
-                    newApplication
+                const data = await client.patch(
+                    `/applications/${applicationId}/status`,
+                    payload
                 );
-                this.applications.push(created);
-                await this._incrementApplicantsCount(jobId);
-                return true;
-            } catch (err) {
-                this.error = 'Could not submit application.';
-                return false;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // ── CANCEL ────────────────────────────────────────────────
-        async cancelApplication(applicationId, jobId) {
-            this.loading = true;
-            this.error = null;
-            try {
-                await axios.delete(`${BASE_URL}/applications/${applicationId}`);
-                this.applications = this.applications.filter(
-                    (a) => a.id !== applicationId
-                );
-                await this._decrementApplicantsCount(jobId);
-                return true;
-            } catch (err) {
-                this.error = 'Could not cancel application.';
-                return false;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        // ── RESPOND: employer accepts or rejects ──────────────────
-        async respondToApplication(applicationId, newStatus) {
-            this.loading = true;
-            this.error = null;
-            try {
+                const normalized = normalizeApplication(data);
                 const index = this.applications.findIndex(
                     (a) => a.id === applicationId
                 );
-                if (index === -1)
-                    throw new Error('Application not found in local state');
-
-                const merged = {
-                    ...this.applications[index],
-                    status: newStatus,
-                    updatedAt: new Date().toISOString(),
-                };
-
-                const { data: updated } = await axios.put(
-                    `${BASE_URL}/applications/${applicationId}`,
-                    merged
-                );
-                this.applications[index] = updated;
-                await this._notifyCandidate(updated, newStatus);
-                return true;
+                if (index !== -1) this.applications[index] = normalized;
+                return normalized;
             } catch (err) {
-                this.error = 'Could not update application status.';
-                return false;
+                this.error = err.message || 'Could not update status.';
+                return null;
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── INTERNAL: bump applicantsCount on job ─────────────────
-        async _incrementApplicantsCount(jobId) {
+        // ── CANCEL/WITHDRAW APPLICATION ───────────────────────────
+        async cancelApplication(applicationId) {
+            this.loading = true;
+            this.error = null;
             try {
-                const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
+                await client.delete(`/applications/${applicationId}`);
+                this.applications = this.applications.filter(
+                    (a) => a.id !== applicationId
                 );
-                await axios.put(`${BASE_URL}/jobs/${jobId}`, {
-                    ...job,
-                    applicantsCount: (job.applicantsCount || 0) + 1,
-                });
-            } catch (e) {
-                console.warn('Could not increment applicantsCount', e);
-            }
-        },
-
-        async _decrementApplicantsCount(jobId) {
-            try {
-                const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
-                );
-                await axios.put(`${BASE_URL}/jobs/${jobId}`, {
-                    ...job,
-                    applicantsCount: Math.max(
-                        0,
-                        (job.applicantsCount || 1) - 1
-                    ),
-                });
-            } catch (e) {
-                console.warn('Could not decrement applicantsCount', e);
-            }
-        },
-
-        // ── INTERNAL: notify candidate ────────────────────────────
-        async _notifyCandidate(application, status) {
-            const messageMap = {
-                accepted: `Your application for job #${application.jobId} was accepted!`,
-                rejected: `Your application for job #${application.jobId} was not selected.`,
-            };
-            try {
-                await axios.post(`${BASE_URL}/notifications`, {
-                    userId: application.candidateId,
-                    type: `application_${status}`,
-                    message: messageMap[status],
-                    read: false,
-                    createdAt: new Date().toISOString(),
-                });
-            } catch (e) {
-                console.warn('Could not send notification', e);
+                return true;
+            } catch (err) {
+                this.error = err.message || 'Could not withdraw application.';
+                return false;
+            } finally {
+                this.loading = false;
             }
         },
     },
