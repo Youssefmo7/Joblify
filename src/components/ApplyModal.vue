@@ -38,56 +38,11 @@
         </div>
 
         <template v-else>
-            <!-- Method toggle -->
-            <div class="apply-panel__methods">
-                <button
-                    :class="['method-btn', { active: method === 'resume' }]"
-                    @click="method = 'resume'"
-                >
-                    <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path
-                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                        />
-                        <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    Upload resume
-                </button>
-                <button
-                    :class="['method-btn', { active: method === 'contact' }]"
-                    @click="method = 'contact'"
-                >
-                    <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path
-                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.54a16 16 0 0 0 6.29 6.29l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
-                        />
-                    </svg>
-                    Share contact info
-                </button>
-            </div>
+            <!-- Resume upload -->
+            <div class="apply-panel__section">
+                <label class="field-label">Resume (PDF, DOC, DOCX) <span class="text-red-500">*</span></label>
 
-            <!-- Resume method -->
-            <div v-if="method === 'resume'" class="apply-panel__section">
-                <label class="field-label">Resume (PDF)</label>
-
-                <div v-if="resumeUrl && !newFile" class="saved-resume">
+                <div v-if="newFile" class="saved-resume">
                     <svg
                         width="16"
                         height="16"
@@ -104,7 +59,7 @@
                         <polyline points="14 2 14 8 20 8" />
                     </svg>
                     <span class="saved-resume__name">
-                        {{ resumeUrl.split('/').pop() }}
+                        {{ newFile.name }}
                     </span>
                     <button class="text-btn" @click="clearFile">
                         Change file
@@ -117,7 +72,6 @@
                     @click="$refs.fileInput.click()"
                 >
                     <svg
-                        v-if="!newFile"
                         width="24"
                         height="24"
                         viewBox="0 0 24 24"
@@ -132,63 +86,32 @@
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
-                    <span v-if="!newFile" class="upload-zone__text">
-                        Click to upload PDF
+                    <span class="upload-zone__text">
+                        Click to upload resume
                         <span class="upload-zone__hint">— max 5MB</span>
-                    </span>
-                    <span v-else class="upload-zone__filled-name">
-                        {{ newFile.name }}
                     </span>
                 </div>
                 <input
                     ref="fileInput"
                     type="file"
-                    accept=".pdf"
+                    accept=".pdf,.doc,.docx"
                     style="display: none"
                     @change="onFileChange"
                 />
 
-                <p v-if="!canSubmit && method === 'resume'" class="field-warn">
+                <p v-if="!canSubmit" class="field-warn">
                     Please upload a resume to continue.
                 </p>
             </div>
 
-            <!-- Contact method -->
-            <div v-if="method === 'contact'" class="apply-panel__section">
-                <div class="field-group">
-                    <label class="field-label">Email</label>
-                    <input
-                        v-model="contactEmail"
-                        class="field-input"
-                        type="email"
-                        placeholder="your@email.com"
-                    />
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Phone</label>
-                    <input
-                        v-model="contactPhone"
-                        class="field-input"
-                        type="tel"
-                        placeholder="+1 555 000 0000"
-                    />
-                </div>
-                <p class="field-hint">
-                    Your details will be shared directly with {{ job.company }}.
-                </p>
-                <p v-if="!canSubmit && method === 'contact'" class="field-warn">
-                    Please fill in both email and phone.
-                </p>
-            </div>
-
-            <!-- Cover note -->
+            <!-- Cover letter -->
             <div class="apply-panel__section">
                 <label class="field-label">
-                    Cover note
+                    Cover letter
                     <span class="field-label__opt">optional</span>
                 </label>
                 <textarea
-                    v-model="coverNote"
+                    v-model="coverLetter"
                     class="field-input field-textarea"
                     rows="3"
                     placeholder="Say something to stand out…"
@@ -231,36 +154,25 @@ const appsStore = useApplicationsStore();
 
 const user = authStore.currentUser;
 
-// Check if already applied — use loose == to handle mixed string/number IDs
 const alreadyApplied = computed(() =>
     appsStore.hasApplied(props.job.id, user?.id)
 );
 
-const method = ref('resume');
 const newFile = ref(null);
-// Pre-fill from the user's saved profile resume
-const resumeUrl = ref(user?.resumeUrl || '');
-const contactEmail = ref(user?.email || '');
-const contactPhone = ref(user?.phone || '');
-const coverNote = ref('');
+const coverLetter = ref('');
 const submitting = ref(false);
 const errorMsg = ref('');
 
-const canSubmit = computed(() => {
-    if (method.value === 'resume') return !!(newFile.value || resumeUrl.value);
-    return !!(contactEmail.value.trim() && contactPhone.value.trim());
-});
+const canSubmit = computed(() => !!newFile.value);
 
 function onFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
     newFile.value = file;
-    resumeUrl.value = `/resumes/${file.name}`;
 }
 
 function clearFile() {
     newFile.value = null;
-    resumeUrl.value = '';
 }
 
 async function handleSubmit() {
@@ -268,29 +180,20 @@ async function handleSubmit() {
         errorMsg.value = 'You must be logged in to apply.';
         return;
     }
+    if (!newFile.value) {
+        errorMsg.value = 'Please upload a resume.';
+        return;
+    }
     errorMsg.value = '';
     submitting.value = true;
 
-    const payload =
-        method.value === 'resume'
-            ? { resumeUrl: resumeUrl.value, coverNote: coverNote.value }
-            : {
-                  contactEmail: contactEmail.value,
-                  contactPhone: contactPhone.value,
-                  coverNote: coverNote.value,
-              };
-
     try {
-        // FIX: pass raw IDs — no Number() coercion so string IDs like "dP-EB-0SqhA" work
-        const ok = await appsStore.applyToJob(
-            props.job.id, // jobId  — keep as-is
-            user.id, // candidateId — keep as-is (may be string)
-            props.job.employerId, // employerId — keep as-is
-            method.value,
-            payload
-        );
+        const result = await appsStore.applyToJob(props.job.id, {
+            resume: newFile.value,
+            coverLetter: coverLetter.value.trim(),
+        });
 
-        if (ok) {
+        if (result) {
             emit('success');
         } else {
             errorMsg.value =
@@ -368,33 +271,6 @@ async function handleSubmit() {
     color: var(--color-text-primary);
 }
 
-.apply-panel__methods {
-    display: flex;
-    gap: 8px;
-    padding: 16px 20px 0;
-}
-.method-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border: 1px solid var(--color-border-secondary);
-    border-radius: var(--border-radius-md);
-    background: none;
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: all 0.15s;
-}
-.method-btn.active {
-    background: #eeedfe;
-    border-color: #7f77dd;
-    color: #3c3489;
-    font-weight: 500;
-}
-
 .apply-panel__section {
     padding: 16px 20px 0;
     display: flex;
@@ -402,11 +278,6 @@ async function handleSubmit() {
     gap: 8px;
 }
 
-.field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
 .field-label {
     font-size: 13px;
     font-weight: 500;
@@ -439,11 +310,6 @@ async function handleSubmit() {
     resize: vertical;
     min-height: 72px;
     font-family: inherit;
-}
-.field-hint {
-    font-size: 12px;
-    color: var(--color-text-tertiary);
-    margin: 0;
 }
 .field-warn {
     font-size: 12px;
@@ -511,11 +377,6 @@ async function handleSubmit() {
 }
 .upload-zone__hint {
     color: var(--color-text-tertiary);
-}
-.upload-zone__filled-name {
-    font-size: 13px;
-    color: #0f6e56;
-    font-weight: 500;
 }
 
 .apply-panel__error {

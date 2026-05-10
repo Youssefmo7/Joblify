@@ -139,7 +139,7 @@ function getCount(status) {
 }
 
 function getJobTitle(jobId) {
-  const job = jobsStore.jobs.find(j => j.id === jobId || j.id === String(jobId));
+  const job = jobsStore.employerJobs.find(j => j.id === jobId || j.id === String(jobId));
   return job?.title || `Job #${jobId}`;
 }
 
@@ -156,7 +156,7 @@ async function respond(appId, status) {
 }
 
 onMounted(async () => {
-  const jobs = jobsStore.myJobs(employerId.value);
+  const jobs = jobsStore.myJobs;
   for (const job of jobs) {
     await appsStore.fetchApplicationsForJob(job.id);
   }

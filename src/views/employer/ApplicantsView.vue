@@ -22,30 +22,15 @@
                 <div class="applicant-card__header">
                     <div>
                         <p class="applicant-name">
-                            Candidate #{{ app.candidateId }}
+                            {{ app.candidateName || `Candidate #${app.candidateId}` }}
                         </p>
                         <p class="applicant-method">
-                            Applied via {{ app.applyMethod }}
+                            Applied via Resume
                         </p>
                     </div>
                     <span :class="['status-badge', `status--${app.status}`]">
                         {{ app.status }}
                     </span>
-                </div>
-
-                <!-- Contact info (contact method) -->
-                <div
-                    v-if="app.applyMethod === 'contact'"
-                    class="applicant-contact"
-                >
-                    <p>
-                        <strong>Email:</strong>
-                        {{ app.contactEmail }}
-                    </p>
-                    <p>
-                        <strong>Phone:</strong>
-                        {{ app.contactPhone }}
-                    </p>
                 </div>
 
                 <!-- Resume link -->

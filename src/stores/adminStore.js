@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import client from '@/api/client';
 
-const BASE_URL = 'http://localhost:3000';
+function normalizeJob(apiJob) {
+    return {
+        ...apiJob,
+        company: apiJob.company?.name || 'Unknown',
+        createdAt: apiJob.created_at,
+    };
+}
 
 export const useAdminStore = defineStore('admin', {
     state: () => ({
@@ -15,75 +21,94 @@ export const useAdminStore = defineStore('admin', {
             totalApplications: 0,
             pendingCount: 0,
         },
-        approvedJobs: [],
-        rejectedJobs: [],
         activityLog: [],
         loading: false,
         error: null,
     }),
 
     getters: {
-        visibleComments: (state) =>
-            state.allComments.filter((c) => c.status === 'visible'),
-
+        visibleComments: (state) => state.allComments,
         candidateCount: (state) =>
             state.allUsers.filter((u) => u.role === 'candidate').length,
-
         employerCount: (state) =>
             state.allUsers.filter((u) => u.role === 'employer').length,
-
         activeJobsCount: (state) => state.stats.activeCount || 0,
         usersGrowth: () => '+0% this month',
         jobsGrowth: () => '+0% this month',
-        
         approvalRatePercent: (state) => {
-            const total = state.approvedJobs.length + state.rejectedJobs.length;
-            return total === 0 ? 0 : Math.round((state.approvedJobs.length / total) * 100);
+            const reviewed =
+                (state.stats.totalJobs || 0) - (state.stats.pendingCount || 0);
+            if (!state.stats.totalJobs) return 0;
+            return Math.round((reviewed / state.stats.totalJobs) * 100);
         },
-        
         actionsLast24h: (state) => state.activityLog.length,
     },
 
     actions: {
-        _logActivity(type, title, meta) {
-            this.activityLog.unshift({
-                id: Date.now() + Math.random(),
-                type,
-                title,
-                meta,
-                createdAt: new Date().toISOString()
-            });
-        },
-
         // ── LOAD DASHBOARD ────────────────────────────────────────
         async loadDashboard() {
             this.loading = true;
             this.error = null;
             try {
-                const [jobsRes, usersRes, appsRes, commentsRes] =
-                    await Promise.all([
-                        axios.get(`${BASE_URL}/jobs`),
-                        axios.get(`${BASE_URL}/users`),
-                        axios.get(`${BASE_URL}/applications`),
-                        axios.get(`${BASE_URL}/comments`),
-                    ]);
+                const [dashRes, activityRes] = await Promise.all([
+                    client.get('/admin/dashboard'),
+                    client.get('/admin/dashboard/activity'),
+                ]);
 
-                const allJobs = jobsRes.data;
-                this.pendingJobs = allJobs.filter(
-                    (j) => j.status === 'pending'
-                );
-                this.allUsers = usersRes.data.filter((u) => u.role !== 'admin');
-                this.allComments = commentsRes.data;
-
+                const dash = dashRes.data || dashRes;
                 this.stats = {
-            totalUsers: this.allUsers.length,
-            activeCount: allJobs.filter(j => j.status === 'active' || j.status === 'approved').length,
-            totalJobs: allJobs.length,
-            totalApplications: appsRes.data.length,
-            pendingCount: this.pendingJobs.length,
-        };
-    } catch (err) {
-                this.error = 'Could not load admin dashboard.';
+                    totalUsers: dash.users?.total || 0,
+                    activeCount: dash.jobs?.approved || 0,
+                    totalJobs: dash.jobs?.total || 0,
+                    totalApplications: dash.applications?.total || 0,
+                    pendingCount: dash.jobs?.pending || 0,
+                };
+
+                // Build activity log from recent activity
+                const activity = activityRes.data || activityRes;
+                const logs = [];
+                (activity.recent_users || []).forEach((u) => {
+                    logs.push({
+                        id: `user-${u.id}`,
+                        type: 'user_registered',
+                        title: `New user: ${u.name}`,
+                        meta: u.role,
+                        createdAt: u.created_at,
+                    });
+                });
+                (activity.recent_jobs || []).forEach((j) => {
+                    logs.push({
+                        id: `job-${j.id}`,
+                        type: j.status === 'pending' ? 'job_pending' : 'job_approved',
+                        title: `Job: ${j.title}`,
+                        meta: j.status,
+                        createdAt: j.created_at,
+                    });
+                });
+                this.activityLog = logs.sort(
+                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                );
+            } catch (err) {
+                this.error = err.message || 'Could not load admin dashboard.';
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // ── FETCH PENDING JOBS ────────────────────────────────────
+        async fetchPendingJobs() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const data = await client.get('/admin/jobs?status=pending');
+                this.pendingJobs = (Array.isArray(data) ? data : data.data || []).map(
+                    normalizeJob
+                );
+                this.stats.pendingCount = this.pendingJobs.length;
+                return this.pendingJobs;
+            } catch (err) {
+                this.error = err.message || 'Could not load pending jobs.';
+                return [];
             } finally {
                 this.loading = false;
             }
@@ -94,34 +119,21 @@ export const useAdminStore = defineStore('admin', {
             this.loading = true;
             this.error = null;
             try {
-                const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
-                );
-
-                // PUT: send full job object with updated status
-                await axios.put(`${BASE_URL}/jobs/${jobId}`, {
-                    ...job,
-                    id: jobId,
-                    status: 'approved',
-                });
-
+                await client.patch(`/admin/jobs/${jobId}/approve`);
                 this.pendingJobs = this.pendingJobs.filter(
                     (j) => j.id !== jobId
                 );
                 this.stats.pendingCount = this.pendingJobs.length;
-                this.approvedJobs.push(jobId);
-                this._logActivity('job_approved', job.title, `Company: ${job.company}`);
-
-                await axios.post(`${BASE_URL}/notifications`, {
-                    userId: job.employerId,
+                this.activityLog.unshift({
+                    id: Date.now(),
                     type: 'job_approved',
-                    message: `Your job posting "${job.title}" has been approved and is now live.`,
-                    read: false,
+                    title: 'Approved job',
+                    meta: jobId,
                     createdAt: new Date().toISOString(),
                 });
                 return true;
             } catch (err) {
-                this.error = 'Could not approve job.';
+                this.error = err.message || 'Could not approve job.';
                 return false;
             } finally {
                 this.loading = false;
@@ -133,99 +145,76 @@ export const useAdminStore = defineStore('admin', {
             this.loading = true;
             this.error = null;
             try {
-                const { data: job } = await axios.get(
-                    `${BASE_URL}/jobs/${jobId}`
-                );
-
-                // PUT: send full job object with updated status + reason
-                await axios.put(`${BASE_URL}/jobs/${jobId}`, {
-                    ...job,
-                    id: jobId,
-                    status: 'rejected',
-                    rejectionReason: reason,
+                await client.patch(`/admin/jobs/${jobId}/reject`, {
+                    reason,
                 });
-
                 this.pendingJobs = this.pendingJobs.filter(
                     (j) => j.id !== jobId
                 );
                 this.stats.pendingCount = this.pendingJobs.length;
-                this.rejectedJobs.push(jobId);
-                this._logActivity('job_rejected', job.title, `Reason: ${reason || 'None'}`);
-
-                await axios.post(`${BASE_URL}/notifications`, {
-                    userId: job.employerId,
+                this.activityLog.unshift({
+                    id: Date.now(),
                     type: 'job_rejected',
-                    message: `Your job posting "${
-                        job.title
-                    }" was not approved. Reason: ${
-                        reason || 'No reason provided.'
-                    }`,
-                    read: false,
+                    title: 'Rejected job',
+                    meta: reason || 'No reason',
                     createdAt: new Date().toISOString(),
                 });
                 return true;
             } catch (err) {
-                this.error = 'Could not reject job.';
+                this.error = err.message || 'Could not reject job.';
                 return false;
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── HIDE COMMENT ──────────────────────────────────────────
-        async hideComment(commentId) {
+        // ── FETCH USERS ───────────────────────────────────────────
+        async fetchUsers(params = {}) {
             this.loading = true;
             this.error = null;
             try {
-                const index = this.allComments.findIndex(
-                    (c) => c.id === commentId
+                const data = await client.get('/admin/users', { params });
+                this.allUsers = (Array.isArray(data) ? data : data.data || []).filter(
+                    (u) => u.role !== 'admin'
                 );
-                if (index === -1) throw new Error('Comment not found');
+                this.stats.totalUsers = this.allUsers.length;
+                return this.allUsers;
+            } catch (err) {
+                this.error = err.message || 'Could not load users.';
+                return [];
+            } finally {
+                this.loading = false;
+            }
+        },
 
-                const merged = {
-                    ...this.allComments[index],
-                    id: commentId,
-                    status: 'hidden',
-                };
-                await axios.put(
-                    `${BASE_URL}/comments/${commentId}`,
-                    merged
-                );
-                this.allComments[index].status = 'hidden';
-                this._logActivity('comment_removed', 'Hidden comment', `By ${merged.userName}`);
+        // ── SUSPEND USER ──────────────────────────────────────────
+        async suspendUser(userId) {
+            this.loading = true;
+            this.error = null;
+            try {
+                await client.patch(`/admin/users/${userId}/suspend`);
+                const user = this.allUsers.find((u) => u.id === userId);
+                if (user) user.suspended = true;
                 return true;
             } catch (err) {
-                this.error = 'Could not hide comment.';
+                this.error = err.message || 'Could not suspend user.';
                 return false;
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── RESTORE COMMENT ───────────────────────────────────────
-        async restoreComment(commentId) {
+        // ── ACTIVATE USER ─────────────────────────────────────────
+        async activateUser(userId) {
             this.loading = true;
             this.error = null;
             try {
-                const index = this.allComments.findIndex(
-                    (c) => c.id === commentId
-                );
-                if (index === -1) throw new Error('Comment not found');
-
-                const merged = {
-                    ...this.allComments[index],
-                    id: commentId,
-                    status: 'visible',
-                };
-                await axios.put(
-                    `${BASE_URL}/comments/${commentId}`,
-                    merged
-                );
-                this.allComments[index].status = 'visible';
-                this._logActivity('comment_restored', 'Restored comment', `By ${merged.userName}`);
+                await client.patch(`/admin/users/${userId}/activate`);
+                const user = this.allUsers.find((u) => u.id === userId);
+                if (user) user.suspended = false;
                 return true;
             } catch (err) {
-                this.error = 'Could not restore comment.';
+                this.error = err.message || 'Could not activate user.';
                 return false;
             } finally {
                 this.loading = false;
@@ -237,61 +226,57 @@ export const useAdminStore = defineStore('admin', {
             this.loading = true;
             this.error = null;
             try {
-                const { data } = await axios.get(`${BASE_URL}/comments`);
-                this.allComments = data;
+                const data = await client.get('/admin/comments');
+                this.allComments = Array.isArray(data) ? data : data.data || [];
+                return this.allComments;
             } catch (err) {
-                this.error = 'Could not load comments.';
+                this.error = err.message || 'Could not load comments.';
+                return [];
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── BAN / UNBAN USER ──────────────────────────────────────────────
-        async banUser(userId) {
+        // ── REMOVE COMMENT ────────────────────────────────────────
+        async removeComment(commentId, reason = '') {
             this.loading = true;
             this.error = null;
             try {
-                const index = this.allUsers.findIndex((u) => u.id === userId);
-                if (index === -1) throw new Error('User not found');
-
-                const merged = {
-                    ...this.allUsers[index],
-                    id: userId,
-                    banned: true,
-                };
-
-                await axios.put(`${BASE_URL}/users/${userId}`, merged);
-                this.allUsers[index].banned = true;
-                this._logActivity('user_banned', `Banned user: ${merged.name}`, `Role: ${merged.role}`);
+                await client.delete(`/admin/comments/${commentId}`, {
+                    reason,
+                });
+                this.allComments = this.allComments.filter(
+                    (c) => c.id !== commentId
+                );
                 return true;
             } catch (err) {
-                this.error = 'Could not ban user.';
+                this.error = err.message || 'Could not remove comment.';
                 return false;
             } finally {
                 this.loading = false;
             }
         },
 
-        async unbanUser(userId) {
+        // ── FETCH ACTIVITY LOGS ───────────────────────────────────
+        async fetchActivityLogs(params = {}) {
             this.loading = true;
             this.error = null;
             try {
-                const index = this.allUsers.findIndex((u) => u.id === userId);
-                if (index === -1) throw new Error('User not found');
-
-                const merged = {
-                    ...this.allUsers[index],
-                    id: userId,
-                    banned: false,
-                };
-
-                await axios.put(`${BASE_URL}/users/${userId}`, merged);
-                this.allUsers[index].banned = false;
-                this._logActivity('user_unbanned', `Unbanned user: ${merged.name}`, `Role: ${merged.role}`);
-                return true;
+                const data = await client.get('/admin/activity-logs', {
+                    params,
+                });
+                const logs = Array.isArray(data) ? data : data.data || [];
+                this.activityLog = logs.map((log) => ({
+                    id: log.id,
+                    type: log.action,
+                    title: `${log.action} on ${log.subject_type}`,
+                    meta: log.meta ? JSON.stringify(log.meta) : '',
+                    createdAt: log.created_at,
+                }));
+                return this.activityLog;
             } catch (err) {
-                this.error = 'Could not unban user.';
-                return false;
+                this.error = err.message || 'Could not load activity logs.';
+                return [];
             } finally {
                 this.loading = false;
             }

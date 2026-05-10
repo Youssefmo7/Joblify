@@ -50,13 +50,7 @@
                 >
                     ✓ Applied
                 </button>
-                <button
-                    v-if="authStore.isCandidate"
-                    :class="['btn-save', { saved: isSaved }]"
-                    @click="authStore.toggleSaveJob(job.id)"
-                >
-                    {{ isSaved ? 'Saved' : 'Save' }}
-                </button>
+
             </div>
         </div>
 
@@ -75,16 +69,6 @@
                 <section class="detail-section">
                     <h2 class="detail-section__title">About the role</h2>
                     <p class="detail-section__text">{{ job.description }}</p>
-                </section>
-
-                <!-- Responsibilities -->
-                <section class="detail-section">
-                    <h2 class="detail-section__title">Responsibilities</h2>
-                    <ul class="detail-list">
-                        <li v-for="item in job.responsibilities" :key="item">
-                            {{ item }}
-                        </li>
-                    </ul>
                 </section>
 
                 <!-- Requirements -->
@@ -264,9 +248,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
 import ApplyModal from '@/components/ApplyModal.vue';
-import axios from 'axios';
-
-const BASE_URL = 'http://localhost:3000';
+import client from '@/api/client';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -281,10 +263,6 @@ const comments = ref([]);
 
 const job = computed(() => jobsStore.currentJob);
 
-const isSaved = computed(() =>
-    authStore.currentUser?.savedJobs?.includes(job.value?.id)
-);
-
 // FIX: use == (loose equality) so "1" == 1 — handles both numeric and string IDs
 const hasApplied = computed(
     () =>
@@ -292,19 +270,23 @@ const hasApplied = computed(
         appsStore.hasApplied(job.value?.id, authStore.currentUser?.id)
 );
 
-const visibleComments = computed(() =>
-    comments.value.filter((c) => c.status === 'visible')
-);
+const visibleComments = computed(() => comments.value);
 
 // ── Load comments ─────────────────────────────────────────────
 async function loadComments() {
     try {
-        // FIX: pass the raw route param — do NOT wrap in Number().
-        // Job IDs like "N9w7HxMMTiM" are strings; Number("N9w7HxMMTiM") = NaN
-        // which makes the query return nothing. Use the ID as-is.
         const jobId = route.params.id;
-        const { data } = await axios.get(`${BASE_URL}/comments?jobId=${jobId}`);
-        comments.value = data;
+        const data = await client.get(`/jobs/${jobId}/comments`);
+        comments.value = (Array.isArray(data) ? data : data.data || []).map(
+            (c) => ({
+                ...c,
+                text: c.content,
+                userName: c.user?.name || 'Unknown',
+                userId: c.user_id,
+                userRole: 'candidate', // API doesn't return role on comment user
+                createdAt: c.created_at,
+            })
+        );
     } catch (err) {
         console.error('Failed to load comments', err);
     }
@@ -316,19 +298,18 @@ async function postComment() {
     commentError.value = '';
     postingComment.value = true;
     try {
-        // FIX: store jobId as the raw value from the fetched job object,
-        // not from route.params (which is always a string).
-        // This matches whatever type json-server used when the job was created.
-        const { data } = await axios.post(`${BASE_URL}/comments`, {
-            jobId: job.value.id,
-            userId: authStore.currentUser.id,
-            userRole: authStore.currentUser.role,
-            userName: authStore.currentUser.name,
-            text: newComment.value.trim(),
-            status: 'visible',
-            createdAt: new Date().toISOString(),
+        const jobId = job.value.id;
+        const data = await client.post(`/jobs/${jobId}/comments`, {
+            content: newComment.value.trim(),
         });
-        comments.value.push(data);
+        comments.value.push({
+            ...data,
+            text: data.content,
+            userName: data.user?.name || authStore.currentUser?.name,
+            userId: authStore.currentUser?.id,
+            userRole: authStore.currentUser?.role,
+            createdAt: data.created_at,
+        });
         newComment.value = '';
     } catch (err) {
         commentError.value = 'Failed to post comment. Please try again.';
@@ -342,19 +323,18 @@ async function postComment() {
 async function deleteComment(comment) {
     if (!confirm('Delete this comment?')) return;
     try {
-        await axios.delete(`${BASE_URL}/comments/${comment.id}`);
+        await client.delete(`/comments/${comment.id}`);
         comments.value = comments.value.filter((c) => c.id !== comment.id);
     } catch (err) {
         console.error('Failed to delete comment', err);
     }
 }
 
-// ── Admin: hide comment ───────────────────────────────────────
+// ── Admin: hide comment (soft-delete via admin endpoint) ──────
 async function hideComment(comment) {
     try {
-        await axios.put(`${BASE_URL}/comments/${comment.id}`, {
-            ...comment,
-            status: 'hidden',
+        await client.delete(`/admin/comments/${comment.id}`, {
+            reason: 'Inappropriate content',
         });
         comment.status = 'hidden';
     } catch (err) {
@@ -396,7 +376,7 @@ onMounted(async () => {
     await jobsStore.fetchJob(route.params.id);
     await loadComments();
     if (authStore.isCandidate) {
-        await appsStore.fetchMyApplications(authStore.currentUser.id);
+        await appsStore.fetchMyApplications();
     }
 });
 </script>

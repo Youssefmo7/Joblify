@@ -1,5 +1,18 @@
 <template>
     <nav class="navbar">
+        <!-- Unverified email banner -->
+        <div
+            v-if="authStore.isLoggedIn && !authStore.isVerified"
+            class="verify-banner"
+        >
+            <span>
+                Please verify your email to unlock all features.
+            </span>
+            <RouterLink to="/verify-email-notice" class="verify-banner__link">
+                Resend email →
+            </RouterLink>
+        </div>
+
         <div class="navbar__inner">
             <!-- Logo -->
             <RouterLink to="/" class="navbar__logo">Joblify</RouterLink>
@@ -25,8 +38,8 @@
                     class="navbar__search-input"
                     type="text"
                     placeholder="Search jobs, skills, or companies..."
-                    :value="jobsStore.filters.keyword"
-                    @input="jobsStore.setFilter('keyword', $event.target.value)"
+                    :value="jobsStore.filters.search"
+                    @input="jobsStore.setFilter('search', $event.target.value)"
                     @keyup.enter="$router.push('/')"
                 />
             </div>
@@ -94,18 +107,18 @@
                                 </button>
                             </div>
                             <div
-                                v-if="notifications.length === 0"
+                                v-if="notificationsStore.notifications.length === 0"
                                 class="navbar__dropdown-empty"
                             >
                                 No notifications yet
                             </div>
                             <div
-                                v-for="n in notifications"
+                                v-for="n in notificationsStore.notifications"
                                 :key="n.id"
-                                :class="['notif-item', { unread: !n.read }]"
+                                :class="['notif-item', { unread: !n.isRead }]"
                                 @click="markRead(n)"
                             >
-                                <span v-if="!n.read" class="notif-item__dot" />
+                                <span v-if="!n.isRead" class="notif-item__dot" />
                                 <p class="notif-item__msg">{{ n.message }}</p>
                                 <p class="notif-item__time">
                                     {{ timeAgo(n.createdAt) }}
@@ -211,17 +224,15 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
-import axios from 'axios';
-
-const BASE_URL = 'http://localhost:3000';
+import { useNotificationsStore } from '@/stores/notificationsStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
+const notificationsStore = useNotificationsStore();
 
 const showNotifications = ref(false);
 const showUserMenu = ref(false);
-const notifications = ref([]);
 
 const initials = computed(() => {
     const name = authStore.currentUser?.name || '';
@@ -233,36 +244,20 @@ const initials = computed(() => {
         .toUpperCase();
 });
 
-const unreadCount = computed(
-    () => notifications.value.filter((n) => !n.read).length
-);
+const unreadCount = computed(() => notificationsStore.unreadCount);
 
 // ── Notifications ─────────────────────────────────────────────
 async function loadNotifications() {
     if (!authStore.isLoggedIn) return;
-    try {
-        const { data } = await axios.get(
-            `${BASE_URL}/notifications?userId=${authStore.currentUser.id}`
-        );
-        notifications.value = data.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-    } catch (e) {
-        console.log(e);
-    }
+    await notificationsStore.fetchNotifications();
 }
 
 async function markRead(notif) {
-    if (notif.read) return;
-    notif.read = true;
-    await axios.patch(`${BASE_URL}/notifications/${notif.id}`, { read: true });
+    await notificationsStore.markRead(notif.id);
 }
 
 async function markAllRead() {
-    for (const n of notifications.value.filter((n) => !n.read)) {
-        n.read = true;
-        await axios.patch(`${BASE_URL}/notifications/${n.id}`, { read: true });
-    }
+    await notificationsStore.markAllRead();
 }
 
 function toggleNotifications() {
@@ -286,16 +281,9 @@ async function handleLogout() {
     router.push('/');
 }
 
-// ── Helpers ───────────────────────────────────────────────────
-function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (mins < 60) return `${mins}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-}
+import { timeAgo } from '@/utils/date';
+
+// ── Helpers moved to @/utils/date ────────────────────────────
 
 // ── Click outside — closes both dropdowns ─────────────────────
 function handleClickOutside() {
@@ -320,6 +308,23 @@ onUnmounted(() => {
     z-index: 50;
     background: var(--color-background-primary);
     border-bottom: 1px solid var(--color-border-tertiary);
+}
+.verify-banner {
+    background: #faeeda;
+    color: #854f0b;
+    font-size: 13px;
+    padding: 8px 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.verify-banner__link {
+    color: #854f0b;
+    font-weight: 600;
+    text-decoration: underline;
 }
 .navbar__inner {
     max-width: 1200px;

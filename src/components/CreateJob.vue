@@ -87,12 +87,9 @@
                                         @blur="validateField('category')"
                                     >
                                         <option value="">Select a category</option>
-                                        <option>Programming</option>
-                                        <option>Design</option>
-                                        <option>Management</option>
-                                        <option>Marketing</option>
-                                        <option>Sales</option>
-                                        <option>Other</option>
+                                        <option v-for="cat in categoriesStore.categories" :key="cat.id" :value="cat.id">
+                                            {{ cat.name }}
+                                        </option>
                                     </select>
                                     <p v-if="touched.category && errors.category" class="text-xs text-red-500 mt-1">Category is required</p>
                                 </div>
@@ -119,21 +116,21 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Work Type <span class="text-red-500">*</span></label>
                                 <div class="flex gap-3">
                                     <label class="flex-1 cursor-pointer">
-                                        <input type="radio" v-model="form.workType" value="Remote" class="sr-only peer">
+                                        <input type="radio" v-model="form.workType" value="remote" class="sr-only peer">
                                         <div class="peer-checked:ring-2 peer-checked:ring-[#fd366e] peer-checked:border-[#fd366e] border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-all">
                                             <p class="text-sm font-semibold text-gray-900">Remote</p>
                                             <p class="text-xs text-gray-500 mt-1">Work from anywhere</p>
                                         </div>
                                     </label>
                                     <label class="flex-1 cursor-pointer">
-                                        <input type="radio" v-model="form.workType" value="On-site" class="sr-only peer">
+                                        <input type="radio" v-model="form.workType" value="onsite" class="sr-only peer">
                                         <div class="peer-checked:ring-2 peer-checked:ring-[#fd366e] peer-checked:border-[#fd366e] border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-all">
                                             <p class="text-sm font-semibold text-gray-900">On-site</p>
                                             <p class="text-xs text-gray-500 mt-1">Office based</p>
                                         </div>
                                     </label>
                                     <label class="flex-1 cursor-pointer">
-                                        <input type="radio" v-model="form.workType" value="Hybrid" class="sr-only peer">
+                                        <input type="radio" v-model="form.workType" value="hybrid" class="sr-only peer">
                                         <div class="peer-checked:ring-2 peer-checked:ring-[#fd366e] peer-checked:border-[#fd366e] border border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-all">
                                             <p class="text-sm font-semibold text-gray-900">Hybrid</p>
                                             <p class="text-xs text-gray-500 mt-1">Mix of both</p>
@@ -143,7 +140,7 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
                                     <input 
                                         v-model="form.deadline" 
                                         type="date" 
@@ -156,10 +153,10 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
                                     <select v-model="form.experienceLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] bg-white transition-colors">
-                                        <option>Entry Level</option>
-                                        <option>Mid Level</option>
-                                        <option>Senior Level</option>
-                                        <option>Director</option>
+                                        <option value="entry">Entry Level</option>
+                                        <option value="mid">Mid Level</option>
+                                        <option value="senior">Senior Level</option>
+                                        <option value="lead">Lead / Principal</option>
                                     </select>
                                 </div>
                             </div>
@@ -183,24 +180,25 @@
                                     rows="4" 
                                     class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] resize-none transition-colors"
                                     :class="touched.requirements && errors.requirements ? 'border-red-500' : 'border-gray-300'"
-                                    placeholder="List the job requirements (one per line)..."
+                                    placeholder="List the job requirements..."
                                     @blur="validateField('requirements')"
                                 ></textarea>
                                 <p v-if="touched.requirements && errors.requirements" class="text-xs text-red-500 mt-1">Please list at least one requirement</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
-                                <textarea v-model="form.benefitsText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] resize-none transition-colors" placeholder="List the benefits offered (one per line)..."></textarea>
+                                <textarea v-model="form.benefitsText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] resize-none transition-colors" placeholder="List the benefits offered..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tech Stack</label>
-                                <input v-model="form.techStack" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="e.g. Vue.js, TypeScript, GraphQL (comma-separated)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Skills <span class="text-gray-400 text-xs">(comma-separated)</span></label>
+                                <input v-model="form.skillsText" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="e.g. Vue.js, TypeScript, GraphQL">
+                                <p class="text-xs text-gray-500 mt-1">Only skills already in our database will be linked.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <input v-model.number="form.salaryMin" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Min (e.g. 140000)">
-                                    <input v-model.number="form.salaryMax" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Max (e.g. 200000)">
+                                    <input v-model.number="form.salaryMin" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Min (e.g. 50000)">
+                                    <input v-model.number="form.salaryMax" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Max (e.g. 80000)">
                                 </div>
                             </div>
                         </div>
@@ -213,25 +211,6 @@
 
                 <!-- Step 3: Branding & Preview -->
                 <div v-show="currentStep === 3" id="step3" class="space-y-6">
-                    <div class="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">Company Branding</h2>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
-                            <div class="flex items-center space-x-4">
-                                <div class="h-16 w-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                                    <img v-if="logoPreview" :src="logoPreview" class="h-full w-full object-cover">
-                                    <img v-else-if="authStore.currentUser?.companyLogo" :src="authStore.currentUser.companyLogo" class="h-full w-full object-cover">
-                                    <svg v-else class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                </div>
-                                <div>
-                                    <button type="button" @click="$refs.logoInput.click()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none">Upload Logo</button>
-                                    <input type="file" ref="logoInput" class="hidden" accept="image/*" @change="handleLogoChange">
-                                    <p class="text-xs text-gray-500 mt-1">PNG, JPG or SVG. Max 2MB.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
                         <h2 class="text-lg font-bold text-blue-900 mb-2">Review Summary</h2>
                         <p class="text-sm text-blue-700 mb-4">Please review your job posting details before publishing. You can still go back to make changes.</p>
@@ -239,6 +218,7 @@
                             <p><strong>Title:</strong> {{ form.title || '-' }}</p>
                             <p><strong>Location:</strong> {{ form.location || '-' }}</p>
                             <p><strong>Work Type:</strong> {{ form.workType }}</p>
+                            <p><strong>Experience:</strong> {{ form.experienceLevel }}</p>
                         </div>
                     </div>
 
@@ -261,30 +241,32 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
+import { useCategoriesStore } from '@/stores/categoriesStore';
+import { useSkillsStore } from '@/stores/skillsStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
+const categoriesStore = useCategoriesStore();
+const skillsStore = useSkillsStore();
 
 const currentStep = ref(1);
-const logoPreview = ref(null);
-const logoFile = ref(null);
 
 const form = reactive({
     title: '',
     description: '',
     category: '',
     location: '',
-    workType: 'Remote',
+    workType: 'remote',
     deadline: '',
-    experienceLevel: 'Senior Level',
+    experienceLevel: 'senior',
     requirementsText: '',
     benefitsText: '',
-    techStack: '',
+    skillsText: '',
     salaryMin: null,
     salaryMax: null,
 });
@@ -348,16 +330,14 @@ function stepTextClass(step) {
     return step <= currentStep.value ? 'text-gray-900' : 'text-gray-500';
 }
 
-function handleLogoChange(e) {
-    const file = e.target.files[0];
-    if (file) {
-        logoFile.value = file;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            logoPreview.value = ev.target.result;
-        };
-        reader.readAsDataURL(file);
+function mapSkillsToIds() {
+    const names = form.skillsText.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
+    const ids = [];
+    for (const name of names) {
+        const skill = skillsStore.skills.find(s => s.name.toLowerCase() === name);
+        if (skill) ids.push(skill.id);
     }
+    return ids;
 }
 
 async function publishJob() {
@@ -372,32 +352,38 @@ async function publishJob() {
         return;
     }
 
+    const description = form.description.trim();
+    const requirements = form.requirementsText.trim();
+    const fullDescription = requirements
+        ? `${description}\n\n## Requirements\n${requirements}`
+        : description;
+
     const jobData = {
-        title: form.title,
-        description: form.description,
-        category: form.category,
-        location: form.location,
-        workType: form.workType,
-        deadline: new Date(form.deadline).toISOString(),
-        experienceLevel: form.experienceLevel,
-        skills: form.techStack.split(',').map(s => s.trim()).filter(s => s),
-        salary: `$${form.salaryMin || 0}k – $${form.salaryMax || 0}k / yr`,
-        responsibilities: form.description.split('\n').filter(r => r.trim()),
-        requirements: form.requirementsText.split('\n').filter(r => r.trim()),
-        benefits: form.benefitsText.split('\n').filter(b => b.trim()),
-        company: employer.companyName || employer.name,
-        companyInitial: (employer.companyName || employer.name).charAt(0),
-        companyBg: logoPreview.value ? '' : 'bg-gray-100',
-        companyText: logoPreview.value ? '' : 'text-gray-600',
-        logo: logoPreview.value || employer.companyLogo || '',
-        status: 'pending'
+        title: form.title.trim(),
+        description: fullDescription,
+        requirements: requirements,
+        benefits: form.benefitsText.trim(),
+        salary_min: form.salaryMin,
+        salary_max: form.salaryMax,
+        location: form.location.trim(),
+        work_type: form.workType,
+        experience_level: form.experienceLevel,
+        deadline: form.deadline,
+        categories: form.category ? [Number(form.category)] : [],
+        skills: mapSkillsToIds(),
+        company_id: employer.company_id || 1, // TODO: fetch from companyStore in Phase 4
     };
 
-    const result = await jobsStore.postJob(jobData, employer.id);
+    const result = await jobsStore.postJob(jobData);
     if (result) {
         router.push('/employer/dashboard');
     }
 }
+
+onMounted(() => {
+    categoriesStore.fetchCategories();
+    skillsStore.fetchSkills();
+});
 </script>
 
 <style scoped>

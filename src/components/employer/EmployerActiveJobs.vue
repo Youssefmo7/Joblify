@@ -69,16 +69,14 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
-const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 
-const myJobs = computed(() => jobsStore.myJobs(authStore.currentUser?.id));
+const myJobs = computed(() => jobsStore.myJobs);
 
 const showDeleteModal = ref(false);
 const jobIdToDelete = ref(null);

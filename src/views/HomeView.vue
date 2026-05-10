@@ -3,32 +3,14 @@
         <!-- ── LEFT: Profile + Filters sidebar ──────────────────── -->
         <aside class="sidebar">
             <!-- Candidate profile card -->
-            <div v-if="authStore.isCandidate" class="profile-card">
+            <div v-if="authStore.isCandidate && authStore.isLoggedIn" class="profile-card">
                 <div class="profile-card__banner" />
                 <div class="profile-card__body">
-                    <img
-                        class="profile-card__avatar"
-                        :src="user.avatar || '/avatars/default.png'"
-                        :alt="user.name"
-                    />
-                    <p class="profile-card__name">{{ user.name }}</p>
-                    <p class="profile-card__title">
-                        {{ user.title || 'Add your job title' }}
-                    </p>
-                    <div class="profile-card__stats">
-                        <div class="profile-card__stat">
-                            <span class="label">Profile views</span>
-                            <span class="value">
-                                {{ user.profileViews || 0 }}
-                            </span>
-                        </div>
-                        <div class="profile-card__stat">
-                            <span class="label">Post reach</span>
-                            <span class="value">
-                                {{ user.savedJobs?.length * 3 || 0 }}
-                            </span>
-                        </div>
+                    <div class="profile-card__avatar-placeholder">
+                        {{ user.name?.charAt(0)?.toUpperCase() || '?' }}
                     </div>
+                    <p class="profile-card__name">{{ user.name }}</p>
+                    <p class="profile-card__title">Candidate</p>
                 </div>
             </div>
 
@@ -47,7 +29,7 @@
                         <input
                             type="checkbox"
                             :value="type.value"
-                            :checked="jobsStore.filters.workType === type.value"
+                            :checked="jobsStore.filters.work_type === type.value"
                             @change="toggleWorkType(type.value)"
                         />
                         {{ type.label }}
@@ -59,18 +41,18 @@
                     <p class="filter-group__label">Category</p>
                     <select
                         class="filter-select"
-                        :value="jobsStore.filters.category"
+                        :value="jobsStore.filters.category_id"
                         @change="
-                            jobsStore.setFilter('category', $event.target.value)
+                            jobsStore.setFilter('category_id', $event.target.value)
                         "
                     >
                         <option value="">All categories</option>
                         <option
-                            v-for="cat in categories"
-                            :key="cat.value"
-                            :value="cat.value"
+                            v-for="cat in categoriesStore.categories"
+                            :key="cat.id"
+                            :value="cat.id"
                         >
-                            {{ cat.label }}
+                            {{ cat.name }}
                         </option>
                     </select>
                 </div>
@@ -80,18 +62,19 @@
                     <p class="filter-group__label">Experience level</p>
                     <select
                         class="filter-select"
-                        :value="jobsStore.filters.experienceLevel"
+                        :value="jobsStore.filters.experience_level"
                         @change="
                             jobsStore.setFilter(
-                                'experienceLevel',
+                                'experience_level',
                                 $event.target.value
                             )
                         "
                     >
                         <option value="">Any</option>
-                        <option value="junior">Junior</option>
-                        <option value="mid">Mid-level</option>
-                        <option value="senior">Senior</option>
+                        <option value="entry">Entry Level</option>
+                        <option value="mid">Mid Level</option>
+                        <option value="senior">Senior Level</option>
+                        <option value="lead">Lead / Principal</option>
                     </select>
                 </div>
 
@@ -100,14 +83,13 @@
                     <p class="filter-group__label">Sort by</p>
                     <select
                         class="filter-select"
-                        :value="jobsStore.filters.sortBy"
+                        :value="jobsStore.filters.sort"
                         @change="
-                            jobsStore.setFilter('sortBy', $event.target.value)
+                            jobsStore.setFilter('sort', $event.target.value)
                         "
                     >
-                        <option value="createdAt">Most recent</option>
-                        <option value="salaryMin">Highest salary</option>
-                        <option value="applicantsCount">Most applicants</option>
+                        <option value="date">Most recent</option>
+                        <option value="relevance">Relevance</option>
                     </select>
                 </div>
 
@@ -125,8 +107,8 @@
                     class="search-bar__input"
                     type="text"
                     placeholder="Search jobs, skills, or companies..."
-                    :value="jobsStore.filters.keyword"
-                    @input="jobsStore.setFilter('keyword', $event.target.value)"
+                    :value="jobsStore.filters.search"
+                    @input="jobsStore.setFilter('search', $event.target.value)"
                 />
                 <input
                     class="search-bar__input search-bar__input--location"
@@ -195,7 +177,7 @@
                     </div>
                     <button
                         class="skill-row__add"
-                        @click="jobsStore.setFilter('keyword', skill.name)"
+                        @click="jobsStore.setFilter('search', skill.name)"
                     >
                         +
                     </button>
@@ -227,12 +209,14 @@ import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import { useCategoriesStore } from '@/stores/categoriesStore';
 import JobCard from '@/components/JobCard.vue';
 import ApplyModal from '@/components/ApplyModal.vue';
 
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
+const categoriesStore = useCategoriesStore();
 
 const applyTarget = ref(null);
 const user = computed(() => authStore.currentUser || {});
@@ -243,14 +227,6 @@ const workTypes = [
     { value: 'hybrid', label: 'Hybrid' },
 ];
 
-const categories = [
-    { value: 'programming', label: 'Programming' },
-    { value: 'design', label: 'Design' },
-    { value: 'management', label: 'Management' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'sales', label: 'Sales' },
-];
-
 const topSkills = [
     { name: 'Vue.js', count: '2,400' },
     { name: 'React', count: '5,100' },
@@ -259,8 +235,8 @@ const topSkills = [
 ];
 
 function toggleWorkType(value) {
-    const current = jobsStore.filters.workType;
-    jobsStore.setFilter('workType', current === value ? '' : value);
+    const current = jobsStore.filters.work_type;
+    jobsStore.setFilter('work_type', current === value ? '' : value);
 }
 
 function openApplyPanel(job) {
@@ -280,9 +256,10 @@ function handleDeleted(jobId) {
 
 onMounted(async () => {
     await jobsStore.fetchJobs();
+    await categoriesStore.fetchCategories();
     // Load candidate's existing applications so hasApplied works
-    if (authStore.isCandidate) {
-        await appsStore.fetchMyApplications(authStore.currentUser.id);
+    if (authStore.isCandidate && authStore.isLoggedIn) {
+        await appsStore.fetchMyApplications();
     }
 });
 </script>

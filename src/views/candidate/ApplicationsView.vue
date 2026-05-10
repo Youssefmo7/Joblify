@@ -40,16 +40,16 @@
         <!-- Application cards -->
         <div v-else class="apps-list">
             <div v-for="app in filtered" :key="app.id" class="app-card">
-                <!-- Job info (loaded lazily from jobsStore) -->
+                <!-- Job info (from normalized application data) -->
                 <div class="app-card__job">
                     <div class="app-card__logo">
                         <img
-                            v-if="getJob(app.jobId)?.companyLogo"
-                            :src="getJob(app.jobId).companyLogo"
-                            :alt="getJob(app.jobId).company"
+                            v-if="app._raw?.job?.company?.logo"
+                            :src="app._raw.job.company.logo"
+                            :alt="app.company"
                         />
                         <span v-else class="app-card__logo-fallback">
-                            {{ getJob(app.jobId)?.company?.[0] || '?' }}
+                            {{ app.company?.[0] || '?' }}
                         </span>
                     </div>
                     <div class="app-card__info">
@@ -57,14 +57,12 @@
                             :to="`/jobs/${app.jobId}`"
                             class="app-card__title"
                         >
-                            {{
-                                getJob(app.jobId)?.title || `Job #${app.jobId}`
-                            }}
+                            {{ app.jobTitle || `Job #${app.jobId}` }}
                         </RouterLink>
                         <p class="app-card__company">
-                            {{ getJob(app.jobId)?.company || '—' }}
-                            <span v-if="getJob(app.jobId)?.location">
-                                · {{ getJob(app.jobId).location }}
+                            {{ app.company || '—' }}
+                            <span v-if="app._raw?.job?.location">
+                                · {{ app._raw.job.location }}
                             </span>
                         </p>
                     </div>
@@ -76,12 +74,7 @@
                         {{ app.status }}
                     </span>
                     <span class="app-card__method">
-                        via
-                        {{
-                            app.applyMethod === 'resume'
-                                ? 'Resume'
-                                : 'Contact info'
-                        }}
+                        via Resume
                     </span>
                     <span class="app-card__date">
                         Applied {{ formatDate(app.createdAt) }}
@@ -117,46 +110,23 @@
                         v-if="app.status === 'pending'"
                         class="btn-cancel"
                         :disabled="appsStore.loading"
-                        @click="openWithdrawConfirm(app)"
+                        @click="cancelApp(app)"
                     >
                         Withdraw application
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Confirmation Modal -->
-        <ConfirmationModal
-            :is-open="confirmModal.isOpen"
-            title="Withdraw application?"
-            :message="`You're about to withdraw your application for ${confirmModal.jobTitle}. This action cannot be undone.`"
-            confirm-text="Withdraw"
-            cancel-text="Keep application"
-            type="warning"
-            @confirm="handleWithdrawConfirm"
-            @cancel="closeConfirmModal"
-        />
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
-import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
-import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
-const authStore = useAuthStore();
-const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 
 const activeTab = ref('all');
-
-const confirmModal = ref({
-    isOpen: false,
-    app: null,
-    jobTitle: '',
-});
 
 const tabs = [
     { label: 'All', value: 'all' },
@@ -165,9 +135,7 @@ const tabs = [
     { label: 'Rejected', value: 'rejected' },
 ];
 
-const applications = computed(() =>
-    appsStore.myApplications(authStore.currentUser?.id)
-);
+const applications = computed(() => appsStore.myApplications);
 
 const filtered = computed(() => {
     if (activeTab.value === 'all') return applications.value;
@@ -179,29 +147,9 @@ function countByStatus(status) {
     return applications.value.filter((a) => a.status === status).length;
 }
 
-function getJob(jobId) {
-    return jobsStore.jobs.find((j) => j.id === jobId) || null;
-}
-
-function openWithdrawConfirm(app) {
-    const job = getJob(app.jobId);
-    confirmModal.value = {
-        isOpen: true,
-        app: app,
-        jobTitle: job?.title || `Job #${app.jobId}`,
-    };
-}
-
-function closeConfirmModal() {
-    confirmModal.value.isOpen = false;
-}
-
-async function handleWithdrawConfirm() {
-    if (confirmModal.value.app) {
-        const app = confirmModal.value.app;
-        await appsStore.cancelApplication(app.id, app.jobId);
-        closeConfirmModal();
-    }
+async function cancelApp(app) {
+    if (!confirm('Withdraw this application?')) return;
+    await appsStore.cancelApplication(app.id);
 }
 
 function formatDate(d) {
@@ -217,9 +165,7 @@ function truncate(text, max) {
 }
 
 onMounted(async () => {
-    await appsStore.fetchMyApplications(authStore.currentUser?.id);
-    // Load all jobs so we can show job titles/logos
-    if (jobsStore.jobs.length === 0) await jobsStore.fetchJobs();
+    await appsStore.fetchMyApplications();
 });
 </script>
 
