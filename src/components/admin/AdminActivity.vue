@@ -14,6 +14,17 @@
                 <span class="text-xs text-gray-600 font-medium bg-white border border-border px-3 py-1 rounded-full shadow-sm">{{ store.logsMeta?.total || store.activityLog.length }} Records</span>
             </div>
         </div>
+
+        <div v-if="store.loading && store.activityLog.length === 0" class="p-12 text-center text-sm text-gray-500 bg-white">
+            <svg class="animate-spin h-8 w-8 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Loading activity logs…
+        </div>
+
+        <div v-else-if="store.error" class="px-6 py-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center justify-between">
+            <span>{{ store.error }}</span>
+            <button class="text-red-700 font-medium underline" @click="applyFilter">Retry</button>
+        </div>
+
         <ul class="divide-y divide-border bg-white" v-if="store.activityLog.length > 0">
             <li class="p-5 flex items-start space-x-4 hover:bg-gray-50 transition-colors" v-for="entry in store.activityLog" :key="entry.id">
                 <div class="h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5" :class="iconClass(entry)">
