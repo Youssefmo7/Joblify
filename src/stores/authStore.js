@@ -99,16 +99,29 @@ export const useAuthStore = defineStore('auth', {
                 return false;
             }
         },
+        async handleSocialCallback(token) {
+            this.loading = true;
+            try {
+                setToken(token); 
+                const success = await this.fetchUser(); 
+                return success;
+            } catch (err) {
+                this.error = "Social authentication failed";
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
 
         // ── SOCIAL AUTH ───────────────────────────────────────────
         loginWithGoogle(role = 'candidate') {
-            const url = new URL('/auth/google/redirect', client.defaults.baseURL);
+            const url = new URL('/api/auth/google/redirect', client.defaults.baseURL);
             if (role) url.searchParams.set('role', role);
             window.location.href = url.toString();
         },
 
         loginWithGitHub(role = 'candidate') {
-            const url = new URL('/auth/github/redirect', client.defaults.baseURL);
+            const url = new URL('/api/auth/github/redirect', client.defaults.baseURL);
             if (role) url.searchParams.set('role', role);
             window.location.href = url.toString();
         },

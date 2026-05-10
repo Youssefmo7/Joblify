@@ -10,6 +10,7 @@ import ForgotPasswordView from '@/views/ForgotPasswordView.vue';
 import ResetPasswordView from '@/views/ResetPasswordView.vue';
 import VerifyEmailView from '@/views/VerifyEmailView.vue';
 import NotFoundView from '@/views/NotFoundView.vue';
+import SocialCallbackView from '@/views/SocialCallbackView.vue';
 
 // ── Candidate views ───────────────────────────────────────────
 import ProfileView from '@/views/candidate/ProfileView.vue';
@@ -46,6 +47,12 @@ const routes = [
         path: '/register',
         name: 'register',
         component: RegisterView,
+        meta: { guestOnly: true },
+    },
+    {
+        path: '/auth/callback',
+        name: 'social-callback',
+        component: SocialCallbackView,
         meta: { guestOnly: true },
     },
     {
