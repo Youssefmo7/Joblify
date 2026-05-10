@@ -9,6 +9,13 @@ function normalizeJob(apiJob) {
     };
 }
 
+function extractMeta(responseData) {
+    // response from our interceptor may have _meta attached
+    if (responseData && responseData._meta) return responseData._meta;
+    // Fallback: if the raw response shape is still available somehow
+    return null;
+}
+
 export const useAdminStore = defineStore('admin', {
     state: () => ({
         pendingJobs: [],
@@ -24,6 +31,11 @@ export const useAdminStore = defineStore('admin', {
         activityLog: [],
         loading: false,
         error: null,
+        // Pagination meta
+        usersMeta: null,
+        jobsMeta: null,
+        commentsMeta: null,
+        logsMeta: null,
     }),
 
     getters: {
@@ -33,8 +45,6 @@ export const useAdminStore = defineStore('admin', {
         employerCount: (state) =>
             state.allUsers.filter((u) => u.role === 'employer').length,
         activeJobsCount: (state) => state.stats.activeCount || 0,
-        usersGrowth: () => '+0% this month',
-        jobsGrowth: () => '+0% this month',
         approvalRatePercent: (state) => {
             const reviewed =
                 (state.stats.totalJobs || 0) - (state.stats.pendingCount || 0);
@@ -64,7 +74,6 @@ export const useAdminStore = defineStore('admin', {
                     pendingCount: dash.jobs?.pending || 0,
                 };
 
-                // Build activity log from recent activity
                 const activity = activityRes.data || activityRes;
                 const logs = [];
                 (activity.recent_users || []).forEach((u) => {
@@ -96,15 +105,18 @@ export const useAdminStore = defineStore('admin', {
         },
 
         // ── FETCH PENDING JOBS ────────────────────────────────────
-        async fetchPendingJobs() {
+        async fetchPendingJobs({ page = 1, per_page = 20 } = {}) {
             this.loading = true;
             this.error = null;
             try {
-                const data = await client.get('/admin/jobs?status=pending');
+                const data = await client.get('/admin/jobs', {
+                    params: { status: 'pending', page, per_page },
+                });
                 this.pendingJobs = (Array.isArray(data) ? data : data.data || []).map(
                     normalizeJob
                 );
-                this.stats.pendingCount = this.pendingJobs.length;
+                this.jobsMeta = extractMeta(data);
+                this.stats.pendingCount = this.jobsMeta?.total ?? this.pendingJobs.length;
                 return this.pendingJobs;
             } catch (err) {
                 this.error = err.message || 'Could not load pending jobs.';
@@ -123,7 +135,7 @@ export const useAdminStore = defineStore('admin', {
                 this.pendingJobs = this.pendingJobs.filter(
                     (j) => j.id !== jobId
                 );
-                this.stats.pendingCount = this.pendingJobs.length;
+                this.stats.pendingCount = Math.max(0, this.stats.pendingCount - 1);
                 this.activityLog.unshift({
                     id: Date.now(),
                     type: 'job_approved',
@@ -151,7 +163,7 @@ export const useAdminStore = defineStore('admin', {
                 this.pendingJobs = this.pendingJobs.filter(
                     (j) => j.id !== jobId
                 );
-                this.stats.pendingCount = this.pendingJobs.length;
+                this.stats.pendingCount = Math.max(0, this.stats.pendingCount - 1);
                 this.activityLog.unshift({
                     id: Date.now(),
                     type: 'job_rejected',
@@ -168,16 +180,65 @@ export const useAdminStore = defineStore('admin', {
             }
         },
 
-        // ── FETCH USERS ───────────────────────────────────────────
-        async fetchUsers(params = {}) {
+        // ── BULK APPROVE ──────────────────────────────────────────
+        async bulkApprove(jobIds) {
             this.loading = true;
             this.error = null;
             try {
-                const data = await client.get('/admin/users', { params });
-                this.allUsers = (Array.isArray(data) ? data : data.data || []).filter(
-                    (u) => u.role !== 'admin'
+                await client.post('/admin/jobs/bulk-approve', { ids: jobIds });
+                this.pendingJobs = this.pendingJobs.filter(
+                    (j) => !jobIds.includes(j.id)
                 );
-                this.stats.totalUsers = this.allUsers.length;
+                this.stats.pendingCount = Math.max(
+                    0,
+                    this.stats.pendingCount - jobIds.length
+                );
+                return true;
+            } catch (err) {
+                this.error = err.message || 'Could not bulk approve jobs.';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // ── BULK REJECT ───────────────────────────────────────────
+        async bulkReject(jobIds, reason = '') {
+            this.loading = true;
+            this.error = null;
+            try {
+                await client.post('/admin/jobs/bulk-reject', {
+                    ids: jobIds,
+                    reason,
+                });
+                this.pendingJobs = this.pendingJobs.filter(
+                    (j) => !jobIds.includes(j.id)
+                );
+                this.stats.pendingCount = Math.max(
+                    0,
+                    this.stats.pendingCount - jobIds.length
+                );
+                return true;
+            } catch (err) {
+                this.error = err.message || 'Could not bulk reject jobs.';
+                return false;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // ── FETCH USERS ───────────────────────────────────────────
+        async fetchUsers({ page = 1, q = '', role = '', per_page = 20 } = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const params = { page, per_page };
+                if (q) params.q = q;
+                if (role) params.role = role;
+                const data = await client.get('/admin/users', { params });
+                this.allUsers = Array.isArray(data) ? data : data.data || [];
+                this.usersMeta = extractMeta(data);
+                this.stats.totalUsers = this.usersMeta?.total ?? this.allUsers.length;
                 return this.allUsers;
             } catch (err) {
                 this.error = err.message || 'Could not load users.';
@@ -222,12 +283,17 @@ export const useAdminStore = defineStore('admin', {
         },
 
         // ── FETCH COMMENTS ────────────────────────────────────────
-        async fetchComments() {
+        async fetchComments({ page = 1, job_id = '', per_page = 20 } = {}) {
             this.loading = true;
             this.error = null;
             try {
-                const data = await client.get('/admin/comments');
-                this.allComments = Array.isArray(data) ? data : data.data || [];
+                const params = { page, per_page };
+                if (job_id) params.job_id = job_id;
+                const data = await client.get('/admin/comments', { params });
+                this.allComments = Array.isArray(data)
+                    ? data
+                    : data.data || [];
+                this.commentsMeta = extractMeta(data);
                 return this.allComments;
             } catch (err) {
                 this.error = err.message || 'Could not load comments.';
@@ -243,7 +309,7 @@ export const useAdminStore = defineStore('admin', {
             this.error = null;
             try {
                 await client.delete(`/admin/comments/${commentId}`, {
-                    reason,
+                    data: { reason },
                 });
                 this.allComments = this.allComments.filter(
                     (c) => c.id !== commentId
@@ -258,10 +324,12 @@ export const useAdminStore = defineStore('admin', {
         },
 
         // ── FETCH ACTIVITY LOGS ───────────────────────────────────
-        async fetchActivityLogs(params = {}) {
+        async fetchActivityLogs({ page = 1, action = '', per_page = 20 } = {}) {
             this.loading = true;
             this.error = null;
             try {
+                const params = { page, per_page };
+                if (action) params.action = action;
                 const data = await client.get('/admin/activity-logs', {
                     params,
                 });
@@ -273,6 +341,7 @@ export const useAdminStore = defineStore('admin', {
                     meta: log.meta ? JSON.stringify(log.meta) : '',
                     createdAt: log.created_at,
                 }));
+                this.logsMeta = extractMeta(data);
                 return this.activityLog;
             } catch (err) {
                 this.error = err.message || 'Could not load activity logs.';

@@ -5,7 +5,17 @@
                 <h3 class="text-lg font-bold text-gray-900">Comments Moderation</h3>
                 <p class="text-sm text-gray-500 mt-1">Review activity to ensure platform guidelines are met.</p>
             </div>
-            <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ store.allComments.length }} Total</span>
+            <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ store.commentsMeta?.total || store.allComments.length }} Total</span>
+        </div>
+
+        <div v-if="store.loading && store.allComments.length === 0" class="p-12 text-center text-sm text-gray-500 bg-white">
+            <svg class="animate-spin h-8 w-8 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Loading comments…
+        </div>
+
+        <div v-else-if="store.error" class="px-6 py-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center justify-between">
+            <span>{{ store.error }}</span>
+            <button class="text-red-700 font-medium underline" @click="store.fetchComments({ page: store.commentsMeta?.current_page || 1 })">Retry</button>
         </div>
 
         <div v-if="actionMessage" class="px-6 py-3 bg-green-50 border-b border-green-100 text-sm font-medium text-green-600 flex items-center transition-all">
@@ -39,15 +49,19 @@
             <p class="font-medium text-lg text-gray-900">No Comments Yet</p>
             <p>There are no comments on any jobs to review right now.</p>
         </div>
+
+        <AdminPagination :meta="store.commentsMeta" @change="goToPage" />
     </div>
 </template>
 
 <script>
 import { ref } from "vue";
 import { useAdminStore } from "@/stores/adminStore";
+import AdminPagination from "./AdminPagination.vue";
 
 export default {
   name: "AdminComments",
+  components: { AdminPagination },
   setup() {
     const store = useAdminStore();
     const actionMessage = ref("");
@@ -65,7 +79,11 @@ export default {
       if (!value) return "Unknown";
       const date = new Date(value);
       if (!Number.isFinite(date.getTime())) return "Unknown";
-      return date.toLocaleString();
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const goToPage = (page) => {
+      store.fetchComments({ page });
     };
 
     const handleRemove = async (commentId) => {
@@ -77,6 +95,7 @@ export default {
       store,
       actionMessage,
       formatDate,
+      goToPage,
       handleRemove
     };
   }

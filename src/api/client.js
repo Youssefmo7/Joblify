@@ -44,7 +44,7 @@ client.interceptors.response.use(
         const status = error.response?.status;
         const message = error.response?.data?.message || 'Something went wrong';
 
-        if (status === 401) {
+        if (status === 401 || status === 403) {
             localStorage.removeItem('access_token');
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login';

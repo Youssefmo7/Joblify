@@ -73,11 +73,19 @@
 
             <!-- Child Views -->
             <AdminOverview v-show="activeTab === 'overview'" />
-            <AdminJobs v-if="activeTab === 'jobs'" />
+            <AdminJobs v-if="activeTab === 'jobs'" @view-job="openJobPreview" />
             <AdminUsers v-if="activeTab === 'users'" />
             <AdminComments v-if="activeTab === 'comments'" />
             <AdminActivity v-if="activeTab === 'activity'" />
 
+            <!-- Job Preview Modal -->
+            <JobPreviewModal
+                v-if="previewJobId"
+                :job-id="previewJobId"
+                @close="closeJobPreview"
+                @approve="onModalApprove"
+                @reject="onModalReject"
+            />
         </div>
     </div>
   </div>
@@ -95,6 +103,7 @@ import AdminJobs from "./admin/AdminJobs.vue";
 import AdminUsers from "./admin/AdminUsers.vue";
 import AdminComments from "./admin/AdminComments.vue";
 import AdminActivity from "./admin/AdminActivity.vue";
+import JobPreviewModal from "./admin/JobPreviewModal.vue";
 
 export default {
   name: "AdminDashboard",
@@ -103,7 +112,8 @@ export default {
       AdminJobs,
       AdminUsers,
       AdminComments,
-      AdminActivity
+      AdminActivity,
+      JobPreviewModal
   },
   setup() {
     const store = useAdminStore();
@@ -111,12 +121,15 @@ export default {
     const router = useRouter();
 
     const activeTab = ref('overview');
+    const previewJobId = ref(null);
 
     onMounted(async () => {
-      await store.loadDashboard();
-      await store.fetchPendingJobs();
-      await store.fetchUsers();
-      await store.fetchComments();
+      await Promise.all([
+        store.loadDashboard(),
+        store.fetchPendingJobs({ page: 1 }),
+        store.fetchUsers({ page: 1 }),
+        store.fetchComments({ page: 1 }),
+      ]);
     });
 
     const logout = () => {
@@ -124,10 +137,31 @@ export default {
       router.push("/");
     };
 
+    const openJobPreview = (jobId) => {
+      previewJobId.value = jobId;
+    };
+
+    const closeJobPreview = () => {
+      previewJobId.value = null;
+    };
+
+    const onModalApprove = async (jobId) => {
+      await store.approveJob(jobId);
+    };
+
+    const onModalReject = async (jobId, reason) => {
+      await store.rejectJob(jobId, reason);
+    };
+
     return {
       store,
       activeTab,
+      previewJobId,
       logout,
+      openJobPreview,
+      closeJobPreview,
+      onModalApprove,
+      onModalReject,
     };
   },
 };
