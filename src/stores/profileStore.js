@@ -3,7 +3,14 @@ import client from '@/api/client';
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
-        profile: null,
+        profile: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            phone: '+1 555 123 4567',
+            linkedin_url: 'https://linkedin.com/in/johndoe',
+            applications_count: 5,
+            has_resume: true,
+        },
         loading: false,
         error: null,
     }),
@@ -43,7 +50,6 @@ export const useProfileStore = defineStore('profile', {
                 await client.post('/profile', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
-                // Refresh profile after update
                 await this.fetchProfile();
                 return true;
             } catch (err) {

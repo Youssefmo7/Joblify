@@ -1,41 +1,39 @@
 import { defineStore } from 'pinia';
 import client from '@/api/client';
 
-function normalizeNotification(apiNotif) {
-    return {
-        ...apiNotif,
-        isRead: apiNotif.is_read,
-        createdAt: apiNotif.created_at,
-    };
-}
+const MOCK_NOTIFICATIONS = [
+    { id: 1, user_id: 1, type: 'job_approved', message: 'Your job posting "Senior Frontend Engineer" has been approved and is now live.', is_read: false, created_at: '2026-05-10T09:00:00Z', updated_at: '2026-05-10T09:00:00Z' },
+    { id: 2, user_id: 1, type: 'application_received', message: 'You have a new application for "Full Stack Developer" from Bob Smith.', is_read: false, created_at: '2026-05-09T14:30:00Z', updated_at: '2026-05-09T14:30:00Z' },
+    { id: 3, user_id: 1, type: 'job_rejected', message: 'Your job "Blockchain Developer" was rejected. Reason: Insufficient details.', is_read: true, created_at: '2026-05-08T11:00:00Z', updated_at: '2026-05-08T11:00:00Z' },
+    { id: 4, user_id: 1, type: 'comment', message: 'Alice Johnson commented on your job "DevOps Engineer".', is_read: false, created_at: '2026-05-07T16:45:00Z', updated_at: '2026-05-07T16:45:00Z' },
+    { id: 5, user_id: 1, type: 'application_status', message: 'Your application for "Data Scientist" at DataDriven has been accepted!', is_read: true, created_at: '2026-05-06T10:00:00Z', updated_at: '2026-05-06T10:00:00Z' },
+];
 
 export const useNotificationsStore = defineStore('notifications', {
     state: () => ({
-        notifications: [],
-        unreadCount: 0,
-        meta: null,
+        notifications: MOCK_NOTIFICATIONS,
         loading: false,
         error: null,
     }),
 
     getters: {
-        unreadNotifications: (state) =>
-            state.notifications.filter((n) => !n.isRead),
+        unreadCount: (state) =>
+            state.notifications.filter((n) => !n.is_read).length,
     },
 
     actions: {
-        async fetchNotifications(unreadOnly = false) {
+        async fetchNotifications() {
             this.loading = true;
             this.error = null;
             try {
-                const params = unreadOnly ? { unread: 1 } : {};
-                const data = await client.get('/notifications', { params });
-                const notifsData = data.notifications || data;
-                this.notifications = (
-                    Array.isArray(notifsData) ? notifsData : notifsData.data || []
-                ).map(normalizeNotification);
-                this.meta = notifsData.current_page ? notifsData : null;
-                this.unreadCount = data.unread_count || 0;
+                const data = await client.get('/notifications');
+                if (data.notifications && Array.isArray(data.notifications.data)) {
+                    this.notifications = data.notifications.data;
+                } else if (Array.isArray(data)) {
+                    this.notifications = data;
+                } else {
+                    this.notifications = [];
+                }
                 return this.notifications;
             } catch (err) {
                 this.error = err.message || 'Could not load notifications.';
@@ -45,26 +43,11 @@ export const useNotificationsStore = defineStore('notifications', {
             }
         },
 
-        async markAllRead() {
+        async markRead(notificationId) {
             try {
-                await client.post('/notifications/read-all');
-                this.notifications.forEach((n) => (n.isRead = true));
-                this.unreadCount = 0;
-                return true;
-            } catch (err) {
-                this.error = err.message || 'Could not mark all as read.';
-                return false;
-            }
-        },
-
-        async markRead(id) {
-            try {
-                const data = await client.patch(`/notifications/${id}/read`);
-                const index = this.notifications.findIndex((n) => n.id === id);
-                if (index !== -1) {
-                    this.notifications[index] = normalizeNotification(data);
-                }
-                this.unreadCount = Math.max(0, this.unreadCount - 1);
+                await client.patch(`/notifications/${notificationId}/read`);
+                const n = this.notifications.find((x) => x.id === notificationId);
+                if (n) n.is_read = true;
                 return true;
             } catch (err) {
                 this.error = err.message || 'Could not mark as read.';
@@ -72,19 +55,13 @@ export const useNotificationsStore = defineStore('notifications', {
             }
         },
 
-        async deleteNotification(id) {
+        async markAllRead() {
             try {
-                await client.delete(`/notifications/${id}`);
-                const removed = this.notifications.find((n) => n.id === id);
-                this.notifications = this.notifications.filter(
-                    (n) => n.id !== id
-                );
-                if (removed && !removed.isRead) {
-                    this.unreadCount = Math.max(0, this.unreadCount - 1);
-                }
+                await client.post('/notifications/read-all');
+                this.notifications.forEach((n) => (n.is_read = true));
                 return true;
             } catch (err) {
-                this.error = err.message || 'Could not delete notification.';
+                this.error = err.message || 'Could not mark all as read.';
                 return false;
             }
         },

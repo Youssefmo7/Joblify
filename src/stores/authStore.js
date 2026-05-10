@@ -7,6 +7,11 @@ function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+// Set mock token for demo if none exists
+if (!getToken()) {
+  localStorage.setItem(TOKEN_KEY, "mock-admin-token-12345");
+}
+
 function setToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
 }
@@ -16,11 +21,18 @@ function clearToken() {
 }
 
 export const useAuthStore = defineStore("auth", {
-  state: () => ({
-    user: null,
-    loading: false,
-    error: null,
-  }),
+    state: () => ({
+        user: {
+            id: 1,
+            name: 'Admin User',
+            email: 'admin@joblify.com',
+            role: 'admin',
+            email_verified_at: '2026-05-01T10:00:00Z',
+            created_at: '2026-01-01T00:00:00Z',
+        },
+        loading: false,
+        error: null,
+    }),
 
   getters: {
     isLoggedIn: (state) => !!state.user,

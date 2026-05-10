@@ -3,10 +3,20 @@ import client from '@/api/client';
 
 export const useCompanyStore = defineStore('company', {
     state: () => ({
-        company: null,
+        company: {
+            id: 1,
+            user_id: 10,
+            name: 'TechCorp',
+            description: 'We build scalable web applications and innovative tech solutions for enterprises worldwide.',
+            logo: null,
+            website: 'https://techcorp.example.com',
+            location: 'San Francisco, CA',
+            created_at: '2026-01-15T10:00:00Z',
+            updated_at: '2026-05-01T14:30:00Z',
+        },
         loading: false,
         error: null,
-        hasCompany: false,
+        hasCompany: true,
     }),
 
     actions: {
