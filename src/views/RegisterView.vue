@@ -40,10 +40,10 @@
                     <input
                         v-model="email"
                         class="form-input"
+                        type="email"
                         placeholder="you@example.com"
                         required
-                        />
-                        <!-- type="email" -->
+                    />
                     <p v-if="errors.email" class="field-error">{{ errors.email }}</p>
                 </div>
                 <div class="form-group">
@@ -54,56 +54,45 @@
                         type="password"
                         placeholder="••••••••"
                         required
-                        />
-                        <!-- minlength="6" -->
+                    />
                     <p v-if="errors.password" class="field-error">
                         {{ errors.password }}
                     </p>
                 </div>
 
-                <!-- Candidate extras -->
-                <div v-if="role === 'candidate'" class="form-group">
+                <!-- Optional fields -->
+                <div class="form-group">
                     <label class="form-label">
-                        Job title
-                        <span class="optional">(optional)</span>
+                        Phone <span class="optional">(optional)</span>
                     </label>
                     <input
-                        v-model="jobTitle"
+                        v-model="phone"
                         class="form-input"
-                        type="text"
-                        placeholder="Frontend Developer"
+                        type="tel"
+                        placeholder="+201234567890"
                     />
-                    <p v-if="errors.jobTitle" class="field-error">
-                        {{ errors.jobTitle }}
-                    </p>
                 </div>
-
-                <!-- Employer extras -->
-                <div v-if="role === 'employer'" class="form-group">
+                <div class="form-group">
                     <label class="form-label">
-                        Company website
-                        <span class="optional">(optional)</span>
+                        LinkedIn URL <span class="optional">(optional)</span>
                     </label>
                     <input
-                        v-model="website"
+                        v-model="linkedinUrl"
                         class="form-input"
                         type="url"
-                        placeholder="https://yourcompany.com"
+                        placeholder="https://linkedin.com/in/johndoe"
                     />
-                    <p v-if="errors.website" class="field-error">
-                        {{ errors.website }}
-                    </p>
                 </div>
 
                 <p v-if="authStore.error" class="form-error">
                     {{ authStore.error }}
                 </p>
 
-            <button
-                class="btn-primary"
-                type="submit"
-                :disabled="authStore.loading"
-            >
+                <button
+                    class="btn-primary"
+                    type="submit"
+                    :disabled="authStore.loading"
+                >
                     {{
                         authStore.loading
                             ? 'Creating account…'
@@ -121,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -132,20 +121,12 @@ const role = ref('candidate');
 const name = ref('');
 const email = ref('');
 const password = ref('');
-const jobTitle = ref('');
-const website = ref('');
+const phone = ref('');
+const linkedinUrl = ref('');
 const errors = ref({
     name: '',
     email: '',
     password: '',
-    jobTitle: '',
-    website: '',
-});
-
-watch(role, () => {
-    errors.value.jobTitle = '';
-    errors.value.website = '';
-    authStore.error = null;
 });
 
 function validateForm() {
@@ -153,8 +134,6 @@ function validateForm() {
         name: '',
         email: '',
         password: '',
-        jobTitle: '',
-        website: '',
     };
 
     const trimmedName = name.value.trim();
@@ -176,31 +155,6 @@ function validateForm() {
         nextErrors.password = 'Password is required.';
     } else if (passwordValue.length < 8) {
         nextErrors.password = 'Password must be at least 8 characters.';
-    } else if (!/[a-z]/.test(passwordValue)) {
-        nextErrors.password = 'Password must include a lowercase letter.';
-    } else if (!/[A-Z]/.test(passwordValue)) {
-        nextErrors.password = 'Password must include an uppercase letter.';
-    } else if (!/[0-9]/.test(passwordValue)) {
-        nextErrors.password = 'Password must include a number.';
-    } else if (!/[^A-Za-z0-9]/.test(passwordValue)) {
-        nextErrors.password = 'Password must include a special character.';
-    }
-
-    if (role.value === 'candidate' && jobTitle.value.trim().length > 0) {
-        if (jobTitle.value.trim().length < 2) {
-            nextErrors.jobTitle = 'Job title must be at least 2 characters.';
-        }
-    }
-
-    if (role.value === 'employer' && website.value.trim().length > 0) {
-        try {
-            const url = new URL(website.value.trim());
-            if (!['http:', 'https:'].includes(url.protocol)) {
-                nextErrors.website = 'Website must start with http or https.';
-            }
-        } catch {
-            nextErrors.website = 'Enter a valid website URL.';
-        }
     }
 
     errors.value = nextErrors;
@@ -216,14 +170,8 @@ async function handleRegister() {
         email: email.value.trim(),
         password: password.value,
         role: role.value,
-        ...(role.value === 'candidate' &&
-            jobTitle.value.trim() && {
-                title: jobTitle.value.trim(),
-            }),
-        ...(role.value === 'employer' && {
-            companyName: name.value.trim(),
-            ...(website.value.trim() && { website: website.value.trim() }),
-        }),
+        phone: phone.value.trim() || undefined,
+        linkedin_url: linkedinUrl.value.trim() || undefined,
     };
 
     const ok = await authStore.register(payload);

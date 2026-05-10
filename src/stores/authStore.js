@@ -1,11 +1,23 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import client from '@/api/client';
 
-const BASE_URL = 'http://localhost:3000';
+const TOKEN_KEY = 'access_token';
+
+function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+}
+
+function setToken(token) {
+    localStorage.setItem(TOKEN_KEY, token);
+}
+
+function clearToken() {
+    localStorage.removeItem(TOKEN_KEY);
+}
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        user: JSON.parse(localStorage.getItem('joblify_user')) || null,
+        user: null,
         loading: false,
         error: null,
     }),
@@ -24,33 +36,20 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const { data: existing } = await axios.get(
-                    `${BASE_URL}/users?email=${encodeURIComponent(
-                        payload.email
-                    )}`
-                );
-                if (existing.length > 0) {
-                    this.error = 'An account with this email already exists.';
-                    return false;
-                }
-
-                const newUser = {
-                    ...payload,
-                    avatar: '/pics/pp.png',
-                    skills: [],
-                    savedJobs: [],
-                    profileViews: 0,
-                    createdAt: new Date().toISOString(),
-                };
-
-                const { data: created } = await axios.post(
-                    `${BASE_URL}/users`,
-                    newUser
-                );
-                this._saveSession(created);
+                const response = await client.post('/register', {
+                    name: payload.name,
+                    email: payload.email,
+                    password: payload.password,
+                    password_confirmation: payload.password,
+                    role: payload.role,
+                    phone: payload.phone || null,
+                    linkedin_url: payload.linkedin_url || null,
+                });
+                setToken(response.access_token);
+                this.user = response.user;
                 return true;
             } catch (err) {
-                this.error = 'Registration failed. Please try again.';
+                this.error = err.message || 'Registration failed. Please try again.';
                 return false;
             } finally {
                 this.loading = false;
@@ -62,17 +61,12 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const { data: users } = await axios.get(
-                    `${BASE_URL}/users?email=${encodeURIComponent(email)}`
-                );
-                if (users.length === 0 || users[0].password !== password) {
-                    this.error = 'Invalid email or password.';
-                    return false;
-                }
-                this._saveSession(users[0]);
+                const response = await client.post('/login', { email, password });
+                setToken(response.access_token);
+                this.user = response.user;
                 return true;
             } catch (err) {
-                this.error = 'Login failed. Please try again.';
+                this.error = err.message || 'Invalid email or password.';
                 return false;
             } finally {
                 this.loading = false;
@@ -80,56 +74,82 @@ export const useAuthStore = defineStore('auth', {
         },
 
         // ── LOGOUT ────────────────────────────────────────────────
-        logout() {
+        async logout() {
+            try {
+                await client.post('/logout');
+            } catch (e) {
+                // ignore — token may already be invalid
+            }
             this.user = null;
-            localStorage.removeItem('joblify_user');
+            clearToken();
         },
 
-        // ── UPDATE PROFILE ────────────────────────────────────────
-        async updateProfile(updates) {
+        // ── FETCH CURRENT USER ────────────────────────────────────
+        async fetchUser() {
+            const token = getToken();
+            if (!token) return false;
+            try {
+                const user = await client.get('/user');
+                this.user = user;
+                return true;
+            } catch (err) {
+                clearToken();
+                this.user = null;
+                return false;
+            }
+        },
+
+        // ── SOCIAL AUTH ───────────────────────────────────────────
+        loginWithGoogle(role = 'candidate') {
+            const url = new URL('/auth/google/redirect', client.defaults.baseURL);
+            if (role) url.searchParams.set('role', role);
+            window.location.href = url.toString();
+        },
+
+        loginWithGitHub(role = 'candidate') {
+            const url = new URL('/auth/github/redirect', client.defaults.baseURL);
+            if (role) url.searchParams.set('role', role);
+            window.location.href = url.toString();
+        },
+
+        // ── EMAIL VERIFICATION ────────────────────────────────────
+        async resendVerification() {
+            try {
+                await client.post('/email/verification-notification');
+                return true;
+            } catch (err) {
+                this.error = err.message || 'Could not resend verification email.';
+                return false;
+            }
+        },
+
+        // ── PASSWORD RESET ────────────────────────────────────────
+        async forgotPassword(email) {
             this.loading = true;
             this.error = null;
             try {
-                const userId = this.user.id;
-
-                // Merge current user data with updates first,
-                // then use PUT to replace the full record.
-                // json-server v1 dropped PATCH support — PUT is the safe choice.
-                const merged = { ...this.user, ...updates, id: userId };
-
-                const { data: updated } = await axios.put(
-                    `${BASE_URL}/users/${userId}`,
-                    merged
-                );
-                this._saveSession(updated);
+                await client.post('/forgot-password', { email });
                 return true;
             } catch (err) {
-                console.error("Update Error Details:", err.response);
-                this.error = 'Could not update profile.';
+                this.error = err.message || 'Could not send reset link.';
                 return false;
             } finally {
                 this.loading = false;
             }
         },
 
-        // ── SAVE JOB (candidate bookmarks) ────────────────────────
-        async toggleSaveJob(jobId) {
-            if (!this.user) return;
-            const saved = this.user.savedJobs || [];
-            const alreadySaved = saved.includes(jobId);
-            const updatedSaved = alreadySaved
-                ? saved.filter((id) => id !== jobId)
-                : [...saved, jobId];
-
-            await this.updateProfile({ savedJobs: updatedSaved });
-        },
-
-        // ── INTERNAL: persist session ─────────────────────────────
-        _saveSession(user) {
-            // Normalize id to Number so all requests use a clean numeric value
-            const normalized = { ...user };
-            this.user = normalized;
-            localStorage.setItem('joblify_user', JSON.stringify(normalized));
+        async resetPassword(payload) {
+            this.loading = true;
+            this.error = null;
+            try {
+                await client.post('/reset-password', payload);
+                return true;
+            } catch (err) {
+                this.error = err.message || 'Could not reset password.';
+                return false;
+            } finally {
+                this.loading = false;
+            }
         },
     },
 });

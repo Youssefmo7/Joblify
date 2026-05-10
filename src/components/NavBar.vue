@@ -102,13 +102,13 @@
                             <div
                                 v-for="n in notifications"
                                 :key="n.id"
-                                :class="['notif-item', { unread: !n.read }]"
+                                :class="['notif-item', { unread: !n.is_read }]"
                                 @click="markRead(n)"
                             >
-                                <span v-if="!n.read" class="notif-item__dot" />
+                                <span v-if="!n.is_read" class="notif-item__dot" />
                                 <p class="notif-item__msg">{{ n.message }}</p>
                                 <p class="notif-item__time">
-                                    {{ timeAgo(n.createdAt) }}
+                                    {{ timeAgo(n.created_at) }}
                                 </p>
                             </div>
                         </div>
@@ -211,9 +211,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
-import axios from 'axios';
-
-const BASE_URL = 'http://localhost:3000';
+import client from '@/api/client';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -234,35 +232,32 @@ const initials = computed(() => {
 });
 
 const unreadCount = computed(
-    () => notifications.value.filter((n) => !n.read).length
+    () => notifications.value.filter((n) => !n.is_read).length
 );
 
 // ── Notifications ─────────────────────────────────────────────
+// TODO: migrate to notificationsStore in Phase 5
 async function loadNotifications() {
     if (!authStore.isLoggedIn) return;
     try {
-        const { data } = await axios.get(
-            `${BASE_URL}/notifications?userId=${authStore.currentUser.id}`
-        );
-        notifications.value = data.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        const data = await client.get('/notifications?unread=1');
+        notifications.value = (data.notifications?.data || []).sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
     } catch (e) {
-        console.log(e);
+        // ignore — notification store will handle this properly in Phase 5
     }
 }
 
 async function markRead(notif) {
-    if (notif.read) return;
-    notif.read = true;
-    await axios.patch(`${BASE_URL}/notifications/${notif.id}`, { read: true });
+    if (notif.is_read) return;
+    notif.is_read = true;
+    await client.patch(`/notifications/${notif.id}/read`);
 }
 
 async function markAllRead() {
-    for (const n of notifications.value.filter((n) => !n.read)) {
-        n.read = true;
-        await axios.patch(`${BASE_URL}/notifications/${n.id}`, { read: true });
-    }
+    await client.post('/notifications/read-all');
+    notifications.value.forEach((n) => (n.is_read = true));
 }
 
 function toggleNotifications() {

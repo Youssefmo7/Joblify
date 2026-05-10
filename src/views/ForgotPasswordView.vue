@@ -2,10 +2,12 @@
     <div class="auth-page">
         <div class="auth-card">
             <RouterLink to="/" class="auth-card__logo">Joblify</RouterLink>
-            <h1 class="auth-card__title">Welcome back</h1>
-            <p class="auth-card__sub">Sign in to your account</p>
+            <h1 class="auth-card__title">Reset your password</h1>
+            <p class="auth-card__sub">
+                Enter your email and we'll send you a reset link.
+            </p>
 
-            <form class="auth-form" @submit.prevent="handleLogin">
+            <form class="auth-form" @submit.prevent="handleSubmit">
                 <div class="form-group">
                     <label class="form-label">Email</label>
                     <input
@@ -16,36 +18,25 @@
                         required
                     />
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input
-                        v-model="password"
-                        class="form-input"
-                        type="password"
-                        placeholder="••••••••"
-                        required
-                    />
-                </div>
 
                 <p v-if="authStore.error" class="form-error">
                     {{ authStore.error }}
+                </p>
+                <p v-if="sent" class="form-success">
+                    Check your inbox for the reset link.
                 </p>
 
                 <button
                     class="btn-primary"
                     type="submit"
-                    :disabled="authStore.loading"
+                    :disabled="authStore.loading || sent"
                 >
-                    {{ authStore.loading ? 'Signing in…' : 'Sign in' }}
+                    {{ authStore.loading ? 'Sending…' : 'Send reset link' }}
                 </button>
             </form>
 
             <p class="auth-card__footer">
-                <RouterLink to="/forgot-password">Forgot password?</RouterLink>
-            </p>
-            <p class="auth-card__footer">
-                Don't have an account?
-                <RouterLink to="/register">Create one</RouterLink>
+                <RouterLink to="/login">Back to sign in</RouterLink>
             </p>
         </div>
     </div>
@@ -53,29 +44,16 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
-const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
-
 const email = ref('');
-const password = ref('');
+const sent = ref(false);
 
-async function handleLogin() {
-    const ok = await authStore.login(email.value, password.value);
-    if (ok) {
-        const redirect =
-            route.query.redirect || roleHome(authStore.currentUser.role);
-        router.push(redirect);
-    }
-}
-
-function roleHome(role) {
-    if (role === 'employer') return '/employer/dashboard';
-    if (role === 'admin') return '/admin';
-    return '/';
+async function handleSubmit() {
+    authStore.error = null;
+    const ok = await authStore.forgotPassword(email.value.trim());
+    if (ok) sent.value = true;
 }
 </script>
 
@@ -148,6 +126,11 @@ function roleHome(role) {
 .form-error {
     font-size: 13px;
     color: var(--color-text-danger);
+    margin: 0;
+}
+.form-success {
+    font-size: 13px;
+    color: var(--color-text-success, #16a34a);
     margin: 0;
 }
 .btn-primary {

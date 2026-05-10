@@ -6,6 +6,9 @@ import HomeView from '@/views/HomeView.vue';
 import JobDetailView from '@/views/JobDetailView.vue';
 import LoginView from '@/views/LoginView.vue';
 import RegisterView from '@/views/RegisterView.vue';
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue';
+import ResetPasswordView from '@/views/ResetPasswordView.vue';
+import VerifyEmailView from '@/views/VerifyEmailView.vue';
 import NotFoundView from '@/views/NotFoundView.vue';
 
 // ── Candidate views ───────────────────────────────────────────
@@ -16,7 +19,6 @@ import ApplicationsView from '@/views/candidate/ApplicationsView.vue';
 import EmployerDashboard from '@/views/employer/DashboardView.vue';
 import PostJobView from '@/views/employer/PostJobView.vue';
 import EmployerProfileView from '@/views/employer/ProfileView.vue';
-// import EditJobView from '@/views/employer/EditJobView.vue';
 import ApplicantsView from '@/views/employer/ApplicantsView.vue';
 
 // ── Admin views ───────────────────────────────────────────────
@@ -45,6 +47,23 @@ const routes = [
         name: 'register',
         component: RegisterView,
         meta: { guestOnly: true },
+    },
+    {
+        path: '/forgot-password',
+        name: 'forgot-password',
+        component: ForgotPasswordView,
+        meta: { guestOnly: true },
+    },
+    {
+        path: '/reset-password',
+        name: 'reset-password',
+        component: ResetPasswordView,
+        meta: { guestOnly: true },
+    },
+    {
+        path: '/email/verify/:id/:hash',
+        name: 'verify-email',
+        component: VerifyEmailView,
     },
 
     // ── Candidate ─────────────────────────────────────────────
@@ -80,12 +99,6 @@ const routes = [
         component: EmployerProfileView,
         meta: { requiresAuth: true, role: 'employer' },
     },
-    // {
-    //     path: '/employer/jobs/:id/edit',
-    //     name: 'edit-job',
-    //     component: EditJobView,
-    //     meta: { requiresAuth: true, role: 'employer' },
-    // },
     {
         path: '/employer/jobs/:id/applicants',
         name: 'applicants',
@@ -98,7 +111,7 @@ const routes = [
         path: '/admin',
         name: 'admin-dashboard',
         component: AdminDashboard,
-        meta: { hideNavbar: true },
+        meta: { requiresAuth: true, role: 'admin', hideNavbar: true },
     },
 
     // ── Catch-all 404 ─────────────────────────────────────────
@@ -117,9 +130,15 @@ const router = createRouter({
     },
 });
 
-// ── Navigation guard ──────────────────────────────────────────
-router.beforeEach((to, from, next) => {
+// ── Auto-login on first navigation ────────────────────────────
+let authInitialized = false;
+router.beforeEach(async (to, from, next) => {
     const auth = useAuthStore();
+
+    if (!authInitialized) {
+        authInitialized = true;
+        await auth.fetchUser();
+    }
 
     // Logged-in users should not see login/register pages
     if (to.meta.guestOnly && auth.isLoggedIn) {

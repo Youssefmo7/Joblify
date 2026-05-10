@@ -2,24 +2,25 @@
     <div class="auth-page">
         <div class="auth-card">
             <RouterLink to="/" class="auth-card__logo">Joblify</RouterLink>
-            <h1 class="auth-card__title">Welcome back</h1>
-            <p class="auth-card__sub">Sign in to your account</p>
+            <h1 class="auth-card__title">Set new password</h1>
+            <p class="auth-card__sub">Choose a strong new password.</p>
 
-            <form class="auth-form" @submit.prevent="handleLogin">
+            <form class="auth-form" @submit.prevent="handleSubmit">
                 <div class="form-group">
-                    <label class="form-label">Email</label>
+                    <label class="form-label">New password</label>
                     <input
-                        v-model="email"
+                        v-model="password"
                         class="form-input"
-                        type="email"
-                        placeholder="you@example.com"
+                        type="password"
+                        placeholder="••••••••"
                         required
+                        minlength="8"
                     />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Password</label>
+                    <label class="form-label">Confirm password</label>
                     <input
-                        v-model="password"
+                        v-model="passwordConfirmation"
                         class="form-input"
                         type="password"
                         placeholder="••••••••"
@@ -30,52 +31,47 @@
                 <p v-if="authStore.error" class="form-error">
                     {{ authStore.error }}
                 </p>
+                <p v-if="success" class="form-success">
+                    Password reset! <RouterLink to="/login">Sign in</RouterLink>
+                </p>
 
                 <button
                     class="btn-primary"
                     type="submit"
-                    :disabled="authStore.loading"
+                    :disabled="authStore.loading || success"
                 >
-                    {{ authStore.loading ? 'Signing in…' : 'Sign in' }}
+                    {{ authStore.loading ? 'Saving…' : 'Reset password' }}
                 </button>
             </form>
-
-            <p class="auth-card__footer">
-                <RouterLink to="/forgot-password">Forgot password?</RouterLink>
-            </p>
-            <p class="auth-card__footer">
-                Don't have an account?
-                <RouterLink to="/register">Create one</RouterLink>
-            </p>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
-const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-const email = ref('');
 const password = ref('');
+const passwordConfirmation = ref('');
+const success = ref(false);
 
-async function handleLogin() {
-    const ok = await authStore.login(email.value, password.value);
-    if (ok) {
-        const redirect =
-            route.query.redirect || roleHome(authStore.currentUser.role);
-        router.push(redirect);
+async function handleSubmit() {
+    authStore.error = null;
+    if (password.value !== passwordConfirmation.value) {
+        authStore.error = 'Passwords do not match.';
+        return;
     }
-}
-
-function roleHome(role) {
-    if (role === 'employer') return '/employer/dashboard';
-    if (role === 'admin') return '/admin';
-    return '/';
+    const ok = await authStore.resetPassword({
+        token: route.query.token,
+        email: route.query.email,
+        password: password.value,
+        password_confirmation: passwordConfirmation.value,
+    });
+    if (ok) success.value = true;
 }
 </script>
 
@@ -150,6 +146,11 @@ function roleHome(role) {
     color: var(--color-text-danger);
     margin: 0;
 }
+.form-success {
+    font-size: 13px;
+    color: var(--color-text-success, #16a34a);
+    margin: 0;
+}
 .btn-primary {
     width: 100%;
     padding: 10px;
@@ -169,15 +170,5 @@ function roleHome(role) {
 .btn-primary:disabled {
     opacity: 0.5;
     cursor: default;
-}
-.auth-card__footer {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    text-align: center;
-    margin-top: 8px;
-}
-.auth-card__footer a {
-    color: #534ab7;
-    text-decoration: none;
 }
 </style>
