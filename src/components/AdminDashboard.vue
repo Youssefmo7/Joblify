@@ -112,9 +112,11 @@ export default {
 
     const activeTab = ref('overview');
 
-    onMounted(() => {
-      // Load all required data initially
-      store.loadDashboard();
+    onMounted(async () => {
+      await store.loadDashboard();
+      await store.fetchPendingJobs();
+      await store.fetchUsers();
+      await store.fetchComments();
     });
 
     const logout = () => {
