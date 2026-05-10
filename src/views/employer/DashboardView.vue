@@ -13,7 +13,7 @@
               </div>
             </div>
             <h2 class="employer-profile__name">
-              {{ authStore.currentUser?.companyName || authStore.currentUser?.name }}
+              {{ companyStore.company?.name || authStore.currentUser?.name }}
             </h2>
             <p class="employer-profile__role">Employer Account</p>
             <RouterLink class="edit-profile-btn" to="/employer/profile">
@@ -152,6 +152,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import { useCompanyStore } from '@/stores/companyStore';
 import EmployerActiveJobs from '@/components/employer/EmployerActiveJobs.vue';
 import EmployerCandidates from '@/components/employer/EmployerCandidates.vue';
 import EmployerAnalytics from '@/components/employer/EmployerAnalytics.vue';
@@ -159,21 +160,22 @@ import EmployerAnalytics from '@/components/employer/EmployerAnalytics.vue';
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
+const companyStore = useCompanyStore();
 
 const activeSection = ref('overview');
 
-const employerId = computed(() => authStore.currentUser?.id);
+// employerId no longer needed — jobs are fetched via /employer/jobs
 const companyInitial = computed(() => {
-  const name = authStore.currentUser?.companyName || authStore.currentUser?.name || '?';
+  const name = companyStore.company?.name || authStore.currentUser?.name || '?';
   return name.charAt(0).toUpperCase();
 });
 
-const myJobs = computed(() => jobsStore.myJobs(employerId.value));
+const myJobs = computed(() => jobsStore.employerJobs);
 const approvedJobs = computed(() => myJobs.value.filter(j => j.status === 'approved'));
 const totalApplicants = computed(() => myJobs.value.reduce((sum, j) => sum + (j.applicantsCount || 0), 0));
 
 const pendingApps = computed(() =>
-  appsStore.applicationsForEmployer(employerId.value).filter(a => a.status === 'pending')
+  appsStore.applications.filter(a => a.status === 'pending')
 );
 const pendingCount = computed(() => pendingApps.value.length);
 
@@ -198,9 +200,9 @@ async function respondToApp(appId, status) {
 }
 
 onMounted(async () => {
-  await jobsStore.fetchJobs();
-  const jobs = jobsStore.myJobs(employerId.value);
-  for (const job of jobs) {
+  await companyStore.fetchCompany();
+  await jobsStore.fetchEmployerJobs();
+  for (const job of jobsStore.employerJobs) {
     await appsStore.fetchApplicationsForJob(job.id);
   }
 });

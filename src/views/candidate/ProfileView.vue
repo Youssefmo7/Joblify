@@ -190,92 +190,58 @@
                     </div>
 
                     <form class="profile-form" @submit.prevent="handleSave">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Full name</label>
-                                <input
-                                    v-model="form.name"
-                                    class="form-input"
-                                    placeholder="Jane Doe"
-                                    required
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Job title</label>
-                                <input
-                                    v-model="form.title"
-                                    class="form-input"
-                                    placeholder="Frontend Developer"
-                                />
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input
-                                    v-model="form.email"
-                                    class="form-input"
-                                    type="email"
-                                    required
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Phone</label>
-                                <input
-                                    v-model="form.phone"
-                                    class="form-input"
-                                    type="tel"
-                                    placeholder="+1 555 000 0000"
-                                />
-                            </div>
-                        </div>
-
+                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">LinkedIn URL</label>
+                            <label class="form-label">Full name</label>
                             <input
-                                v-model="form.linkedin"
+                                v-model="form.name"
                                 class="form-input"
-                                type="url"
-                                placeholder="https://linkedin.com/in/yourname"
+                                placeholder="Jane Doe"
+                                required
                             />
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">
-                                Avatar URL
-                                <span class="optional">
-                                    (leave blank to use initials)
-                                </span>
-                            </label>
+                            <label class="form-label">Phone</label>
                             <input
-                                v-model="form.avatar"
+                                v-model="form.phone"
                                 class="form-input"
-                                placeholder="https://..."
+                                type="tel"
+                                placeholder="+1 555 000 0000"
                             />
                         </div>
+                    </div>
 
-                        <div class="form-footer">
-                            <div>
-                                <p v-if="authStore.error" class="form-error">
-                                    {{ authStore.error }}
-                                </p>
-                                <p v-if="saveSuccess" class="form-success">
-                                    Changes saved!
-                                </p>
-                            </div>
-                            <button
-                                type="submit"
-                                class="btn-primary"
-                                :disabled="authStore.loading"
-                            >
-                                {{
-                                    authStore.loading
-                                        ? 'Saving…'
-                                        : 'Save changes'
-                                }}
-                            </button>
+                    <div class="form-group">
+                        <label class="form-label">LinkedIn URL</label>
+                        <input
+                            v-model="form.linkedin_url"
+                            class="form-input"
+                            type="url"
+                            placeholder="https://linkedin.com/in/yourname"
+                        />
+                    </div>
+
+                    <div class="form-footer">
+                        <div>
+                            <p v-if="profileStore.error" class="form-error">
+                                {{ profileStore.error }}
+                            </p>
+                            <p v-if="saveSuccess" class="form-success">
+                                Changes saved!
+                            </p>
                         </div>
+                        <button
+                            type="submit"
+                            class="btn-primary"
+                            :disabled="profileStore.loading"
+                        >
+                            {{
+                                profileStore.loading
+                                    ? 'Saving…'
+                                    : 'Save changes'
+                            }}
+                        </button>
+                    </div>
                     </form>
                 </div>
 
@@ -349,7 +315,7 @@
                         </p>
                     </div>
 
-                    <div v-if="form.resumeUrl" class="resume-current">
+                    <div v-if="profileStore.hasResume && !newResumeFile" class="resume-current">
                         <div class="resume-current__icon">
                             <svg
                                 width="22"
@@ -368,21 +334,15 @@
                             </svg>
                         </div>
                         <div class="resume-current__info">
-                            <p class="resume-current__name">
-                                {{ form.resumeUrl.split('/').pop() }}
-                            </p>
-                            <p class="resume-current__sub">Current resume</p>
+                            <p class="resume-current__name">Your resume</p>
+                            <p class="resume-current__sub">PDF on file</p>
                         </div>
                         <div class="resume-current__actions">
-                            <a
-                                :href="form.resumeUrl"
-                                target="_blank"
-                                class="btn-ghost-sm"
-                            >
-                                View
-                            </a>
+                            <button class="btn-ghost-sm" @click="profileStore.downloadResume">
+                                Download
+                            </button>
                             <button class="btn-danger-sm" @click="removeResume">
-                                Remove
+                                Replace
                             </button>
                         </div>
                     </div>
@@ -437,103 +397,16 @@
                             <p v-if="saveSuccess" class="form-success">
                                 Resume saved!
                             </p>
-                            <p v-if="authStore.error" class="form-error">
-                                {{ authStore.error }}
+                            <p v-if="profileStore.error" class="form-error">
+                                {{ profileStore.error }}
                             </p>
                         </div>
                         <button
                             class="btn-primary"
-                            :disabled="authStore.loading"
+                            :disabled="profileStore.loading"
                             @click="handleSave"
                         >
-                            {{ authStore.loading ? 'Saving…' : 'Save resume' }}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- ══ Password & account ══ -->
-                <div v-if="activeTab === 'account'" class="profile-card">
-                    <div class="profile-card__header">
-                        <h2 class="profile-card__title">Change password</h2>
-                        <p class="profile-card__sub">
-                            Keep your account secure with a strong password.
-                        </p>
-                    </div>
-
-                    <form
-                        class="profile-form"
-                        @submit.prevent="handlePasswordChange"
-                    >
-                        <div class="form-group">
-                            <label class="form-label">New password</label>
-                            <input
-                                v-model="newPassword"
-                                class="form-input"
-                                type="password"
-                                placeholder="At least 6 characters"
-                                minlength="6"
-                                required
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">
-                                Confirm new password
-                            </label>
-                            <input
-                                v-model="confirmPassword"
-                                class="form-input"
-                                type="password"
-                                placeholder="Repeat password"
-                                required
-                            />
-                        </div>
-                        <p v-if="passwordError" class="form-error">
-                            {{ passwordError }}
-                        </p>
-                        <p v-if="passwordSuccess" class="form-success">
-                            Password updated!
-                        </p>
-
-                        <div class="form-footer">
-                            <div />
-                            <button
-                                type="submit"
-                                class="btn-primary"
-                                :disabled="authStore.loading"
-                            >
-                                {{
-                                    authStore.loading
-                                        ? 'Updating…'
-                                        : 'Update password'
-                                }}
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Logout section -->
-                    <div class="danger-zone">
-                        <!-- <h3 class="danger-zone__title">Sign out</h3> -->
-                        <!-- <p class="danger-zone__sub">
-                            You'll be redirected to the login page.
-                        </p> -->
-                        <button class="logout-btn-full" @click="handleLogout">
-                            <svg
-                                width="15"
-                                height="15"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
-                                />
-                                <polyline points="16 17 21 12 16 7" />
-                                <line x1="21" y1="12" x2="9" y2="12" />
-                            </svg>
-                            Sign out
+                            {{ profileStore.loading ? 'Saving…' : 'Save resume' }}
                         </button>
                     </div>
                 </div>
@@ -547,42 +420,34 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import { useProfileStore } from '@/stores/profileStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const appsStore = useApplicationsStore();
+const profileStore = useProfileStore();
 
 const tabs = [
     { label: 'Personal info', value: 'info' },
     { label: 'Skills', value: 'skills' },
     { label: 'Resume', value: 'resume' },
-    { label: 'Account', value: 'account' },
 ];
 const activeTab = ref('info');
 
 const form = reactive({
     name: '',
-    title: '',
     email: '',
     phone: '',
-    linkedin: '',
-    avatar: '',
+    linkedin_url: '',
     skills: [],
-    resumeUrl: '',
 });
 
 const skillInput = ref('');
 const newResumeFile = ref(null);
 const isDragging = ref(false);
 const saveSuccess = ref(false);
-const newPassword = ref('');
-const confirmPassword = ref('');
-const passwordError = ref('');
-const passwordSuccess = ref(false);
 
-const appCount = computed(
-    () => appsStore.myApplications(authStore.currentUser?.id).length
-);
+const appCount = computed(() => appsStore.myApplications.length);
 
 // ── Skills ────────────────────────────────────────────────────
 function addSkill() {
@@ -600,7 +465,6 @@ function handleResumeChange(e) {
     const file = e.target.files[0];
     if (!file) return;
     newResumeFile.value = file;
-    form.resumeUrl = `/resumes/${file.name}`;
 }
 
 function handleDrop(e) {
@@ -608,41 +472,27 @@ function handleDrop(e) {
     const file = e.dataTransfer.files[0];
     if (file && file.type === 'application/pdf') {
         newResumeFile.value = file;
-        form.resumeUrl = `/resumes/${file.name}`;
     }
 }
 
 function removeResume() {
-    form.resumeUrl = '';
     newResumeFile.value = null;
 }
 
 // ── Save ──────────────────────────────────────────────────────
 async function handleSave() {
     saveSuccess.value = false;
-    const ok = await authStore.updateProfile({ ...form });
+    const ok = await profileStore.updateProfile({
+        name: form.name,
+        phone: form.phone,
+        linkedin_url: form.linkedin_url,
+        resume: newResumeFile.value || undefined,
+    });
     if (ok) {
         saveSuccess.value = true;
+        newResumeFile.value = null;
         setTimeout(() => {
             saveSuccess.value = false;
-        }, 3000);
-    }
-}
-
-// ── Password ──────────────────────────────────────────────────
-async function handlePasswordChange() {
-    passwordError.value = '';
-    passwordSuccess.value = false;
-    if (newPassword.value !== confirmPassword.value) {
-        passwordError.value = 'Passwords do not match.';
-        return;
-    }
-    const ok = await authStore.updateProfile({ password: newPassword.value });
-    if (ok) {
-        passwordSuccess.value = true;
-        newPassword.value = confirmPassword.value = '';
-        setTimeout(() => {
-            passwordSuccess.value = false;
         }, 3000);
     }
 }
@@ -657,15 +507,14 @@ function handleLogout() {
 onMounted(async () => {
     const user = authStore.currentUser;
     if (!user) return router.push('/login');
+    await profileStore.fetchProfile();
+    await appsStore.fetchMyApplications();
+
     form.name = user.name || '';
-    form.title = user.title || '';
     form.email = user.email || '';
-    form.phone = user.phone || '';
-    form.linkedin = user.linkedin || '';
-    form.avatar = user.avatar || '';
+    form.phone = profileStore.profile?.phone || user.phone || '';
+    form.linkedin_url = profileStore.profile?.linkedin_url || user.linkedin_url || '';
     form.skills = [...(user.skills || [])];
-    form.resumeUrl = user.resumeUrl || '';
-    await appsStore.fetchMyApplications(user.id);
 });
 </script>
 
