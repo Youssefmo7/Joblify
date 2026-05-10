@@ -376,7 +376,7 @@ onMounted(async () => {
     await jobsStore.fetchJob(route.params.id);
     await loadComments();
     if (authStore.isCandidate) {
-        await appsStore.fetchMyApplications(authStore.currentUser.id);
+        await appsStore.fetchMyApplications();
     }
 });
 </script>

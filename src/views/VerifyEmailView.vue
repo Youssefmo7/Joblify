@@ -21,9 +21,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
 import client from '@/api/client';
 
 const route = useRoute();
+const authStore = useAuthStore();
 const verifying = ref(true);
 const verified = ref(false);
 const error = ref('');
@@ -32,6 +34,10 @@ onMounted(async () => {
     try {
         await client.get(`/email/verify/${route.params.id}/${route.params.hash}`);
         verified.value = true;
+        // Update local user so they don't need to re-login
+        if (authStore.user) {
+            authStore.user.email_verified_at = new Date().toISOString();
+        }
     } catch (err) {
         error.value = err.message || 'Invalid or expired verification link.';
     } finally {

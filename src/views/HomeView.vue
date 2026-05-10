@@ -177,7 +177,7 @@
                     </div>
                     <button
                         class="skill-row__add"
-                        @click="jobsStore.setFilter('keyword', skill.name)"
+                        @click="jobsStore.setFilter('search', skill.name)"
                     >
                         +
                     </button>

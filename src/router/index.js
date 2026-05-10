@@ -71,13 +71,13 @@ const routes = [
         path: '/profile',
         name: 'profile',
         component: ProfileView,
-        meta: { requiresAuth: true, role: 'candidate' },
+        meta: { requiresAuth: true, role: 'candidate', verified: true },
     },
     {
         path: '/my-applications',
         name: 'my-applications',
         component: ApplicationsView,
-        meta: { requiresAuth: true, role: 'candidate' },
+        meta: { requiresAuth: true, role: 'candidate', verified: true },
     },
 
     // ── Employer ──────────────────────────────────────────────
@@ -85,25 +85,25 @@ const routes = [
         path: '/employer/dashboard',
         name: 'employer-dashboard',
         component: EmployerDashboard,
-        meta: { requiresAuth: true, role: 'employer' },
+        meta: { requiresAuth: true, role: 'employer', verified: true },
     },
     {
         path: '/employer/post-job',
         name: 'post-job',
         component: PostJobView,
-        meta: { requiresAuth: true, role: 'employer', hideNavbar: true },
+        meta: { requiresAuth: true, role: 'employer', hideNavbar: true, verified: true },
     },
     {
         path: '/employer/profile',
         name: 'employer-profile',
         component: EmployerProfileView,
-        meta: { requiresAuth: true, role: 'employer' },
+        meta: { requiresAuth: true, role: 'employer', verified: true },
     },
     {
         path: '/employer/jobs/:id/applicants',
         name: 'applicants',
         component: ApplicantsView,
-        meta: { requiresAuth: true, role: 'employer' },
+        meta: { requiresAuth: true, role: 'employer', verified: true },
     },
 
     // ── Admin ─────────────────────────────────────────────────
@@ -111,7 +111,15 @@ const routes = [
         path: '/admin',
         name: 'admin-dashboard',
         component: AdminDashboard,
-        meta: { requiresAuth: true, role: 'admin', hideNavbar: true },
+        meta: { requiresAuth: true, role: 'admin', hideNavbar: true, verified: true },
+    },
+
+    // ── Email verification notice ─────────────────────────────
+    {
+        path: '/verify-email-notice',
+        name: 'verify-email-notice',
+        component: () => import('@/views/VerifyEmailNoticeView.vue'),
+        meta: { requiresAuth: true },
     },
 
     // ── Catch-all 404 ─────────────────────────────────────────
@@ -153,6 +161,11 @@ router.beforeEach(async (to, from, next) => {
     // Role mismatch — redirect to that user's home
     if (to.meta.role && auth.user?.role !== to.meta.role) {
         return next(roleHomePath(auth.user?.role));
+    }
+
+    // Email verification required
+    if (to.meta.verified && auth.isLoggedIn && !auth.isVerified) {
+        return next({ name: 'verify-email-notice' });
     }
 
     next();

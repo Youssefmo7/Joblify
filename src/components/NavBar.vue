@@ -1,5 +1,18 @@
 <template>
     <nav class="navbar">
+        <!-- Unverified email banner -->
+        <div
+            v-if="authStore.isLoggedIn && !authStore.isVerified"
+            class="verify-banner"
+        >
+            <span>
+                Please verify your email to unlock all features.
+            </span>
+            <RouterLink to="/verify-email-notice" class="verify-banner__link">
+                Resend email →
+            </RouterLink>
+        </div>
+
         <div class="navbar__inner">
             <!-- Logo -->
             <RouterLink to="/" class="navbar__logo">Joblify</RouterLink>
@@ -25,8 +38,8 @@
                     class="navbar__search-input"
                     type="text"
                     placeholder="Search jobs, skills, or companies..."
-                    :value="jobsStore.filters.keyword"
-                    @input="jobsStore.setFilter('keyword', $event.target.value)"
+                    :value="jobsStore.filters.search"
+                    @input="jobsStore.setFilter('search', $event.target.value)"
                     @keyup.enter="$router.push('/')"
                 />
             </div>
@@ -295,6 +308,23 @@ onUnmounted(() => {
     z-index: 50;
     background: var(--color-background-primary);
     border-bottom: 1px solid var(--color-border-tertiary);
+}
+.verify-banner {
+    background: #faeeda;
+    color: #854f0b;
+    font-size: 13px;
+    padding: 8px 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.verify-banner__link {
+    color: #854f0b;
+    font-weight: 600;
+    text-decoration: underline;
 }
 .navbar__inner {
     max-width: 1200px;

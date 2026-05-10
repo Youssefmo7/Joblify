@@ -29,6 +29,11 @@ export const useApplicationsStore = defineStore('applications', {
         myApplications: (state) => state.applications,
         applicationsForJob: (state) => (jobId) =>
             state.applications.filter((a) => a.jobId == jobId),
+        applicationsForEmployer: (state) => (employerId) =>
+            state.applications.filter(
+                (a) => a._raw?.job?.company?.user_id == employerId ||
+                       a._raw?.job?.company?.user?.id == employerId
+            ),
         hasApplied: (state) => (jobId, candidateId) =>
             state.applications.some(
                 (a) => a.jobId == jobId && a.candidateId == candidateId

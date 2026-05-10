@@ -61,15 +61,13 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
 
-const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 
-const myJobs = computed(() => jobsStore.myJobs(authStore.currentUser?.id));
+const myJobs = computed(() => jobsStore.myJobs);
 
 function getNewApplicants(jobId) {
   return appsStore.applicationsForJob(jobId).filter(a => a.status === 'pending').length;
