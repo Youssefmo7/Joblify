@@ -63,7 +63,7 @@
                                     placeholder="e.g. Senior Frontend Engineer"
                                     @blur="validateField('title')"
                                 >
-                                <p v-if="touched.title && errors.title" class="text-xs text-red-500 mt-1">Job title is required</p>
+                                <p v-if="touched.title && errors.title" class="text-xs text-red-500 mt-1">{{ errors.title }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Job Description <span class="text-red-500">*</span></label>
@@ -75,11 +75,11 @@
                                     placeholder="Describe the role, responsibilities, and what the candidate will be working on..."
                                     @blur="validateField('description')"
                                 ></textarea>
-                                <p v-if="touched.description && errors.description" class="text-xs text-red-500 mt-1">Description is required</p>
+                                <p v-if="touched.description && errors.description" class="text-xs text-red-500 mt-1">{{ errors.description }}</p>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                                     <select 
                                         v-model="form.category" 
                                         class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] bg-white transition-colors"
@@ -91,7 +91,6 @@
                                             {{ cat.name }}
                                         </option>
                                     </select>
-                                    <p v-if="touched.category && errors.category" class="text-xs text-red-500 mt-1">Category is required</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Location <span class="text-red-500">*</span></label>
@@ -103,7 +102,7 @@
                                         placeholder="e.g. Mountain View, CA"
                                         @blur="validateField('location')"
                                     >
-                                    <p v-if="touched.location && errors.location" class="text-xs text-red-500 mt-1">Location is required</p>
+                                    <p v-if="touched.location && errors.location" class="text-xs text-red-500 mt-1">{{ errors.location }}</p>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +139,7 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline <span class="text-red-500">*</span></label>
                                     <input 
                                         v-model="form.deadline" 
                                         type="date" 
@@ -148,7 +147,7 @@
                                         :class="touched.deadline && errors.deadline ? 'border-red-500' : 'border-gray-300'"
                                         @blur="validateField('deadline')"
                                     >
-                                    <p v-if="touched.deadline && errors.deadline" class="text-xs text-red-500 mt-1">Deadline is required</p>
+                                    <p v-if="touched.deadline && errors.deadline" class="text-xs text-red-500 mt-1">{{ errors.deadline }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
@@ -174,7 +173,7 @@
                         <h2 class="text-lg font-bold text-gray-900 mb-4">Requirements &amp; Benefits</h2>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Requirements <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
                                 <textarea 
                                     v-model="form.requirementsText" 
                                     rows="4" 
@@ -183,7 +182,6 @@
                                     placeholder="List the job requirements..."
                                     @blur="validateField('requirements')"
                                 ></textarea>
-                                <p v-if="touched.requirements && errors.requirements" class="text-xs text-red-500 mt-1">Please list at least one requirement</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
@@ -195,10 +193,30 @@
                                 <p class="text-xs text-gray-500 mt-1">Only skills already in our database will be linked.</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range <span class="text-gray-400 text-xs">(in EGP)</span></label>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <input v-model.number="form.salaryMin" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Min (e.g. 50000)">
-                                    <input v-model.number="form.salaryMax" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Max (e.g. 80000)">
+                                    <div>
+                                        <input 
+                                            v-model.number="form.salaryMin" 
+                                            type="number" 
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors"
+                                            :class="touched.salaryMin && errors.salaryMin ? 'border-red-500' : 'border-gray-300'"
+                                            placeholder="Min (e.g. 50000)"
+                                            @blur="validateField('salaryMin')"
+                                        >
+                                        <p v-if="touched.salaryMin && errors.salaryMin" class="text-xs text-red-500 mt-1">{{ errors.salaryMin }}</p>
+                                    </div>
+                                    <div>
+                                        <input 
+                                            v-model.number="form.salaryMax" 
+                                            type="number" 
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors"
+                                            :class="touched.salaryMax && errors.salaryMax ? 'border-red-500' : 'border-gray-300'"
+                                            placeholder="Max (e.g. 80000)"
+                                            @blur="validateField('salaryMax')"
+                                        >
+                                        <p v-if="touched.salaryMax && errors.salaryMax" class="text-xs text-red-500 mt-1">{{ errors.salaryMax }}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -222,20 +240,30 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between pt-4">
-                        <button type="button" @click="prevStep(2)" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50 transition-colors">Back</button>
-                        <button 
-                            type="button" 
-                            class="px-8 py-2.5 bg-[#fd366e] hover:bg-pink-600 hover:scale-[1.02] active:scale-95 text-white font-medium rounded-lg text-sm transition-all shadow-sm disabled:opacity-50"
-                            @click="publishJob"
-                            :disabled="jobsStore.loading"
-                        >
-                            {{ jobsStore.loading ? 'Publishing...' : 'Publish Job' }}
-                        </button>
+                        <div class="flex flex-col items-end gap-2 pt-4">
+                            <div class="flex justify-between w-full">
+                                <button type="button" @click="prevStep(2)" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50 transition-colors">Back</button>
+                                <button 
+                                    type="button" 
+                                    class="px-8 py-2.5 bg-[#fd366e] hover:bg-pink-600 hover:scale-[1.02] active:scale-95 text-white font-medium rounded-lg text-sm transition-all shadow-sm disabled:opacity-50"
+                                    @click="publishJob"
+                                    :disabled="jobsStore.loading"
+                                >
+                                    {{ jobsStore.loading ? 'Publishing...' : 'Publish Job' }}
+                                </button>
+                            </div>
+                            <div v-if="submissionError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg w-full">
+                                <p class="text-sm text-red-600 font-bold mb-1">{{ submissionError }}</p>
+                                <ul v-if="Object.keys(jobsStore.validationErrors).length" class="list-disc list-inside">
+                                    <li v-for="(errs, field) in jobsStore.validationErrors" :key="field" class="text-xs text-red-500">
+                                        {{ errs[0] }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </form>
-        </div>
+                </form>
+            </div>
         </div>
     </div>
 </template>
@@ -255,6 +283,7 @@ const categoriesStore = useCategoriesStore();
 const skillsStore = useSkillsStore();
 
 const currentStep = ref(1);
+const submissionError = ref('');
 
 const form = reactive({
     title: '',
@@ -278,16 +307,59 @@ const touched = reactive({
     location: false,
     deadline: false,
     requirements: false,
+    salaryMin: false,
+    salaryMax: false,
 });
 
-const errors = computed(() => ({
-    title: !form.title?.trim(),
-    description: !form.description?.trim(),
-    category: !form.category,
-    location: !form.location?.trim(),
-    deadline: !form.deadline,
-    requirements: !form.requirementsText?.trim(),
-}));
+const errors = computed(() => {
+    const errs = {};
+    
+    // Title
+    if (!form.title?.trim()) {
+        errs.title = 'Please enter a job title.';
+    } else if (form.title.length > 255) {
+        errs.title = 'Please enter a valid job title.';
+    }
+    
+    // Description
+    if (!form.description?.trim()) {
+        errs.description = 'Please enter a job description.';
+    }
+    
+    // Location
+    if (!form.location?.trim()) {
+        errs.location = 'Please enter a job location.';
+    }
+    
+    // Deadline (Required per user request, after_or_equal:today per Laravel)
+    if (!form.deadline) {
+        errs.deadline = 'The deadline must be a valid date.';
+    } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const deadlineDate = new Date(form.deadline);
+        if (isNaN(deadlineDate.getTime())) {
+            errs.deadline = 'The deadline must be a valid date.';
+        } else if (deadlineDate < today) {
+            errs.deadline = 'The deadline must be a date after or equal to today.';
+        }
+    }
+
+    // Salary Min/Max (Numeric per Laravel)
+    if (form.salaryMin !== null && form.salaryMin !== '' && (isNaN(form.salaryMin) || form.salaryMin <= 0)) {
+        errs.salaryMin = 'Please enter a valid minimum salary.';
+    }
+    if (form.salaryMax !== null && form.salaryMax !== '' && (isNaN(form.salaryMax) || form.salaryMax <= 0)) {
+        errs.salaryMax = 'Please enter a valid maximum salary.';
+    }
+    if(form.salaryMin && form.salaryMax && Number(form.salaryMin) >= Number(form.salaryMax)){
+        errs.salaryMax = 'The maximum salary must be greater than the minimum salary.';
+    }
+    
+    // Categories and Requirements are nullable in Laravel, so no error flags needed unless specifically requested.
+    
+    return errs;
+});
 
 function validateField(field) {
     touched[field] = true;
@@ -296,15 +368,16 @@ function validateField(field) {
 function validateStep1() {
     touched.title = true;
     touched.description = true;
-    touched.category = true;
     touched.location = true;
     touched.deadline = true;
-    return !(errors.value.title || errors.value.description || errors.value.category || errors.value.location || errors.value.deadline);
+    
+    return !(errors.value.title || errors.value.description || errors.value.location || errors.value.deadline);
 }
 
 function validateStep2() {
-    touched.requirements = true;
-    return !errors.value.requirements;
+    touched.salaryMin = true;
+    touched.salaryMax = true;
+    return !(errors.value.salaryMin || errors.value.salaryMax);
 }
 
 function nextStep(step) {
@@ -342,7 +415,11 @@ function mapSkillsToIds() {
 
 async function publishJob() {
     if (!validateStep1() || !validateStep2()) {
-        currentStep.value = 1;
+        if (!validateStep1()) {
+            currentStep.value = 1;
+        } else {
+            currentStep.value = 2;
+        }
         return;
     }
 
@@ -374,9 +451,13 @@ async function publishJob() {
         company_id: employer.company_id || 1, // TODO: fetch from companyStore in Phase 4
     };
 
+    submissionError.value = '';
     const result = await jobsStore.postJob(jobData);
     if (result) {
         router.push('/employer/dashboard');
+    } else {
+        // Now using the store's error which captures the server message
+        submissionError.value = jobsStore.error || "Failed to publish job. Please check your data.";
     }
 }
 
