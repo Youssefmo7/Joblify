@@ -2,7 +2,7 @@
     <div class="bg-surface rounded-xl border border-border overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-border bg-gray-50 flex justify-between items-center">
             <h3 class="text-lg font-bold text-gray-900">Job Approvals</h3>
-            <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full">{{ store.stats.pendingCount }} Pending</span>
+            <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full">{{ store.jobsMeta?.total || store.pendingJobs.length }} Pending</span>
         </div>
 
         <div v-if="actionMessage" class="px-6 py-3 bg-green-50 border-b border-green-100 text-sm font-medium text-green-600 flex items-center transition-all">
@@ -10,11 +10,11 @@
             {{ actionMessage }}
         </div>
 
-        <div class="divide-y divide-border bg-white" v-if="store.stats.pendingCount > 0">
+        <div class="divide-y divide-border bg-white" v-if="store.pendingJobs.length > 0">
             <div class="p-5 hover:bg-gray-50 transition-colors" v-for="job in store.pendingJobs" :key="job.id">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h4 class="text-base font-bold text-gray-900 cursor-pointer hover:text-primary transition-colors">{{ job.title }}</h4>
+                        <h4 class="text-base font-bold text-gray-900 cursor-pointer hover:text-primary transition-colors" @click="$emit('view-job', job.id)">{{ job.title }}</h4>
                         <div class="flex items-center mt-1 space-x-3 text-sm text-gray-500">
                             <div class="flex items-center"><svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg> <span class="font-medium text-gray-700">{{ job.company }}</span></div>
                             <span class="text-gray-300">&bull;</span>
@@ -38,15 +38,20 @@
             <p class="text-gray-900 font-bold text-lg mb-1">You're all caught up!</p>
             <p class="text-gray-500">There are no pending jobs to review right now.</p>
         </div>
+
+        <AdminPagination :meta="store.jobsMeta" @change="goToPage" />
     </div>
 </template>
 
 <script>
 import { ref } from "vue";
 import { useAdminStore } from "@/stores/adminStore";
+import AdminPagination from "./AdminPagination.vue";
 
 export default {
   name: "AdminJobs",
+  components: { AdminPagination },
+  emits: ['view-job'],
   setup() {
     const store = useAdminStore();
     const reviewNotes = ref({});
@@ -65,7 +70,11 @@ export default {
       if (!value) return "Unknown";
       const date = new Date(value);
       if (!Number.isFinite(date.getTime())) return "Unknown";
-      return date.toLocaleString();
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const goToPage = (page) => {
+      store.fetchPendingJobs({ page });
     };
 
     const handleApprove = async (jobId) => {
@@ -84,6 +93,7 @@ export default {
       reviewNotes,
       actionMessage,
       formatDate,
+      goToPage,
       handleApprove,
       handleReject
     };

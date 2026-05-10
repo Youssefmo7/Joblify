@@ -113,10 +113,12 @@ export default {
     const activeTab = ref('overview');
 
     onMounted(async () => {
-      await store.loadDashboard();
-      await store.fetchPendingJobs();
-      await store.fetchUsers();
-      await store.fetchComments();
+      await Promise.all([
+        store.loadDashboard(),
+        store.fetchPendingJobs({ page: 1 }),
+        store.fetchUsers({ page: 1 }),
+        store.fetchComments({ page: 1 }),
+      ]);
     });
 
     const logout = () => {
