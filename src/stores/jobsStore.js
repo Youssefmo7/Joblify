@@ -46,6 +46,7 @@ export const useJobsStore = defineStore('jobs', {
             per_page: 10,
         },
         meta: null,
+        validationErrors: {},
     }),
 
     getters: {
@@ -124,6 +125,7 @@ export const useJobsStore = defineStore('jobs', {
                 return normalized;
             } catch (err) {
                 this.error = err.message || 'Could not post job.';
+                this.validationErrors = err.errors || {};
                 return null;
             } finally {
                 this.loading = false;
