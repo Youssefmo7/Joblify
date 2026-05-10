@@ -32,14 +32,20 @@ const error = ref('');
 
 onMounted(async () => {
     try {
-        await client.get(`/email/verify/${route.params.id}/${route.params.hash}`);
+        const { id, hash } = route.params;
+
+        await client.get(`/email/verify/${id}/${hash}`, {
+            params: route.query 
+        });
+
         verified.value = true;
-        // Update local user so they don't need to re-login
+
         if (authStore.user) {
             authStore.user.email_verified_at = new Date().toISOString();
         }
     } catch (err) {
-        error.value = err.message || 'Invalid or expired verification link.';
+        console.error("Verification failed:", err.response?.data);
+        error.value = err.response?.data?.message || 'Invalid or expired verification link.';
     } finally {
         verifying.value = false;
     }
