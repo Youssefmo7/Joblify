@@ -133,11 +133,16 @@
                 <!-- Resume summary -->
                 <div class="sidebar-card">
                     <h3 class="sidebar-card__title">Resume</h3>
-                    <a
-                        v-if="form.resumeUrl"
-                        :href="form.resumeUrl"
-                        target="_blank"
+                    <button
+                        v-if="profileStore.hasResume"
                         class="resume-preview-link"
+                        style="
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            padding: 0;
+                        "
+                        @click="profileStore.downloadResume()"
                     >
                         <svg
                             width="14"
@@ -154,8 +159,8 @@
                             />
                             <polyline points="14 2 14 8 20 8" />
                         </svg>
-                        {{ form.resumeUrl.split('/').pop() }}
-                    </a>
+                        Download resume
+                    </button>
                     <span v-else class="no-data">No resume uploaded</span>
                 </div>
             </aside>
@@ -190,58 +195,58 @@
                     </div>
 
                     <form class="profile-form" @submit.prevent="handleSave">
-                    <div class="form-row">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Full name</label>
+                                <input
+                                    v-model="form.name"
+                                    class="form-input"
+                                    placeholder="Jane Doe"
+                                    required
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input
+                                    v-model="form.phone"
+                                    class="form-input"
+                                    type="tel"
+                                    placeholder="+1 555 000 0000"
+                                />
+                            </div>
+                        </div>
+
                         <div class="form-group">
-                            <label class="form-label">Full name</label>
+                            <label class="form-label">LinkedIn URL</label>
                             <input
-                                v-model="form.name"
+                                v-model="form.linkedin_url"
                                 class="form-input"
-                                placeholder="Jane Doe"
-                                required
+                                type="url"
+                                placeholder="https://linkedin.com/in/yourname"
                             />
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Phone</label>
-                            <input
-                                v-model="form.phone"
-                                class="form-input"
-                                type="tel"
-                                placeholder="+1 555 000 0000"
-                            />
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">LinkedIn URL</label>
-                        <input
-                            v-model="form.linkedin_url"
-                            class="form-input"
-                            type="url"
-                            placeholder="https://linkedin.com/in/yourname"
-                        />
-                    </div>
-
-                    <div class="form-footer">
-                        <div>
-                            <p v-if="profileStore.error" class="form-error">
-                                {{ profileStore.error }}
-                            </p>
-                            <p v-if="saveSuccess" class="form-success">
-                                Changes saved!
-                            </p>
+                        <div class="form-footer">
+                            <div>
+                                <p v-if="profileStore.error" class="form-error">
+                                    {{ profileStore.error }}
+                                </p>
+                                <p v-if="saveSuccess" class="form-success">
+                                    Changes saved!
+                                </p>
+                            </div>
+                            <button
+                                type="submit"
+                                class="btn-primary"
+                                :disabled="profileStore.loading"
+                            >
+                                {{
+                                    profileStore.loading
+                                        ? 'Saving…'
+                                        : 'Save changes'
+                                }}
+                            </button>
                         </div>
-                        <button
-                            type="submit"
-                            class="btn-primary"
-                            :disabled="profileStore.loading"
-                        >
-                            {{
-                                profileStore.loading
-                                    ? 'Saving…'
-                                    : 'Save changes'
-                            }}
-                        </button>
-                    </div>
                     </form>
                 </div>
 
@@ -297,10 +302,12 @@
                         </p>
                         <button
                             class="btn-primary"
-                            :disabled="authStore.loading"
+                            :disabled="profileStore.loading"
                             @click="handleSave"
                         >
-                            {{ authStore.loading ? 'Saving…' : 'Save skills' }}
+                            {{
+                                profileStore.loading ? 'Saving…' : 'Save skills'
+                            }}
                         </button>
                     </div>
                 </div>
@@ -315,7 +322,10 @@
                         </p>
                     </div>
 
-                    <div v-if="profileStore.hasResume && !newResumeFile" class="resume-current">
+                    <div
+                        v-if="profileStore.hasResume && !newResumeFile"
+                        class="resume-current"
+                    >
                         <div class="resume-current__icon">
                             <svg
                                 width="22"
@@ -338,7 +348,10 @@
                             <p class="resume-current__sub">PDF on file</p>
                         </div>
                         <div class="resume-current__actions">
-                            <button class="btn-ghost-sm" @click="profileStore.downloadResume">
+                            <button
+                                class="btn-ghost-sm"
+                                @click="profileStore.downloadResume"
+                            >
                                 Download
                             </button>
                             <button class="btn-danger-sm" @click="removeResume">
@@ -406,7 +419,9 @@
                             :disabled="profileStore.loading"
                             @click="handleSave"
                         >
-                            {{ profileStore.loading ? 'Saving…' : 'Save resume' }}
+                            {{
+                                profileStore.loading ? 'Saving…' : 'Save resume'
+                            }}
                         </button>
                     </div>
                 </div>
@@ -486,6 +501,7 @@ async function handleSave() {
         name: form.name,
         phone: form.phone,
         linkedin_url: form.linkedin_url,
+        skills: form.skills, // ← skills now included
         resume: newResumeFile.value || undefined,
     });
     if (ok) {
@@ -513,8 +529,10 @@ onMounted(async () => {
     form.name = user.name || '';
     form.email = user.email || '';
     form.phone = profileStore.profile?.phone || user.phone || '';
-    form.linkedin_url = profileStore.profile?.linkedin_url || user.linkedin_url || '';
-    form.skills = [...(user.skills || [])];
+    form.linkedin_url =
+        profileStore.profile?.linkedin_url || user.linkedin_url || '';
+    // skills come back from the API as plain name strings e.g. ['Vue.js', 'PHP']
+    form.skills = [...(profileStore.profile?.skills || [])];
 });
 </script>
 

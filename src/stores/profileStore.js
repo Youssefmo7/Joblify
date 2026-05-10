@@ -29,21 +29,33 @@ export const useProfileStore = defineStore('profile', {
             }
         },
 
-        async updateProfile({ name, phone, linkedin_url, resume }) {
+        async updateProfile({ name, phone, linkedin_url, skills, resume }) {
             this.loading = true;
             this.error = null;
             try {
                 const formData = new FormData();
                 if (name !== undefined) formData.append('name', name);
-                if (phone !== undefined) formData.append('phone', phone);
+                if (phone !== undefined) formData.append('phone', phone ?? '');
                 if (linkedin_url !== undefined)
-                    formData.append('linkedin_url', linkedin_url);
+                    formData.append('linkedin_url', linkedin_url ?? '');
+
+                // Skills are sent as an array of name strings: skills[]
+                if (Array.isArray(skills) && skills.length > 0) {
+                    skills.forEach((skill) => {
+                        formData.append('skills[]', skill);
+                    });
+                } else {
+                    // Send an empty marker so the backend knows to clear all skills
+                    formData.append('skills', '');
+                }
+
                 if (resume) formData.append('resume', resume);
 
                 await client.post('/profile', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
-                // Refresh profile after update
+
+                // Refresh profile after update so the store reflects the saved state
                 await this.fetchProfile();
                 return true;
             } catch (err) {
