@@ -94,21 +94,21 @@
                                 </button>
                             </div>
                             <div
-                                v-if="notifications.length === 0"
+                                v-if="notificationsStore.notifications.length === 0"
                                 class="navbar__dropdown-empty"
                             >
                                 No notifications yet
                             </div>
                             <div
-                                v-for="n in notifications"
+                                v-for="n in notificationsStore.notifications"
                                 :key="n.id"
-                                :class="['notif-item', { unread: !n.is_read }]"
+                                :class="['notif-item', { unread: !n.isRead }]"
                                 @click="markRead(n)"
                             >
-                                <span v-if="!n.is_read" class="notif-item__dot" />
+                                <span v-if="!n.isRead" class="notif-item__dot" />
                                 <p class="notif-item__msg">{{ n.message }}</p>
                                 <p class="notif-item__time">
-                                    {{ timeAgo(n.created_at) }}
+                                    {{ timeAgo(n.createdAt) }}
                                 </p>
                             </div>
                         </div>
@@ -211,15 +211,15 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
-import client from '@/api/client';
+import { useNotificationsStore } from '@/stores/notificationsStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
+const notificationsStore = useNotificationsStore();
 
 const showNotifications = ref(false);
 const showUserMenu = ref(false);
-const notifications = ref([]);
 
 const initials = computed(() => {
     const name = authStore.currentUser?.name || '';
@@ -231,33 +231,20 @@ const initials = computed(() => {
         .toUpperCase();
 });
 
-const unreadCount = computed(
-    () => notifications.value.filter((n) => !n.is_read).length
-);
+const unreadCount = computed(() => notificationsStore.unreadCount);
 
 // ── Notifications ─────────────────────────────────────────────
-// TODO: migrate to notificationsStore in Phase 5
 async function loadNotifications() {
     if (!authStore.isLoggedIn) return;
-    try {
-        const data = await client.get('/notifications?unread=1');
-        notifications.value = (data.notifications?.data || []).sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-    } catch (e) {
-        // ignore — notification store will handle this properly in Phase 5
-    }
+    await notificationsStore.fetchNotifications();
 }
 
 async function markRead(notif) {
-    if (notif.is_read) return;
-    notif.is_read = true;
-    await client.patch(`/notifications/${notif.id}/read`);
+    await notificationsStore.markRead(notif.id);
 }
 
 async function markAllRead() {
-    await client.post('/notifications/read-all');
-    notifications.value.forEach((n) => (n.is_read = true));
+    await notificationsStore.markAllRead();
 }
 
 function toggleNotifications() {
