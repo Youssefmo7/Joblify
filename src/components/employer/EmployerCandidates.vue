@@ -39,7 +39,10 @@
         </div>
 
         <div class="candidate-item__actions">
-          <span v-if="app.status === 'accepted'" class="status-badge accepted">Accepted</span>
+          <template v-if="app.status === 'accepted'">
+            <span v-if="app.paid" class="status-badge accepted">Accepted & Paid</span>
+            <button v-else class="action-btn pay" @click="openPayment(app)">Pay for Placement</button>
+          </template>
           <span v-else-if="app.status === 'rejected'" class="status-badge rejected">Rejected</span>
           <template v-else>
             <button
@@ -64,6 +67,17 @@
         No {{ filter === 'all' ? '' : filter }} candidates found.
       </div>
     </div>
+
+    <!-- Payment Modal -->
+    <PaymentModal
+      v-if="selectedApp"
+      :show="showPaymentModal"
+      :application="selectedApp"
+      :jobTitle="getJobTitle(selectedApp.jobId)"
+      :employerId="employerId"
+      @close="closePayment"
+      @success="onPaymentSuccess"
+    />
   </div>
 </template>
 
@@ -72,6 +86,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import PaymentModal from './PaymentModal.vue';
 
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
@@ -86,6 +101,24 @@ const tabs = [
 ];
 
 const employerId = computed(() => authStore.currentUser?.id);
+
+const showPaymentModal = ref(false);
+const selectedApp = ref(null);
+
+function openPayment(app) {
+  selectedApp.value = app;
+  showPaymentModal.value = true;
+}
+
+function closePayment() {
+  showPaymentModal.value = false;
+  selectedApp.value = null;
+}
+
+function onPaymentSuccess() {
+  closePayment();
+  // No need to manually refresh here as store is updated ref-responsively
+}
 
 const allApplications = computed(() =>
   appsStore.applicationsForEmployer(employerId.value)
@@ -270,6 +303,12 @@ onMounted(async () => {
   border: none;
 }
 .action-btn.accept:hover { opacity: 0.9; }
+.action-btn.pay {
+  background: #fd366e;
+  color: #fff;
+  border: none;
+}
+.action-btn.pay:hover { opacity: 0.9; transform: translateY(-1px); }
 .action-btn.reject {
   background: none;
   border: 1px solid var(--color-border-tertiary);
