@@ -29,12 +29,7 @@
                     >
                         {{ formatWorkType(job.workType) }}
                     </span>
-                    <span
-                        v-if="job.promoted"
-                        class="job-card__badge job-card__badge--promoted"
-                    >
-                        Promoted
-                    </span>
+
                 </p>
             </div>
 
@@ -91,16 +86,6 @@
             </span>
 
             <div class="job-card__actions">
-                <!-- Save button (candidate only) -->
-                <button
-                    v-if="authStore.isCandidate"
-                    class="job-card__save"
-                    :class="{ saved: isSaved }"
-                    @click.stop="handleSave"
-                >
-                    {{ isSaved ? 'Saved' : 'Save' }}
-                </button>
-
                 <!-- Apply / Applied -->
                 <button
                     v-if="authStore.isCandidate"
@@ -152,11 +137,7 @@ const menuOpen = ref(false);
 const isOwner = computed(
     () =>
         authStore.isEmployer &&
-        authStore.currentUser?.id === props.job.employerId
-);
-
-const isSaved = computed(() =>
-    authStore.currentUser?.savedJobs?.includes(props.job.id)
+        authStore.currentUser?.id == props.job.employerId
 );
 
 const hasApplied = computed(
@@ -171,10 +152,6 @@ function goToJob() {
 
 function toggleMenu() {
     menuOpen.value = !menuOpen.value;
-}
-
-async function handleSave() {
-    await authStore.toggleSaveJob(props.job.id);
 }
 
 async function handleDelete() {
