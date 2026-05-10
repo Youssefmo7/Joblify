@@ -5,27 +5,27 @@
             <h1 class="auth-card__title">Set new password</h1>
             <p class="auth-card__sub">Choose a strong new password.</p>
 
-            <form class="auth-form" @submit.prevent="handleSubmit">
+            <form class="auth-form" @submit.prevent="handleSubmit" novalidate>
                 <div class="form-group">
                     <label class="form-label">New password</label>
                     <input
                         v-model="password"
                         class="form-input"
+                        :class="{ 'input-error': errors.password }"
                         type="password"
                         placeholder="••••••••"
-                        required
-                        minlength="8"
                     />
+                    <p v-if="errors.password" class="field-error">{{ errors.password }}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Confirm password</label>
                     <input
                         v-model="passwordConfirmation"
                         class="form-input"
+                        :class="{ 'input-error': errors.passwordConfirmation }"
                         type="password"
-                        placeholder="••••••••"
-                        required
                     />
+                    <p v-if="errors.passwordConfirmation" class="field-error">{{ errors.passwordConfirmation }}</p>
                 </div>
 
                 <p v-if="authStore.error" class="form-error">
@@ -59,23 +59,64 @@ const password = ref('');
 const passwordConfirmation = ref('');
 const success = ref(false);
 
+const errors = ref({
+    password: '',
+    passwordConfirmation: '',
+});
+
+function validateForm() {
+    let isValid = true;
+    const nextErrors = { password: '', passwordConfirmation: '' };
+
+    if (!password.value) {
+        nextErrors.password = 'Password is required.';
+        isValid = false;
+    } else if (password.value.length < 8) {
+        nextErrors.password = 'Password must be at least 8 characters.';
+        isValid = false;
+    }
+
+    if (!passwordConfirmation.value) {
+        nextErrors.passwordConfirmation = 'Please confirm your password.';
+        isValid = false;
+    } else if (password.value !== passwordConfirmation.value) {
+        nextErrors.passwordConfirmation = 'Passwords do not match.';
+        isValid = false;
+    }
+
+    errors.value = nextErrors;
+    return isValid;
+}
+
 async function handleSubmit() {
     authStore.error = null;
-    if (password.value !== passwordConfirmation.value) {
-        authStore.error = 'Passwords do not match.';
-        return;
-    }
+    if (!validateForm()) return;
+
     const ok = await authStore.resetPassword({
         token: route.query.token,
         email: route.query.email,
         password: password.value,
         password_confirmation: passwordConfirmation.value,
     });
-    if (ok) success.value = true;
+    if (ok) {
+        success.value = true;
+
+        password.value = '';
+        passwordConfirmation.value = '';
+    }
 }
 </script>
 
 <style scoped>
+.input-error {
+    border-color: var(--color-text-danger, #dc2626) !important;
+}
+
+.field-error {
+    font-size: 12px;
+    color: var(--color-text-danger, #dc2626);
+    margin: 4px 0 0;
+}
 .auth-page {
     min-height: 100vh;
     display: flex;

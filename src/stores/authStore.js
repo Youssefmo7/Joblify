@@ -67,7 +67,7 @@ export const useAuthStore = defineStore("auth", {
         this.user = response.user;
         return true;
       } catch (err) {
-        this.error = err.message || "Invalid email or password.";
+        this.error = err.response?.data?.message || err.message || "Invalid email or password.";        
         return false;
       } finally {
         this.loading = false;
