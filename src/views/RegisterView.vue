@@ -25,9 +25,7 @@
             <form class="auth-form" @submit.prevent="handleRegister" novalidate>
                 <!-- Shared fields -->
                 <div class="form-group">
-                    <label class="form-label">
-                        {{ role === 'employer' ? 'Company name' : 'Full name' }}
-                    </label>
+                    <label class="form-label">Full name</label>
                     <input
                         v-model="name"
                         class="form-input"
@@ -80,7 +78,14 @@
                     <input v-model="linkedinUrl" class="form-input" type="url" placeholder="https://linkedin.com/in/johndoe" />
                 </div>
 
-                <p v-if="authStore.error" class="form-error">{{ authStore.error }}</p>
+                <div v-if="authStore.error" class="form-error">
+                    <p class="font-bold mb-1">{{ authStore.error }}</p>
+                    <ul v-if="Object.keys(authStore.validationErrors).length" class="server-errors-list">
+                        <li v-for="(msgs, field) in authStore.validationErrors" :key="field">
+                            {{ msgs[0] }}
+                        </li>
+                    </ul>
+                </div>
 
                 <button class="btn-primary" type="submit" :disabled="authStore.loading">
                     {{ authStore.loading ? 'Creating account…' : 'Create account' }}
@@ -253,6 +258,21 @@ async function handleRegister() {
     color: var(--color-text-primary);
     text-decoration: none;
     margin-bottom: 4px;
+}
+.form-error {
+    color: var(--color-text-danger);
+    font-size: 14px;
+    margin-bottom: 16px;
+    background: #fef2f2;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #fee2e2;
+}
+.server-errors-list {
+    list-style: disc;
+    margin-left: 20px;
+    font-size: 12px;
+    margin-top: 4px;
 }
 .auth-card__title {
     font-size: 22px;

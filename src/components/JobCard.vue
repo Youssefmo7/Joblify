@@ -2,7 +2,7 @@
     <div class="job-card">
         <!-- Header row -->
         <div class="job-card__header">
-            <div class="job-card__logo">
+            <RouterLink :to="`/companies/${job.companyId}`" class="job-card__logo">
                 <img
                     v-if="job.companyLogo"
                     :src="job.companyLogo"
@@ -11,13 +11,15 @@
                 <span v-else class="job-card__logo-fallback">
                     {{ job.company[0] }}
                 </span>
-            </div>
+            </RouterLink>
 
             <div class="job-card__meta">
                 <h2 class="job-card__title" @click="goToJob">
                     {{ job.title }}
                 </h2>
-                <p class="job-card__company">{{ job.company }}</p>
+                <p class="job-card__company">
+                    <RouterLink :to="`/companies/${job.companyId}`">{{ job.company }}</RouterLink>
+                </p>
                 <p class="job-card__location">
                     {{ job.location }}
                     <span class="job-card__dot">•</span>

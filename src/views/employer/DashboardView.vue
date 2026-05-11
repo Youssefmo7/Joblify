@@ -57,7 +57,7 @@
           <div class="metrics-grid">
             <div class="metric-card" @click="activeSection = 'jobs'">
               <span class="metric-label">Active Jobs</span>
-              <span class="metric-value">{{ approvedJobs.length }}</span>
+              <span class="metric-value">{{ activeJobs.length }}</span>
             </div>
             <div class="metric-card secondary" @click="activeSection = 'analytics'">
               <span class="metric-label">Total Applicants</span>
@@ -107,12 +107,12 @@
                 <button class="text-link" @click="activeSection = 'jobs'">View All</button>
               </div>
               <div class="content-block__body">
-                <div v-if="approvedJobs.length === 0" class="empty-state">
+                <div v-if="activeJobs.length === 0" class="empty-state">
                   <p>No active jobs yet.</p>
                   <RouterLink to="/employer/post-job" class="cta-btn small">Post a Job</RouterLink>
                 </div>
                 <div v-else class="item-list">
-                  <div v-for="job in approvedJobs.slice(0, 3)" :key="job.id" class="list-item">
+                  <div v-for="job in activeJobs.slice(0, 3)" :key="job.id" class="list-item">
                     <div class="list-item__info">
                       <h4 class="list-item__title">{{ job.title }}</h4>
                       <p class="list-item__sub">
@@ -167,7 +167,7 @@
         <EmployerActiveJobs v-if="activeSection === 'jobs'" />
         <EmployerCandidates v-if="activeSection === 'candidates'" />
         <EmployerAnalytics v-if="activeSection === 'analytics'" />
-        <EmployerBilling v-if="activeSection === 'billing'" />
+        <!-- <EmployerBilling v-if="activeSection === 'billing'" /> -->
 
         <!-- Payment Modal (for Overview section quick actions) -->
         <PaymentModal
@@ -194,7 +194,7 @@ import { useAnalyticsStore } from '@/stores/analyticsStore';
 import EmployerActiveJobs from '@/components/employer/EmployerActiveJobs.vue';
 import EmployerCandidates from '@/components/employer/EmployerCandidates.vue';
 import EmployerAnalytics from '@/components/employer/EmployerAnalytics.vue';
-import EmployerBilling from '@/components/employer/EmployerBilling.vue';
+//import EmployerBilling from '@/components/employer/EmployerBilling.vue';
 import PaymentModal from '@/components/employer/PaymentModal.vue';
 
 const authStore = useAuthStore();
@@ -212,8 +212,9 @@ const companyInitial = computed(() => {
 });
 
 const myJobs = computed(() => jobsStore.employerJobs);
-const approvedJobs = computed(() => myJobs.value.filter(j => j.status === 'approved'));
-const totalApplicants = computed(() => myJobs.value.reduce((sum, j) => sum + (j.applicantsCount || 0), 0));
+// Active jobs = all jobs except rejected ones
+const activeJobs = computed(() => myJobs.value.filter(j => j.status !== 'rejected'));
+const totalApplicants = computed(() => appsStore.applications.length);
 
 const pendingApps = computed(() =>
   appsStore.applications.filter(a => a.status === 'pending')
@@ -252,7 +253,8 @@ function onPaymentSuccess() {
 }
 
 function getJobTitle(jobId) {
-  const job = jobsStore.jobs.find(j => j.id === jobId || j.id === String(jobId));
+  const jobs = [...jobsStore.allJobs, ...jobsStore.employerJobs];
+  const job = jobs.find(j => j.id === jobId || j.id === String(jobId));
   return job?.title || `Job #${jobId}`;
 }
 
@@ -265,12 +267,12 @@ async function respondToApp(appId, status) {
 }
 
 onMounted(async () => {
-  await companyStore.fetchCompany();
-  await jobsStore.fetchEmployerJobs();
-  await analyticsStore.fetchAnalytics();
-  for (const job of jobsStore.employerJobs) {
-    await appsStore.fetchApplicationsForJob(job.id);
-  }
+  await Promise.all([
+    companyStore.fetchCompany(),
+    jobsStore.fetchEmployerJobs(),
+    analyticsStore.fetchAnalytics(),
+    appsStore.fetchMyApplications()
+  ]);
 });
 </script>
 
