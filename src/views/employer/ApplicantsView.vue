@@ -36,7 +36,7 @@
                 <!-- Resume link -->
                 <div v-if="app.resumeUrl" class="applicant-resume">
                     <a
-                        href="https://writing.colostate.edu/guides/documents/resume/functionalsample.pdf"
+                        :href="app.resumeUrl"
                         target="_blank"
                         class="resume-link"
                     >
@@ -58,14 +58,14 @@
                     <button
                         class="btn-accept"
                         :disabled="appsStore.loading"
-                        @click="respond(app.id, 'accepted')"
+                        @click="openRespond(app, 'accepted')"
                     >
                         Accept
                     </button>
                     <button
                         class="btn-reject"
                         :disabled="appsStore.loading"
-                        @click="respond(app.id, 'rejected')"
+                        @click="openRespond(app, 'rejected')"
                     >
                         Reject
                     </button>
@@ -73,13 +73,25 @@
             </div>
         </div>
     </div>
+    <!-- Respond Modal -->
+    <ApplicationRespondModal
+      v-if="respondingApp"
+      :show="showRespondModal"
+      :application="respondingApp"
+      :jobTitle="jobTitle"
+      :status="respondStatus"
+      :loading="appsStore.loading"
+      @close="closeRespond"
+      @confirm="handleRespondConfirm"
+    />
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import ApplicationRespondModal from '@/components/employer/ApplicationRespondModal.vue';
 
 const route = useRoute();
 const jobsStore = useJobsStore();
@@ -93,8 +105,27 @@ const jobTitle = computed(
 
 const applications = computed(() => appsStore.applicationsForJob(jobId.value));
 
-async function respond(appId, status) {
-    await appsStore.respondToApplication(appId, status);
+const showRespondModal = ref(false);
+const respondingApp = ref(null);
+const respondStatus = ref('');
+
+function openRespond(app, status) {
+  respondingApp.value = app;
+  respondStatus.value = status;
+  showRespondModal.value = true;
+}
+
+function closeRespond() {
+  showRespondModal.value = false;
+  respondingApp.value = null;
+  respondStatus.value = '';
+}
+
+async function handleRespondConfirm({ appId, status, note }) {
+  const success = await appsStore.respondToApplication(appId, status, note);
+  if (success) {
+    closeRespond();
+  }
 }
 
 function formatDate(d) {

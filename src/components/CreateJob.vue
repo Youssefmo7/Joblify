@@ -309,6 +309,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useCategoriesStore } from '@/stores/categoriesStore';
 import { useSkillsStore } from '@/stores/skillsStore';
+import { useCompanyStore } from '@/stores/companyStore';
 
 const props = defineProps({
     jobId: {
@@ -322,6 +323,7 @@ const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const categoriesStore = useCategoriesStore();
 const skillsStore = useSkillsStore();
+const companyStore = useCompanyStore();
 
 const currentStep = ref(1);
 const submissionError = ref('');
@@ -488,9 +490,9 @@ async function publishJob() {
         work_type: form.workType,
         experience_level: form.experienceLevel,
         deadline: form.deadline,
-        categories: form.category ? [Number(form.category)] : [],
+        category_id: form.category ? Number(form.category) : null,
         skills: form.selectedSkills.map(s => s.id),
-        company_id: employer.company_id || 1,
+        company_id: companyStore.company?.id || employer.company_id || 1,
     };
 
     submissionError.value = '';
@@ -508,6 +510,7 @@ async function publishJob() {
 onMounted(async () => {
     categoriesStore.fetchCategories();
     skillsStore.fetchSkills();
+    companyStore.fetchCompany();
 
     if (isEdit.value) {
         const job = await jobsStore.fetchJob(props.jobId);

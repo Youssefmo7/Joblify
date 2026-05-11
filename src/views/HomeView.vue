@@ -149,6 +149,7 @@
                         "
                     >
                         <option value="date">Most recent</option>
+                        <option value="relevance">Most relevant</option>
                     </select>
                 </div>
 
@@ -162,17 +163,11 @@
         <main class="feed">
             <!-- Search bar -->
             <div class="search-bar">
-                <input
-                    class="search-bar__input"
-                    type="text"
-                    placeholder="Search jobs, skills, or companies..."
-                    :value="jobsStore.filters.search"
-                    @input="jobsStore.setFilter('search', $event.target.value)"
-                />
+                <!-- Main search is now handled in the Navbar -->
                 <input
                     class="search-bar__input search-bar__input--location"
                     type="text"
-                    placeholder="Location"
+                    placeholder="Search by location"
                     :value="jobsStore.filters.location"
                     @input="
                         jobsStore.setFilter('location', $event.target.value)
@@ -237,13 +232,12 @@
             <div class="widget">
                 <h3 class="widget__title">Top skills for you</h3>
                 <div
-                    v-for="skill in topSkills"
-                    :key="skill.name"
+                    v-for="skill in randomSkills"
+                    :key="skill.id"
                     class="skill-row"
                 >
                     <div>
                         <p class="skill-row__name">{{ skill.name }}</p>
-                        <p class="skill-row__count">{{ skill.count }}+ jobs</p>
                     </div>
                     <button
                         class="skill-row__add"
@@ -274,11 +268,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
 import { useCategoriesStore } from '@/stores/categoriesStore';
+import { useSkillsStore } from '@/stores/skillsStore';
 import JobCard from '@/components/JobCard.vue';
 import ApplyModal from '@/components/ApplyModal.vue';
 
@@ -286,6 +281,7 @@ const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 const categoriesStore = useCategoriesStore();
+const skillsStore = useSkillsStore();
 
 const applyTarget = ref(null);
 const user = authStore.currentUser || {};
@@ -296,12 +292,11 @@ const workTypes = [
     { value: 'hybrid', label: 'Hybrid' },
 ];
 
-const topSkills = [
-    { name: 'Vue.js', count: '2,400' },
-    { name: 'React', count: '5,100' },
-    { name: 'Python', count: '4,200' },
-    { name: 'Figma', count: '1,800' },
-];
+const randomSkills = computed(() => {
+    const all = skillsStore.skills;
+    if (all.length <= 10) return all;
+    return [...all].sort(() => 0.5 - Math.random()).slice(0, 10);
+});
 
 function toggleWorkType(value) {
     const current = jobsStore.filters.work_type;
@@ -321,9 +316,23 @@ function handleDeleted(jobId) {
     console.log('Job deleted:', jobId);
 }
 
+// Debounce helper for real-time search
+let searchTimeout = null;
+watch(
+    () => jobsStore.filters,
+    () => {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            jobsStore.fetchJobs();
+        }, 300);
+    },
+    { deep: true }
+);
+
 onMounted(async () => {
     await jobsStore.fetchJobs();
     await categoriesStore.fetchCategories();
+    await skillsStore.fetchSkills();
     if (authStore.isCandidate && authStore.isLoggedIn) {
         await appsStore.fetchMyApplications();
     }
@@ -378,7 +387,7 @@ onMounted(async () => {
     border-color: #534ab7;
 }
 .search-bar__input--location {
-    max-width: 180px;
+    max-width: 300px;
 }
 
 /* ── Results summary ── */
