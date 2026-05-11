@@ -33,6 +33,7 @@ export const useAdminStore = defineStore('admin', {
             totalJobs: 0,
             totalApplications: 0,
             pendingCount: 0,
+            users: { total: 0, candidates: 0, employers: 0, admins: 0 },
         },
         activityLog: [],
         loading: false,
@@ -74,8 +75,10 @@ export const useAdminStore = defineStore('admin', {
     getters: {
         visibleComments: (state) => state.allComments,
         candidateCount: (state) =>
+            state.stats.users?.candidates ??
             state.allUsers.filter((u) => u.role === 'candidate').length,
         employerCount: (state) =>
+            state.stats.users?.employers ??
             state.allUsers.filter((u) => u.role === 'employer').length,
         activeJobsCount: (state) => state.stats.activeCount || 0,
         approvalRatePercent: (state) => {
@@ -97,13 +100,14 @@ export const useAdminStore = defineStore('admin', {
                     client.get('/admin/dashboard/activity'),
                 ]);
 
-                const dash = dashRes.data || dashRes;
+                const dash = dashRes && typeof dashRes === 'object' ? dashRes : {};
                 this.stats = {
-                    totalUsers: dash.users?.total || this.stats.totalUsers,
-                    activeCount: dash.jobs?.approved || this.stats.activeCount,
-                    totalJobs: dash.jobs?.total || this.stats.totalJobs,
-                    totalApplications: dash.applications?.total || this.stats.totalApplications,
-                    pendingCount: dash.jobs?.pending || this.stats.pendingCount,
+                    totalUsers: dash.users?.total ?? this.stats.totalUsers,
+                    activeCount: dash.jobs?.approved ?? this.stats.activeCount,
+                    totalJobs: dash.jobs?.total ?? this.stats.totalJobs,
+                    totalApplications: dash.applications?.total ?? this.stats.totalApplications,
+                    pendingCount: dash.jobs?.pending ?? this.stats.pendingCount,
+                    users: dash.users ?? this.stats.users,
                 };
 
                 const activity = activityRes.data || activityRes;

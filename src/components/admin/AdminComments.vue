@@ -13,7 +13,7 @@
             Loading comments…
         </div>
 
-        <div v-else-if="store.error" class="px-6 py-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center justify-between">
+        <div v-if="store.error" class="px-6 py-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center justify-between">
             <span>{{ store.error }}</span>
             <button class="text-red-700 font-medium underline" @click="store.fetchComments({ page: store.commentsMeta?.current_page || 1 })">Retry</button>
         </div>

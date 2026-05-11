@@ -9,9 +9,9 @@
         <div v-if="selectedIds.length > 0" class="px-6 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between flex-wrap gap-3">
             <span class="text-sm font-medium text-blue-900">{{ selectedIds.length }} selected</span>
             <div class="flex items-center gap-3">
-                <input v-model="bulkReason" class="px-3 py-1.5 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Bulk rejection reason" />
-                <button class="px-4 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50" @click="handleBulkReject">Reject Selected</button>
-                <button class="px-4 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700" @click="handleBulkApprove">Approve Selected</button>
+                <input v-model="bulkReason" :disabled="store.loading" class="px-3 py-1.5 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50" placeholder="Bulk rejection reason" />
+                <button :disabled="store.loading" class="px-4 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed" @click="handleBulkReject">Reject Selected</button>
+                <button :disabled="store.loading" class="px-4 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" @click="handleBulkApprove">Approve Selected</button>
             </div>
         </div>
 
@@ -20,7 +20,7 @@
             Loading pending jobs…
         </div>
 
-        <div v-else-if="store.error" class="px-6 py-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center justify-between">
+        <div v-if="store.error" class="px-6 py-4 bg-red-50 border-b border-red-100 text-sm text-red-600 flex items-center justify-between">
             <span>{{ store.error }}</span>
             <button class="text-red-700 font-medium underline" @click="store.fetchPendingJobs({ page: store.jobsMeta?.current_page || 1 })">Retry</button>
         </div>
@@ -53,8 +53,8 @@
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <input v-model="reviewNotes[job.id]" class="px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto" placeholder="Rejection note (Optional)" />
                                 <div class="flex gap-2">
-                                    <button @click="handleReject(job.id)" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 rounded-lg transition-colors whitespace-nowrap">Reject</button>
-                                    <button @click="handleApprove(job.id)" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition-colors whitespace-nowrap">Approve</button>
+                                    <button :disabled="store.loading" @click="handleReject(job.id)" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 rounded-lg transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">Reject</button>
+                                    <button :disabled="store.loading" @click="handleApprove(job.id)" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">Approve</button>
                                 </div>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ export default {
     };
 
     const handleBulkApprove = async () => {
-      if (selectedIds.value.length === 0) return;
+      if (selectedIds.value.length === 0 || store.loading) return;
       const ok = await store.bulkApprove(selectedIds.value);
       if (ok) {
         showMessage(`${selectedIds.value.length} jobs approved.`);
@@ -151,7 +151,7 @@ export default {
     };
 
     const handleBulkReject = async () => {
-      if (selectedIds.value.length === 0) return;
+      if (selectedIds.value.length === 0 || store.loading) return;
       const ok = await store.bulkReject(selectedIds.value, bulkReason.value);
       if (ok) {
         showMessage(`${selectedIds.value.length} jobs rejected.`);

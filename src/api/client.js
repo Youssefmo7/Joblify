@@ -33,6 +33,16 @@ client.interceptors.response.use(
             if (result && typeof result === 'object') {
                 if (response.data.meta) {
                     result._meta = response.data.meta;
+                } else if (response.data.current_page !== undefined) {
+                    // Laravel paginator format (meta at top level)
+                    result._meta = {
+                        current_page: response.data.current_page,
+                        last_page: response.data.last_page,
+                        per_page: response.data.per_page,
+                        total: response.data.total,
+                        from: response.data.from,
+                        to: response.data.to,
+                    };
                 }
                 if (response.data.message) {
                     result._message = response.data.message;
