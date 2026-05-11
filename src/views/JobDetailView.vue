@@ -2,7 +2,7 @@
     <div class="detail-page" v-if="job">
         <!-- Header -->
         <div class="detail-header">
-            <div class="detail-header__logo">
+            <RouterLink :to="`/companies/${job.companyId}`" class="detail-header__logo">
                 <img
                     v-if="job.companyLogo"
                     :src="job.companyLogo"
@@ -11,10 +11,12 @@
                 <span v-else class="detail-header__logo-fallback">
                     {{ job.company[0] }}
                 </span>
-            </div>
+            </RouterLink>
             <div class="detail-header__meta">
                 <h1 class="detail-header__title">{{ job.title }}</h1>
-                <p class="detail-header__company">{{ job.company }}</p>
+                <p class="detail-header__company">
+                    <RouterLink :to="`/companies/${job.companyId}`">{{ job.company }}</RouterLink>
+                </p>
                 <div class="detail-header__tags">
                     <span class="tag tag--location">{{ job.location }}</span>
                     <span :class="['tag', `tag--${job.workType}`]">
@@ -75,7 +77,7 @@
                 <section class="detail-section">
                     <h2 class="detail-section__title">Requirements</h2>
                     <ul class="detail-list">
-                        <li v-for="item in job.requirements" :key="item">
+                        <li v-for="(item, index) in (job.requirements || '').split('.').filter(i => i.trim())" :key="index">
                             {{ item }}
                         </li>
                     </ul>
@@ -85,7 +87,7 @@
                 <section v-if="job.benefits?.length" class="detail-section">
                     <h2 class="detail-section__title">Benefits</h2>
                     <div class="detail-chips">
-                        <span v-for="b in job.benefits" :key="b" class="chip">
+                        <span v-for="b in (job.benefits || '').split('.').filter(i => i.trim())" :key="b" class="chip">
                             {{ b }}
                         </span>
                     </div>
@@ -231,6 +233,26 @@
                         </span>
                     </div>
                 </div>
+
+                <!-- About the company card -->
+                <div class="detail-sidebar__card company-card">
+                    <h3 class="detail-sidebar__title">About the company</h3>
+                    <div class="company-card__header">
+                        <div class="company-card__logo">
+                            <img v-if="job.companyLogo" :src="job.companyLogo" :alt="job.company" />
+                            <span v-else class="logo-fallback">{{ job.company[0] }}</span>
+                        </div>
+                        <div>
+                            <p class="company-card__name">{{ job.company }}</p>
+                            <RouterLink :to="`/companies/${job.companyId}`" class="company-card__link">
+                                View profile
+                            </RouterLink>
+                        </div>
+                    </div>
+                    <p class="company-card__desc" v-if="job._raw.company?.description">
+                        {{ truncate(job._raw.company.description, 120) }}
+                    </p>
+                </div>
             </aside>
         </div>
     </div>
@@ -260,8 +282,21 @@ const newComment = ref('');
 const postingComment = ref(false);
 const commentError = ref('');
 const comments = ref([]);
-
 const job = computed(() => jobsStore.currentJob);
+
+// ── Formatters ────────────────────────────────────────────────
+const formatWorkType = (t) => ({ remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid' }[t] || t);
+const formatSalary = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : n);
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const truncate = (text, max) => (text?.length > max ? text.slice(0, max) + '…' : text);
+const timeAgo = (dateStr) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (hours < 1) return 'just now';
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+};
 
 // FIX: use == (loose equality) so "1" == 1 — handles both numeric and string IDs
 const hasApplied = computed(
@@ -346,30 +381,6 @@ function handleApplySuccess() {
     showApply.value = false;
 }
 
-// ── Formatters ────────────────────────────────────────────────
-function formatWorkType(t) {
-    return { remote: 'Remote', onsite: 'On-site', hybrid: 'Hybrid' }[t] || t;
-}
-function formatSalary(n) {
-    return n >= 1000 ? `${Math.round(n / 1000)}k` : n;
-}
-function formatDate(d) {
-    return d
-        ? new Date(d).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-          })
-        : '—';
-}
-function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (hours < 1) return 'just now';
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-}
 
 onMounted(async () => {
     // FIX: pass route.params.id as a string — fetchJob just uses it in the URL
@@ -765,5 +776,48 @@ onMounted(async () => {
     font-weight: 500;
     text-align: right;
     text-transform: capitalize;
+}
+
+/* Company card in sidebar */
+.company-card__header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.company-card__logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--color-background-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--color-border-tertiary);
+}
+.company-card__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.company-card__name {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+}
+.company-card__link {
+    font-size: 12px;
+    color: #534ab7;
+    text-decoration: none;
+}
+.company-card__link:hover {
+    text-decoration: underline;
+}
+.company-card__desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin: 0;
 }
 </style>

@@ -20,6 +20,7 @@ export const useAuthStore = defineStore("auth", {
     user: null,
     loading: false,
     error: null,
+    validationErrors: {},
   }),
 
   getters: {
@@ -36,6 +37,7 @@ export const useAuthStore = defineStore("auth", {
     async register(payload) {
       this.loading = true;
       this.error = null;
+      this.validationErrors = {};
       try {
         const response = await client.post("/register", {
           name: payload.name,
@@ -51,6 +53,7 @@ export const useAuthStore = defineStore("auth", {
         return true;
       } catch (err) {
         this.error = err.message || "Registration failed. Please try again.";
+        this.validationErrors = err.errors || {};
         return false;
       } finally {
         this.loading = false;
@@ -61,13 +64,15 @@ export const useAuthStore = defineStore("auth", {
     async login(email, password) {
       this.loading = true;
       this.error = null;
+      this.validationErrors = {};
       try {
         const response = await client.post("/login", { email, password });
         setToken(response.access_token);
         this.user = response.user;
         return true;
       } catch (err) {
-        this.error = err.response?.data?.message || err.message || "Invalid email or password.";        
+        this.error = err.message || "Invalid email or password.";
+        this.validationErrors = err.errors || {};
         return false;
       } finally {
         this.loading = false;

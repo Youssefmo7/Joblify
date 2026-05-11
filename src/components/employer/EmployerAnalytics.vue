@@ -19,7 +19,7 @@
         </div>
         <div class="metric-card__content">
           <p class="label">Total Jobs</p>
-          <p class="value">{{ myJobs.length }}</p>
+          <p class="value">{{ analyticsStore.totalJobs }}</p>
         </div>
       </div>
       <div class="metric-card">
@@ -83,25 +83,23 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 
-const authStore = useAuthStore();
 const jobsStore = useJobsStore();
+const analyticsStore = useAnalyticsStore();
 
 const period = ref('30');
 
-const myJobs = computed(() => jobsStore.myJobs(authStore.currentUser?.id));
+const myJobs = computed(() => jobsStore.myJobs);
 
-const totalApplicants = computed(() =>
-  myJobs.value.reduce((sum, j) => sum + (j.applicantsCount || 0), 0)
-);
-
+const totalApplicants = computed(() => analyticsStore.totalApplications);
 const approvedCount = computed(() =>
   myJobs.value.filter(j => j.status === 'approved').length
 );
 
 function formatDate(d) {
+  if (!d) return '-';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 </script>

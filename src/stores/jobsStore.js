@@ -6,6 +6,7 @@ function normalizeJob(apiJob) {
     return {
         ...apiJob,
         company: apiJob.company?.name || 'Unknown',
+        companyId: apiJob.company?.id || null,
         companyLogo: apiJob.company?.logo || null,
         employerId: apiJob.company?.user?.id || apiJob.company?.user_id || null,
         skills: (apiJob.skills || []).map((s) =>
@@ -220,15 +221,21 @@ export const useJobsStore = defineStore('jobs', {
         async updateJob(id, updates) {
             this.loading = true;
             this.error = null;
+            this.validationErrors = {};
             try {
                 const data = await client.patch(`/jobs/${id}`, updates);
                 const normalized = normalizeJob(data);
                 const index = this.allJobs.findIndex((j) => j.id === id);
                 if (index !== -1) this.allJobs[index] = normalized;
+                
+                const empIndex = this.employerJobs.findIndex((j) => j.id === id);
+                if (empIndex !== -1) this.employerJobs[empIndex] = normalized;
+
                 if (this.currentJob?.id === id) this.currentJob = normalized;
                 return normalized;
             } catch (err) {
                 this.error = err.message || 'Could not update job.';
+                this.validationErrors = err.errors || {};
                 return null;
             } finally {
                 this.loading = false;

@@ -6,7 +6,7 @@
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
                         <router-link to="/employer/dashboard" class="text-2xl font-bold tracking-tight text-gray-900 border-r border-gray-200 pr-4 mr-4">Joblify</router-link>
-                        <span class="text-lg font-semibold text-gray-600">Post a New Job</span>
+                        <span class="text-lg font-semibold text-gray-600">{{ isEdit ? 'Edit Job' : 'Post a New Job' }}</span>
                     </div>
                     <div class="flex items-center">
                         <router-link to="/employer/dashboard" class="text-sm text-gray-600 hover:text-gray-900 font-medium mr-4">Cancel</router-link>
@@ -16,7 +16,7 @@
                             @click="publishJob"
                             :disabled="jobsStore.loading"
                         >
-                            {{ jobsStore.loading ? 'Publishing...' : 'Publish Job' }}
+                            {{ jobsStore.loading ? (isEdit ? 'Updating...' : 'Publishing...') : (isEdit ? 'Update Job' : 'Publish Job') }}
                         </button>
                     </div>
                 </div>
@@ -188,9 +188,43 @@
                                 <textarea v-model="form.benefitsText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] resize-none transition-colors" placeholder="List the benefits offered..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Skills <span class="text-gray-400 text-xs">(comma-separated)</span></label>
-                                <input v-model="form.skillsText" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="e.g. Vue.js, TypeScript, GraphQL">
-                                <p class="text-xs text-gray-500 mt-1">Only skills already in our database will be linked.</p>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+                                <div class="space-y-3">
+                                    <div class="relative">
+                                        <input 
+                                            v-model="skillSearch" 
+                                            type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" 
+                                            placeholder="Search skills (e.g. Vue.js)..."
+                                            @input="skillsStore.suggestSkills(skillSearch)"
+                                        >
+                                        <div v-if="skillsStore.suggestions.length && skillSearch.length >= 2" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            <button 
+                                                v-for="skill in filteredSuggestions" 
+                                                :key="skill.id"
+                                                type="button"
+                                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors border-b last:border-0 border-gray-100"
+                                                @click="addSkill(skill)"
+                                            >
+                                                {{ skill.name }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Selected Skills Pills -->
+                                    <div class="flex flex-wrap gap-2">
+                                        <div 
+                                            v-for="skill in form.selectedSkills" 
+                                            :key="skill.id"
+                                            class="flex items-center gap-1.5 px-3 py-1 bg-pink-50 text-[#fd366e] border border-pink-100 rounded-full text-xs font-medium"
+                                        >
+                                            {{ skill.name }}
+                                            <button @click="removeSkill(skill.id)" class="hover:text-pink-800 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range <span class="text-gray-400 text-xs">(in EGP)</span></label>
@@ -249,7 +283,7 @@
                                     @click="publishJob"
                                     :disabled="jobsStore.loading"
                                 >
-                                    {{ jobsStore.loading ? 'Publishing...' : 'Publish Job' }}
+                                    {{ jobsStore.loading ? (isEdit ? 'Updating...' : 'Publishing...') : (isEdit ? 'Update Job' : 'Publish Job') }}
                                 </button>
                             </div>
                             <div v-if="submissionError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg w-full">
@@ -276,6 +310,13 @@ import { useJobsStore } from '@/stores/jobsStore';
 import { useCategoriesStore } from '@/stores/categoriesStore';
 import { useSkillsStore } from '@/stores/skillsStore';
 
+const props = defineProps({
+    jobId: {
+        type: [String, Number],
+        default: null
+    }
+});
+
 const router = useRouter();
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
@@ -284,6 +325,8 @@ const skillsStore = useSkillsStore();
 
 const currentStep = ref(1);
 const submissionError = ref('');
+
+const isEdit = computed(() => !!props.jobId);
 
 const form = reactive({
     title: '',
@@ -295,10 +338,25 @@ const form = reactive({
     experienceLevel: 'senior',
     requirementsText: '',
     benefitsText: '',
-    skillsText: '',
+    selectedSkills: [], // Array of {id, name}
     salaryMin: null,
     salaryMax: null,
 });
+
+const skillSearch = ref('');
+const filteredSuggestions = computed(() => {
+    return skillsStore.suggestions.filter(s => !form.selectedSkills.some(ss => ss.id === s.id));
+});
+
+function addSkill(skill) {
+    form.selectedSkills.push(skill);
+    skillSearch.value = '';
+    skillsStore.suggestions = [];
+}
+
+function removeSkill(id) {
+    form.selectedSkills = form.selectedSkills.filter(s => s.id !== id);
+}
 
 const touched = reactive({
     title: false,
@@ -403,16 +461,6 @@ function stepTextClass(step) {
     return step <= currentStep.value ? 'text-gray-900' : 'text-gray-500';
 }
 
-function mapSkillsToIds() {
-    const names = form.skillsText.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
-    const ids = [];
-    for (const name of names) {
-        const skill = skillsStore.skills.find(s => s.name.toLowerCase() === name);
-        if (skill) ids.push(skill.id);
-    }
-    return ids;
-}
-
 async function publishJob() {
     if (!validateStep1() || !validateStep2()) {
         if (!validateStep1()) {
@@ -429,16 +477,10 @@ async function publishJob() {
         return;
     }
 
-    const description = form.description.trim();
-    const requirements = form.requirementsText.trim();
-    const fullDescription = requirements
-        ? `${description}\n\n## Requirements\n${requirements}`
-        : description;
-
     const jobData = {
         title: form.title.trim(),
-        description: fullDescription,
-        requirements: requirements,
+        description: form.description.trim(),
+        requirements: form.requirementsText.trim(),
         benefits: form.benefitsText.trim(),
         salary_min: form.salaryMin,
         salary_max: form.salaryMax,
@@ -447,23 +489,45 @@ async function publishJob() {
         experience_level: form.experienceLevel,
         deadline: form.deadline,
         categories: form.category ? [Number(form.category)] : [],
-        skills: mapSkillsToIds(),
-        company_id: employer.company_id || 1, // TODO: fetch from companyStore in Phase 4
+        skills: form.selectedSkills.map(s => s.id),
+        company_id: employer.company_id || 1,
     };
 
     submissionError.value = '';
-    const result = await jobsStore.postJob(jobData);
+    const result = isEdit.value 
+        ? await jobsStore.updateJob(props.jobId, jobData)
+        : await jobsStore.postJob(jobData);
+
     if (result) {
         router.push('/employer/dashboard');
     } else {
-        // Now using the store's error which captures the server message
-        submissionError.value = jobsStore.error || "Failed to publish job. Please check your data.";
+        submissionError.value = jobsStore.error || `Failed to ${isEdit.value ? 'update' : 'publish'} job. Please check your data.`;
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
     categoriesStore.fetchCategories();
     skillsStore.fetchSkills();
+
+    if (isEdit.value) {
+        const job = await jobsStore.fetchJob(props.jobId);
+        if (job) {
+            form.title = job.title;
+            // Handle description which might contain requirements if it was combined before
+            // but the API now has them separate.
+            form.description = job._raw.description || '';
+            form.location = job.location;
+            form.workType = job.workType;
+            form.experienceLevel = job.experienceLevel;
+            form.deadline = job._raw.deadline ? job._raw.deadline.split('T')[0] : '';
+            form.salaryMin = job.salaryMin;
+            form.salaryMax = job.salaryMax;
+            form.category = job._raw.categories?.[0]?.id || '';
+            form.requirementsText = job._raw.requirements || '';
+            form.benefitsText = job._raw.benefits || '';
+            form.selectedSkills = (job._raw.skills || []).map(s => ({ id: s.id, name: s.name }));
+        }
+    }
 });
 </script>
 

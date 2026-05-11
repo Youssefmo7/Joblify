@@ -11,6 +11,7 @@ import ResetPasswordView from '@/views/ResetPasswordView.vue';
 import VerifyEmailView from '@/views/VerifyEmailView.vue';
 import NotFoundView from '@/views/NotFoundView.vue';
 import SocialCallbackView from '@/views/SocialCallbackView.vue';
+import CompanyProfileView from '@/views/CompanyProfileView.vue';
 
 // ── Candidate views ───────────────────────────────────────────
 import ProfileView from '@/views/candidate/ProfileView.vue';
@@ -21,6 +22,7 @@ import EmployerDashboard from '@/views/employer/DashboardView.vue';
 import PostJobView from '@/views/employer/PostJobView.vue';
 import EmployerProfileView from '@/views/employer/ProfileView.vue';
 import ApplicantsView from '@/views/employer/ApplicantsView.vue';
+import EditJobView from '@/views/employer/EditJobView.vue';
 
 // ── Admin views ───────────────────────────────────────────────
 import AdminDashboard from '@/components/AdminDashboard.vue';
@@ -41,13 +43,13 @@ const routes = [
         path: '/login',
         name: 'login',
         component: LoginView,
-        meta: { guestOnly: true },
+        meta: { guestOnly: true, hideNavbar: true },
     },
     {
         path: '/register',
         name: 'register',
         component: RegisterView,
-        meta: { guestOnly: true },
+        meta: { guestOnly: true, hideNavbar: true },
     },
     {
         path: '/auth/callback',
@@ -59,18 +61,23 @@ const routes = [
         path: '/forgot-password',
         name: 'forgot-password',
         component: ForgotPasswordView,
-        meta: { guestOnly: true },
+        meta: { guestOnly: true, hideNavbar: true },
     },
     {
         path: '/reset-password',
         name: 'reset-password',
         component: ResetPasswordView,
-        meta: { guestOnly: true },
+        meta: { guestOnly: true, hideNavbar: true },
     },
     {
         path: '/email/verify/:id/:hash',
         name: 'verify-email',
         component: VerifyEmailView,
+    },
+    {
+        path: '/companies/:id',
+        name: 'company-profile',
+        component: CompanyProfileView,
     },
 
     // ── Candidate ─────────────────────────────────────────────
@@ -111,6 +118,12 @@ const routes = [
         name: 'applicants',
         component: ApplicantsView,
         meta: { requiresAuth: true, role: 'employer', verified: true },
+    },
+    {
+        path: '/employer/jobs/:id/edit',
+        name: 'edit-job',
+        component: EditJobView,
+        meta: { requiresAuth: true, role: 'employer', hideNavbar: true, verified: true },
     },
 
     // ── Admin ─────────────────────────────────────────────────

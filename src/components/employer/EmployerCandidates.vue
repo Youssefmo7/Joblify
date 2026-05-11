@@ -156,10 +156,7 @@ async function respond(appId, status) {
 }
 
 onMounted(async () => {
-  const jobs = jobsStore.myJobs;
-  for (const job of jobs) {
-    await appsStore.fetchApplicationsForJob(job.id);
-  }
+  await appsStore.fetchMyApplications();
 });
 </script>
 
