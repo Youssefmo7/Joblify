@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
 import client from '@/api/client';
 
+// ── Normalize raw API job → component-friendly shape ─────────────────────────
 function normalizeJob(apiJob) {
     return {
         ...apiJob,
-        // Component-friendly aliases
         company: apiJob.company?.name || 'Unknown',
         companyLogo: apiJob.company?.logo || null,
         employerId: apiJob.company?.user?.id || apiJob.company?.user_id || null,
@@ -14,66 +14,151 @@ function normalizeJob(apiJob) {
         categories: (apiJob.categories || []).map((c) =>
             typeof c === 'string' ? c : c.name
         ),
-        category: (apiJob.categories?.[0]?.name) || '',
+        category: apiJob.categories?.[0]?.name || '',
         workType: apiJob.work_type,
         experienceLevel: apiJob.experience_level,
         salaryMin: apiJob.salary_min,
         salaryMax: apiJob.salary_max,
         createdAt: apiJob.created_at,
         applicantsCount: apiJob.applications_count || 0,
-        // Keep original nested objects for detail views
         _raw: apiJob,
     };
 }
 
+const DEFAULT_FILTERS = {
+    search: '',
+    location: '',
+    category_id: '',
+    work_type: '',
+    experience_level: '',
+    salary_min: null,
+    salary_max: null,
+    posted_within: '',
+    sort: 'date',
+};
+
 export const useJobsStore = defineStore('jobs', {
     state: () => ({
-        jobs: [],
+        // allJobs holds every job fetched from the API — never mutated by filters
+        allJobs: [],
         currentJob: null,
         employerJobs: [],
         loading: false,
         error: null,
-        filters: {
-            search: '',
-            location: '',
-            category_id: '',
-            work_type: '',
-            experience_level: '',
-            salary_min: null,
-            salary_max: null,
-            posted_within: '',
-            sort: 'date',
-            per_page: 10,
-        },
-        meta: null,
+        filters: { ...DEFAULT_FILTERS },
         validationErrors: {},
     }),
 
     getters: {
-        filteredJobs: (state) => state.jobs,
+        // ── All filtering and sorting happens here, purely in JS ─────────────
+        filteredJobs: (state) => {
+            let jobs = [...state.allJobs];
+            const f = state.filters;
+
+            // Search: title, company name, skills, categories
+            if (f.search.trim()) {
+                const term = f.search.trim().toLowerCase();
+                jobs = jobs.filter(
+                    (j) =>
+                        j.title?.toLowerCase().includes(term) ||
+                        j.company?.toLowerCase().includes(term) ||
+                        j.skills?.some((s) => s.toLowerCase().includes(term)) ||
+                        j.categories?.some((c) =>
+                            c.toLowerCase().includes(term)
+                        )
+                );
+            }
+
+            // Location
+            if (f.location.trim()) {
+                const loc = f.location.trim().toLowerCase();
+                jobs = jobs.filter((j) =>
+                    j.location?.toLowerCase().includes(loc)
+                );
+            }
+
+            // Work type
+            if (f.work_type) {
+                jobs = jobs.filter((j) => j.workType === f.work_type);
+            }
+
+            // Category (match by name since we have names after normalization)
+            if (f.category_id) {
+                jobs = jobs.filter((j) =>
+                    j._raw?.categories?.some(
+                        (c) => String(c.id) === String(f.category_id)
+                    )
+                );
+            }
+
+            // Experience level
+            if (f.experience_level) {
+                jobs = jobs.filter(
+                    (j) => j.experienceLevel === f.experience_level
+                );
+            }
+
+            // Salary range — job overlaps the requested range
+            if (f.salary_min !== null && f.salary_min !== '') {
+                jobs = jobs.filter(
+                    (j) =>
+                        j.salaryMax === null ||
+                        j.salaryMax >= Number(f.salary_min)
+                );
+            }
+            if (f.salary_max !== null && f.salary_max !== '') {
+                jobs = jobs.filter(
+                    (j) =>
+                        j.salaryMin === null ||
+                        j.salaryMin <= Number(f.salary_max)
+                );
+            }
+
+            // Posted within
+            if (f.posted_within) {
+                const cutoff = {
+                    '24h': () => new Date(Date.now() - 86_400_000),
+                    week: () => new Date(Date.now() - 7 * 86_400_000),
+                    month: () => new Date(Date.now() - 30 * 86_400_000),
+                }[f.posted_within]?.();
+
+                if (cutoff) {
+                    jobs = jobs.filter((j) => new Date(j.createdAt) >= cutoff);
+                }
+            }
+
+            // Sort
+            if (f.sort === 'date') {
+                jobs.sort(
+                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                );
+            }
+
+            return jobs;
+        },
+
         myJobs: (state) => state.employerJobs,
         pendingJobs: (state) =>
             state.employerJobs.filter((j) => j.status === 'pending'),
     },
 
     actions: {
-        // ── FETCH PUBLIC JOBS (paginated) ─────────────────────────
-        async fetchJobs(params = {}) {
+        // ── FETCH ALL JOBS once (no filter params sent to backend) ────────────
+        async fetchJobs() {
             this.loading = true;
             this.error = null;
             try {
-                const query = { ...this.filters, ...params };
-                // Remove empty values
-                Object.keys(query).forEach((k) => {
-                    if (query[k] === '' || query[k] === null) delete query[k];
+                // Fetch all approved jobs — backend just paginates by default,
+                // so request a large per_page to get everything in one shot,
+                // or loop pages. For most job boards one request is fine.
+                const response = await client.get('/jobs', {
+                    params: { per_page: 100 },
                 });
 
-                const data = await client.get('/jobs', { params: query });
-                this.jobs = (Array.isArray(data) ? data : data.data || []).map(
-                    normalizeJob
-                );
-                this.meta = data._meta || null;
-                return this.jobs;
+                const list =
+                    response?.data ?? (Array.isArray(response) ? response : []);
+                this.allJobs = list.map(normalizeJob);
+                return this.allJobs;
             } catch (err) {
                 this.error = err.message || 'Could not load jobs.';
                 return [];
@@ -82,7 +167,7 @@ export const useJobsStore = defineStore('jobs', {
             }
         },
 
-        // ── FETCH SINGLE JOB ──────────────────────────────────────
+        // ── FETCH SINGLE JOB ──────────────────────────────────────────────────
         async fetchJob(id) {
             this.loading = true;
             this.error = null;
@@ -99,7 +184,7 @@ export const useJobsStore = defineStore('jobs', {
             }
         },
 
-        // ── POST NEW JOB ──────────────────────────────────────────
+        // ── POST NEW JOB ──────────────────────────────────────────────────────
         async postJob(jobData) {
             this.loading = true;
             this.error = null;
@@ -117,11 +202,10 @@ export const useJobsStore = defineStore('jobs', {
                     deadline: jobData.deadline,
                     categories: jobData.categories || [],
                     skills: jobData.skills || [],
-                    company_id: jobData.company_id,
                 };
                 const data = await client.post('/jobs', payload);
                 const normalized = normalizeJob(data);
-                this.jobs.unshift(normalized);
+                this.allJobs.unshift(normalized);
                 return normalized;
             } catch (err) {
                 this.error = err.message || 'Could not post job.';
@@ -132,15 +216,15 @@ export const useJobsStore = defineStore('jobs', {
             }
         },
 
-        // ── UPDATE JOB ────────────────────────────────────────────
+        // ── UPDATE JOB ────────────────────────────────────────────────────────
         async updateJob(id, updates) {
             this.loading = true;
             this.error = null;
             try {
                 const data = await client.patch(`/jobs/${id}`, updates);
                 const normalized = normalizeJob(data);
-                const index = this.jobs.findIndex((j) => j.id === id);
-                if (index !== -1) this.jobs[index] = normalized;
+                const index = this.allJobs.findIndex((j) => j.id === id);
+                if (index !== -1) this.allJobs[index] = normalized;
                 if (this.currentJob?.id === id) this.currentJob = normalized;
                 return normalized;
             } catch (err) {
@@ -151,14 +235,16 @@ export const useJobsStore = defineStore('jobs', {
             }
         },
 
-        // ── DELETE JOB ────────────────────────────────────────────
+        // ── DELETE JOB ────────────────────────────────────────────────────────
         async deleteJob(id) {
             this.loading = true;
             this.error = null;
             try {
                 await client.delete(`/jobs/${id}`);
-                this.jobs = this.jobs.filter((j) => j.id !== id);
-                this.employerJobs = this.employerJobs.filter((j) => j.id !== id);
+                this.allJobs = this.allJobs.filter((j) => j.id !== id);
+                this.employerJobs = this.employerJobs.filter(
+                    (j) => j.id !== id
+                );
                 return true;
             } catch (err) {
                 this.error = err.message || 'Could not delete job.';
@@ -168,15 +254,15 @@ export const useJobsStore = defineStore('jobs', {
             }
         },
 
-        // ── FETCH EMPLOYER'S OWN JOBS ─────────────────────────────
+        // ── FETCH EMPLOYER'S OWN JOBS ─────────────────────────────────────────
         async fetchEmployerJobs() {
             this.loading = true;
             this.error = null;
             try {
                 const data = await client.get('/employer/jobs');
-                this.employerJobs = (Array.isArray(data) ? data : data.data || []).map(
-                    normalizeJob
-                );
+                this.employerJobs = (
+                    Array.isArray(data) ? data : data.data || []
+                ).map(normalizeJob);
                 return this.employerJobs;
             } catch (err) {
                 this.error = err.message || 'Could not load your jobs.';
@@ -186,24 +272,13 @@ export const useJobsStore = defineStore('jobs', {
             }
         },
 
-        // ── FILTERS ───────────────────────────────────────────────
+        // ── FILTER HELPERS ────────────────────────────────────────────────────
         setFilter(key, value) {
             this.filters[key] = value;
         },
 
         resetFilters() {
-            this.filters = {
-                search: '',
-                location: '',
-                category_id: '',
-                work_type: '',
-                experience_level: '',
-                salary_min: null,
-                salary_max: null,
-                posted_within: '',
-                sort: 'date',
-                per_page: 10,
-            };
+            this.filters = { ...DEFAULT_FILTERS };
         },
     },
 });

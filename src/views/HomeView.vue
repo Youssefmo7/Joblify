@@ -3,7 +3,10 @@
         <!-- ── LEFT: Profile + Filters sidebar ──────────────────── -->
         <aside class="sidebar">
             <!-- Candidate profile card -->
-            <div v-if="authStore.isCandidate && authStore.isLoggedIn" class="profile-card">
+            <div
+                v-if="authStore.isCandidate && authStore.isLoggedIn"
+                class="profile-card"
+            >
                 <div class="profile-card__banner" />
                 <div class="profile-card__body">
                     <div class="profile-card__avatar-placeholder">
@@ -29,7 +32,9 @@
                         <input
                             type="checkbox"
                             :value="type.value"
-                            :checked="jobsStore.filters.work_type === type.value"
+                            :checked="
+                                jobsStore.filters.work_type === type.value
+                            "
                             @change="toggleWorkType(type.value)"
                         />
                         {{ type.label }}
@@ -43,7 +48,10 @@
                         class="filter-select"
                         :value="jobsStore.filters.category_id"
                         @change="
-                            jobsStore.setFilter('category_id', $event.target.value)
+                            jobsStore.setFilter(
+                                'category_id',
+                                $event.target.value
+                            )
                         "
                     >
                         <option value="">All categories</option>
@@ -78,6 +86,58 @@
                     </select>
                 </div>
 
+                <!-- Posted within -->
+                <div class="filter-group">
+                    <p class="filter-group__label">Posted within</p>
+                    <select
+                        class="filter-select"
+                        :value="jobsStore.filters.posted_within"
+                        @change="
+                            jobsStore.setFilter(
+                                'posted_within',
+                                $event.target.value
+                            )
+                        "
+                    >
+                        <option value="">Any time</option>
+                        <option value="24h">Last 24 hours</option>
+                        <option value="week">Last week</option>
+                        <option value="month">Last month</option>
+                    </select>
+                </div>
+
+                <!-- Salary range -->
+                <div class="filter-group">
+                    <p class="filter-group__label">Salary range</p>
+                    <div class="salary-inputs">
+                        <input
+                            class="filter-input"
+                            type="number"
+                            placeholder="Min"
+                            :value="jobsStore.filters.salary_min"
+                            @change="
+                                jobsStore.setFilter(
+                                    'salary_min',
+                                    $event.target.value || null
+                                )
+                            "
+                        />
+                        <span class="salary-sep">–</span>
+                        <input
+                            class="filter-input"
+                            type="number"
+                            placeholder="Max"
+                            :value="jobsStore.filters.salary_max"
+                            @change="
+                                jobsStore.setFilter(
+                                    'salary_max',
+                                    $event.target.value || null
+                                )
+                            "
+                        />
+                    </div>
+                </div>
+
                 <!-- Sort -->
                 <div class="filter-group">
                     <p class="filter-group__label">Sort by</p>
@@ -89,11 +149,10 @@
                         "
                     >
                         <option value="date">Most recent</option>
-                        <option value="relevance">Relevance</option>
                     </select>
                 </div>
 
-                <button class="filter-reset" @click="jobsStore.resetFilters">
+                <button class="filter-reset" @click="jobsStore.resetFilters()">
                     Reset filters
                 </button>
             </div>
@@ -121,8 +180,20 @@
                 />
             </div>
 
+            <!-- Results summary -->
+            <div
+                v-if="!jobsStore.loading && jobsStore.filteredJobs.length > 0"
+                class="feed__summary"
+            >
+                {{ jobsStore.filteredJobs.length }} job{{
+                    jobsStore.filteredJobs.length !== 1 ? 's' : ''
+                }}
+                found
+            </div>
+
             <!-- Loading -->
             <div v-if="jobsStore.loading" class="feed__state">
+                <span class="feed__spinner" />
                 Loading jobs…
             </div>
 
@@ -150,7 +221,6 @@
                         @apply="openApplyPanel"
                         @deleted="handleDeleted"
                     />
-                    <!-- Apply panel opens inline directly below the card that was clicked -->
                     <ApplyModal
                         v-if="applyTarget?.id === job.id"
                         :job="job"
@@ -177,6 +247,7 @@
                     </div>
                     <button
                         class="skill-row__add"
+                        :title="`Search for ${skill.name} jobs`"
                         @click="jobsStore.setFilter('search', skill.name)"
                     >
                         +
@@ -199,13 +270,11 @@
                 </RouterLink>
             </div>
         </aside>
-
-        <!-- Apply modal removed — now renders inline below each job card -->
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
@@ -219,7 +288,7 @@ const appsStore = useApplicationsStore();
 const categoriesStore = useCategoriesStore();
 
 const applyTarget = ref(null);
-const user = computed(() => authStore.currentUser || {});
+const user = authStore.currentUser || {};
 
 const workTypes = [
     { value: 'remote', label: 'Remote' },
@@ -241,7 +310,6 @@ function toggleWorkType(value) {
 
 function openApplyPanel(job) {
     if (!authStore.isLoggedIn) return;
-    // toggle: clicking Apply on the same job closes the panel
     applyTarget.value = applyTarget.value?.id === job.id ? null : job;
 }
 
@@ -250,14 +318,12 @@ function handleApplySuccess() {
 }
 
 function handleDeleted(jobId) {
-    // jobsStore already removed it locally
-    console.log(jobId);
+    console.log('Job deleted:', jobId);
 }
 
 onMounted(async () => {
     await jobsStore.fetchJobs();
     await categoriesStore.fetchCategories();
-    // Load candidate's existing applications so hasApplied works
     if (authStore.isCandidate && authStore.isLoggedIn) {
         await appsStore.fetchMyApplications();
     }
@@ -296,7 +362,7 @@ onMounted(async () => {
 .search-bar {
     display: flex;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
 .search-bar__input {
     flex: 1;
@@ -315,6 +381,13 @@ onMounted(async () => {
     max-width: 180px;
 }
 
+/* ── Results summary ── */
+.feed__summary {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+}
+
 /* ── Feed ── */
 .feed__list {
     display: flex;
@@ -326,9 +399,48 @@ onMounted(async () => {
     padding: 48px 0;
     color: var(--color-text-secondary);
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 .feed__state--error {
-    color: var(--color-text-danger);
+    color: var(--color-text-danger, #c0392b);
+}
+.feed__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-border-secondary);
+    border-top-color: #534ab7;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Salary inputs ── */
+.salary-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.filter-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 13px;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    min-width: 0;
+}
+.salary-sep {
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
 }
 
 /* ── Profile card ── */
@@ -349,13 +461,19 @@ onMounted(async () => {
     flex-direction: column;
     gap: 4px;
 }
-.profile-card__avatar {
+.profile-card__avatar-placeholder {
     width: 52px;
     height: 52px;
     border-radius: 50%;
+    background: #534ab7;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 3px solid var(--color-background-primary);
     margin-top: -26px;
-    object-fit: cover;
 }
 .profile-card__name {
     font-size: 15px;
@@ -367,23 +485,6 @@ onMounted(async () => {
     font-size: 12px;
     color: var(--color-text-secondary);
     margin: 0 0 8px;
-}
-.profile-card__stats {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.profile-card__stat {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-}
-.profile-card__stat .label {
-    color: var(--color-text-secondary);
-}
-.profile-card__stat .value {
-    color: #e8246a;
-    font-weight: 500;
 }
 
 /* ── Filter box ── */
