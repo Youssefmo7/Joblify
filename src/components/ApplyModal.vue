@@ -38,59 +38,135 @@
         </div>
 
         <template v-else>
-            <!-- Resume upload -->
+            <!-- Resume section -->
             <div class="apply-panel__section">
                 <label class="field-label">Resume (PDF, DOC, DOCX) <span class="text-red-500">*</span></label>
 
-                <div v-if="newFile" class="saved-resume">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                <!-- Profile CV option: user has a CV on file -->
+                <div v-if="hasProfileCv" class="cv-option-group">
+                    <label
+                        class="cv-option"
+                        :class="{ 'cv-option--active': useProfileCv }"
+                        @click="selectProfileCv"
                     >
-                        <path
-                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                        <input
+                            type="radio"
+                            name="cv-source"
+                            :checked="useProfileCv"
+                            class="cv-option__radio"
                         />
-                        <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    <span class="saved-resume__name">
-                        {{ newFile.name }}
-                    </span>
-                    <button class="text-btn" @click="clearFile">
-                        Change file
-                    </button>
+                        <span class="cv-option__check">
+                            <span v-if="useProfileCv" class="cv-option__dot"></span>
+                        </span>
+                        <div class="cv-option__content">
+                            <span class="cv-option__label">Use my profile CV</span>
+                            <span class="cv-option__desc">Your uploaded CV on file will be used</span>
+                        </div>
+                        <svg
+                            class="cv-option__icon"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                    </label>
+
+                    <label
+                        class="cv-option"
+                        :class="{ 'cv-option--active': !useProfileCv }"
+                        @click="selectUploadCv"
+                    >
+                        <input
+                            type="radio"
+                            name="cv-source"
+                            :checked="!useProfileCv"
+                            class="cv-option__radio"
+                        />
+                        <span class="cv-option__check">
+                            <span v-if="!useProfileCv" class="cv-option__dot"></span>
+                        </span>
+                        <div class="cv-option__content">
+                            <span class="cv-option__label">Upload a different CV</span>
+                            <span class="cv-option__desc">Choose a file from your device</span>
+                        </div>
+                        <svg
+                            class="cv-option__icon"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                    </label>
                 </div>
 
-                <div
-                    v-else
-                    :class="['upload-zone', { 'upload-zone--filled': newFile }]"
-                    @click="$refs.fileInput.click()"
-                >
-                    <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        style="opacity: 0.4"
+                <!-- Upload zone: shown when user chose to upload, or has no profile CV -->
+                <div v-if="showUploadZone">
+                    <div v-if="newFile" class="saved-resume">
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                            />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        <span class="saved-resume__name">
+                            {{ newFile.name }}
+                        </span>
+                        <button class="text-btn" @click="clearFile">
+                            Change file
+                        </button>
+                    </div>
+
+                    <div
+                        v-else
+                        class="upload-zone"
+                        @click="$refs.fileInput.click()"
                     >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    <span class="upload-zone__text">
-                        Click to upload resume
-                        <span class="upload-zone__hint">— max 5MB</span>
-                    </span>
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            style="opacity: 0.4"
+                        >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span class="upload-zone__text">
+                            Click to upload resume
+                            <span class="upload-zone__hint">— max 5MB</span>
+                        </span>
+                    </div>
                 </div>
+
                 <input
                     ref="fileInput"
                     type="file"
@@ -99,8 +175,11 @@
                     @change="onFileChange"
                 />
 
-                <p v-if="!canSubmit" class="field-warn">
+                <p v-if="!canSubmit && !hasProfileCv" class="field-warn">
                     Please upload a resume to continue.
+                </p>
+                <p v-if="!canSubmit && hasProfileCv && !useProfileCv && !newFile" class="field-warn">
+                    Please upload a resume or use your profile CV.
                 </p>
             </div>
 
@@ -140,9 +219,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
+import { useProfileStore } from '@/stores/profileStore';
 
 const props = defineProps({
     job: { type: Object, required: true },
@@ -151,6 +231,7 @@ const emit = defineEmits(['close', 'success']);
 
 const authStore = useAuthStore();
 const appsStore = useApplicationsStore();
+const profileStore = useProfileStore();
 
 const user = authStore.currentUser;
 
@@ -158,17 +239,37 @@ const alreadyApplied = computed(() =>
     appsStore.hasApplied(props.job.id, user?.id)
 );
 
+const hasProfileCv = computed(() => profileStore.hasResume);
+const useProfileCv = ref(true);
 const newFile = ref(null);
 const coverLetter = ref('');
 const submitting = ref(false);
 const errorMsg = ref('');
 
-const canSubmit = computed(() => !!newFile.value);
+const showUploadZone = computed(() => {
+    if (!hasProfileCv.value) return true;
+    return !useProfileCv.value;
+});
+
+const canSubmit = computed(() => {
+    if (hasProfileCv.value && useProfileCv.value) return true;
+    return !!newFile.value;
+});
+
+function selectProfileCv() {
+    useProfileCv.value = true;
+    newFile.value = null;
+}
+
+function selectUploadCv() {
+    useProfileCv.value = false;
+}
 
 function onFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
     newFile.value = file;
+    useProfileCv.value = false;
 }
 
 function clearFile() {
@@ -180,8 +281,8 @@ async function handleSubmit() {
         errorMsg.value = 'You must be logged in to apply.';
         return;
     }
-    if (!newFile.value) {
-        errorMsg.value = 'Please upload a resume.';
+    if (!canSubmit.value) {
+        errorMsg.value = 'Please upload a resume or use your profile CV.';
         return;
     }
     errorMsg.value = '';
@@ -191,6 +292,7 @@ async function handleSubmit() {
         const result = await appsStore.applyToJob(props.job.id, {
             resume: newFile.value,
             coverLetter: coverLetter.value.trim(),
+            useProfileCv: useProfileCv.value && hasProfileCv.value,
         });
 
         if (result) {
@@ -205,6 +307,12 @@ async function handleSubmit() {
         submitting.value = false;
     }
 }
+
+onMounted(() => {
+    if (!profileStore.profile) {
+        profileStore.fetchProfile();
+    }
+});
 </script>
 
 <style scoped>
@@ -318,6 +426,76 @@ async function handleSubmit() {
     padding: 6px 10px;
     border-radius: var(--border-radius-md);
     margin: 0;
+}
+
+.cv-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.cv-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--color-background-primary);
+    border: 1.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.cv-option:hover {
+    border-color: #534ab7;
+}
+.cv-option--active {
+    border-color: #534ab7;
+    background: #eeedfe;
+}
+.cv-option__radio {
+    display: none;
+}
+.cv-option__check {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--color-border-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.cv-option--active .cv-option__check {
+    border-color: #534ab7;
+}
+.cv-option__dot {
+    width: 8px;
+    height: 8px;
+    background: #534ab7;
+    border-radius: 50%;
+}
+.cv-option__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+}
+.cv-option__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+.cv-option__desc {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+}
+.cv-option__icon {
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+}
+.cv-option--active .cv-option__icon {
+    color: #534ab7;
 }
 
 .saved-resume {
