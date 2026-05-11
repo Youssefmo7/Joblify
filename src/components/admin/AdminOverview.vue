@@ -15,7 +15,7 @@
             <p class="mt-2 text-3xl font-bold text-yellow-600">{{ store.stats.pendingCount }}</p>
         </div>
         <div class="bg-surface rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
-            <p class="text-sm font-medium text-gray-500">Flagged Comments</p>
+            <p class="text-sm font-medium text-gray-500">Total Comments</p>
             <p class="mt-2 text-3xl font-bold text-red-600">{{ store.allComments.length }}</p>
         </div>
     </div>
@@ -88,14 +88,15 @@ export default {
 
     const formatActivityTitle = (entry) => {
       const type = entry.type || '';
-      if (type === 'job_approved' || type === 'job.approve') return `Approved job: ${entry.title || ''}`;
-      if (type === 'job_rejected' || type === 'job.reject') return `Rejected job: ${entry.title || ''}`;
-      if (type === 'job_pending') return `New pending job: ${entry.title || ''}`;
-      if (type === 'user_registered') return `New user: ${entry.title || ''}`;
-      if (type === 'user.suspend') return `Suspended user: ${entry.title || ''}`;
-      if (type === 'user.activate') return `Activated user: ${entry.title || ''}`;
+      const title = entry.title || '';
+      if (type === 'job_approved' || type === 'job.approve') return `Approved job: ${title}`;
+      if (type === 'job_rejected' || type === 'job.reject') return `Rejected job: ${title}`;
+      if (type === 'job_pending') return `New pending job: ${title}`;
+      if (type === 'user_registered') return `New user: ${title}`;
+      if (type === 'user.suspend') return `Suspended user: ${title}`;
+      if (type === 'user.activate') return `Activated user: ${title}`;
       if (type === 'comment.delete') return `Removed comment`;
-      return entry.title || 'Admin action';
+      return title || 'Admin action';
     };
 
     return {

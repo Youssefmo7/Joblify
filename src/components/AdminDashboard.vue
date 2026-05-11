@@ -10,8 +10,13 @@
                 </div>
                 <div class="flex items-center">
                     <span class="text-xs bg-red-100 text-red-700 font-bold px-2 py-1 rounded-full mr-4">ADMIN</span>
-                    <div class="h-8 w-8 bg-gray-800 rounded-full flex items-center justify-center border border-border cursor-pointer" @click="logout">
-                        <span class="font-bold text-white text-sm">A</span>
+                    <div class="relative" ref="profileMenu">
+                        <div class="h-8 w-8 bg-gray-800 rounded-full flex items-center justify-center border border-border cursor-pointer" @click="toggleProfileMenu">
+                            <span class="font-bold text-white text-sm">A</span>
+                        </div>
+                        <div v-if="showProfileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-border py-1 z-50">
+                            <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">Logout</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,7 +97,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, onUnmounted } from "vue";
 import { useAdminStore } from "@/stores/adminStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
@@ -122,6 +127,18 @@ export default {
 
     const activeTab = ref('overview');
     const previewJobId = ref(null);
+    const showProfileMenu = ref(false);
+    const profileMenu = ref(null);
+
+    const toggleProfileMenu = () => {
+      showProfileMenu.value = !showProfileMenu.value;
+    };
+
+    const closeProfileMenu = (e) => {
+      if (profileMenu.value && !profileMenu.value.contains(e.target)) {
+        showProfileMenu.value = false;
+      }
+    };
 
     onMounted(async () => {
       await Promise.all([
@@ -130,9 +147,15 @@ export default {
         store.fetchUsers({ page: 1 }),
         store.fetchComments({ page: 1 }),
       ]);
+      document.addEventListener('click', closeProfileMenu);
+    });
+
+    onUnmounted(() => {
+      document.removeEventListener('click', closeProfileMenu);
     });
 
     const logout = () => {
+      showProfileMenu.value = false;
       authStore.logout();
       router.push("/");
     };
@@ -157,7 +180,10 @@ export default {
       store,
       activeTab,
       previewJobId,
+      showProfileMenu,
+      profileMenu,
       logout,
+      toggleProfileMenu,
       openJobPreview,
       closeJobPreview,
       onModalApprove,

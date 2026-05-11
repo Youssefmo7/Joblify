@@ -30,11 +30,13 @@ client.interceptors.response.use(
         if (response.data && typeof response.data === 'object' && 'data' in response.data) {
             // Keep meta pagination info attached
             const result = response.data.data;
-            if (response.data.meta) {
-                result._meta = response.data.meta;
-            }
-            if (response.data.message) {
-                result._message = response.data.message;
+            if (result && typeof result === 'object') {
+                if (response.data.meta) {
+                    result._meta = response.data.meta;
+                }
+                if (response.data.message) {
+                    result._message = response.data.message;
+                }
             }
             return result;
         }
@@ -42,7 +44,9 @@ client.interceptors.response.use(
     },
     (error) => {
         const status = error.response?.status;
-        const message = error.response?.data?.message || 'Something went wrong';
+        const message = error.response?.data?.message
+            || error.response?.data?.error
+            || 'Something went wrong';
 
         if (status === 401 || status === 403) {
             localStorage.removeItem('access_token');

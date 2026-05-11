@@ -1,20 +1,9 @@
 import { defineStore } from 'pinia';
 import client from '@/api/client';
 
-const MOCK_CATEGORIES = [
-    { id: 1, name: 'Engineering' },
-    { id: 2, name: 'Design' },
-    { id: 3, name: 'Data Science' },
-    { id: 4, name: 'Technical Writing' },
-    { id: 5, name: 'Security' },
-    { id: 6, name: 'Marketing' },
-    { id: 7, name: 'Product' },
-    { id: 8, name: 'Sales' },
-];
-
 export const useCategoriesStore = defineStore('categories', {
     state: () => ({
-        categories: MOCK_CATEGORIES,
+        categories: [],
         loading: false,
         error: null,
     }),

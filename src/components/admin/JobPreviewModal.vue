@@ -55,11 +55,11 @@
                     </div>
                     <div class="p-3 bg-gray-50 rounded-lg">
                         <p class="text-xs text-gray-500 uppercase">Salary</p>
-                        <p class="font-medium text-gray-900">${{ job.salary_min || 0 }} – ${{ job.salary_max || 0 }}</p>
+                        <p class="font-medium text-gray-900">{{ formatSalary(job.salary_min, job.salary_max) }}</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-lg">
                         <p class="text-xs text-gray-500 uppercase">Deadline</p>
-                        <p class="font-medium text-gray-900">{{ job.deadline || '—' }}</p>
+                        <p class="font-medium text-gray-900">{{ formatDeadline(job.deadline) }}</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-lg">
                         <p class="text-xs text-gray-500 uppercase">Posted</p>
@@ -122,6 +122,25 @@ export default {
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         };
 
+        const formatSalary = (min, max) => {
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0,
+            });
+            if (min && max) return `${formatter.format(min)} – ${formatter.format(max)}`;
+            if (min) return formatter.format(min);
+            if (max) return formatter.format(max);
+            return '—';
+        };
+
+        const formatDeadline = (value) => {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (!Number.isFinite(date.getTime())) return value;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        };
+
         const fetchJob = async () => {
             loading.value = true;
             error.value = '';
@@ -156,6 +175,8 @@ export default {
             rejectReason,
             successMessage,
             formatDate,
+            formatSalary,
+            formatDeadline,
             fetchJob,
             handleApprove,
             handleReject,

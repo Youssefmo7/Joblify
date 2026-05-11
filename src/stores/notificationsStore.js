@@ -1,17 +1,9 @@
 import { defineStore } from 'pinia';
 import client from '@/api/client';
 
-const MOCK_NOTIFICATIONS = [
-    { id: 1, user_id: 1, type: 'job_approved', message: 'Your job posting "Senior Frontend Engineer" has been approved and is now live.', is_read: false, created_at: '2026-05-10T09:00:00Z', updated_at: '2026-05-10T09:00:00Z' },
-    { id: 2, user_id: 1, type: 'application_received', message: 'You have a new application for "Full Stack Developer" from Bob Smith.', is_read: false, created_at: '2026-05-09T14:30:00Z', updated_at: '2026-05-09T14:30:00Z' },
-    { id: 3, user_id: 1, type: 'job_rejected', message: 'Your job "Blockchain Developer" was rejected. Reason: Insufficient details.', is_read: true, created_at: '2026-05-08T11:00:00Z', updated_at: '2026-05-08T11:00:00Z' },
-    { id: 4, user_id: 1, type: 'comment', message: 'Alice Johnson commented on your job "DevOps Engineer".', is_read: false, created_at: '2026-05-07T16:45:00Z', updated_at: '2026-05-07T16:45:00Z' },
-    { id: 5, user_id: 1, type: 'application_status', message: 'Your application for "Data Scientist" at DataDriven has been accepted!', is_read: true, created_at: '2026-05-06T10:00:00Z', updated_at: '2026-05-06T10:00:00Z' },
-];
-
 export const useNotificationsStore = defineStore('notifications', {
     state: () => ({
-        notifications: MOCK_NOTIFICATIONS,
+        notifications: [],
         loading: false,
         error: null,
     }),

@@ -45,7 +45,7 @@
                             <div>
                                 <h4 class="text-base font-bold text-gray-900 cursor-pointer hover:text-primary transition-colors" @click="$emit('view-job', job.id)">{{ job.title }}</h4>
                                 <div class="flex items-center mt-1 space-x-3 text-sm text-gray-500">
-                                    <div class="flex items-center"><svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg> <span class="font-medium text-gray-700">{{ job.company }}</span></div>
+                                    <div class="flex items-center"><svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg> <span class="font-medium text-gray-700">{{ job.companyName }}</span></div>
                                     <span class="text-gray-300">&bull;</span>
                                     <span>{{ formatDate(job.createdAt) }}</span>
                                 </div>
