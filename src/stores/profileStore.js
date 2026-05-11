@@ -66,6 +66,20 @@ export const useProfileStore = defineStore('profile', {
             }
         },
 
+        async fetchResumeBlob() {
+            try {
+                const response = await client.get('/profile/resume', {
+                    responseType: 'blob',
+                });
+                const blob = new Blob([response], { type: 'application/pdf' });
+                const filename = this.profile?.resume_filename || 'resume.pdf';
+                return new File([blob], filename, { type: 'application/pdf' });
+            } catch (err) {
+                this.error = err.message || 'Could not fetch resume.';
+                return null;
+            }
+        },
+
         async downloadResume() {
             try {
                 const response = await client.get('/profile/resume', {
