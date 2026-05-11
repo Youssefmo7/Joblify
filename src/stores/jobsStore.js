@@ -52,91 +52,7 @@ export const useJobsStore = defineStore('jobs', {
 
     getters: {
         // ── All filtering and sorting happens here, purely in JS ─────────────
-        filteredJobs: (state) => {
-            let jobs = [...state.allJobs];
-            const f = state.filters;
-
-            // Search: title, company name, skills, categories
-            if (f.search.trim()) {
-                const term = f.search.trim().toLowerCase();
-                jobs = jobs.filter(
-                    (j) =>
-                        j.title?.toLowerCase().includes(term) ||
-                        j.company?.toLowerCase().includes(term) ||
-                        j.skills?.some((s) => s.toLowerCase().includes(term)) ||
-                        j.categories?.some((c) =>
-                            c.toLowerCase().includes(term)
-                        )
-                );
-            }
-
-            // Location
-            if (f.location.trim()) {
-                const loc = f.location.trim().toLowerCase();
-                jobs = jobs.filter((j) =>
-                    j.location?.toLowerCase().includes(loc)
-                );
-            }
-
-            // Work type
-            if (f.work_type) {
-                jobs = jobs.filter((j) => j.workType === f.work_type);
-            }
-
-            // Category (match by name since we have names after normalization)
-            if (f.category_id) {
-                jobs = jobs.filter((j) =>
-                    j._raw?.categories?.some(
-                        (c) => String(c.id) === String(f.category_id)
-                    )
-                );
-            }
-
-            // Experience level
-            if (f.experience_level) {
-                jobs = jobs.filter(
-                    (j) => j.experienceLevel === f.experience_level
-                );
-            }
-
-            // Salary range — job overlaps the requested range
-            if (f.salary_min !== null && f.salary_min !== '') {
-                jobs = jobs.filter(
-                    (j) =>
-                        j.salaryMax === null ||
-                        j.salaryMax >= Number(f.salary_min)
-                );
-            }
-            if (f.salary_max !== null && f.salary_max !== '') {
-                jobs = jobs.filter(
-                    (j) =>
-                        j.salaryMin === null ||
-                        j.salaryMin <= Number(f.salary_max)
-                );
-            }
-
-            // Posted within
-            if (f.posted_within) {
-                const cutoff = {
-                    '24h': () => new Date(Date.now() - 86_400_000),
-                    week: () => new Date(Date.now() - 7 * 86_400_000),
-                    month: () => new Date(Date.now() - 30 * 86_400_000),
-                }[f.posted_within]?.();
-
-                if (cutoff) {
-                    jobs = jobs.filter((j) => new Date(j.createdAt) >= cutoff);
-                }
-            }
-
-            // Sort
-            if (f.sort === 'date') {
-                jobs.sort(
-                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-                );
-            }
-
-            return jobs;
-        },
+        filteredJobs: (state) => state.allJobs,
 
         myJobs: (state) => state.employerJobs,
         pendingJobs: (state) =>
@@ -144,17 +60,25 @@ export const useJobsStore = defineStore('jobs', {
     },
 
     actions: {
-        // ── FETCH ALL JOBS once (no filter params sent to backend) ────────────
         async fetchJobs() {
             this.loading = true;
             this.error = null;
             try {
-                // Fetch all approved jobs — backend just paginates by default,
-                // so request a large per_page to get everything in one shot,
-                // or loop pages. For most job boards one request is fine.
-                const response = await client.get('/jobs', {
-                    params: { per_page: 100 },
-                });
+                // Build params from current filters
+                const params = {};
+                if (this.filters.search) params.search = this.filters.search;
+                if (this.filters.location) params.location = this.filters.location;
+                if (this.filters.category_id) params.category_id = this.filters.category_id;
+                if (this.filters.work_type) params.work_type = this.filters.work_type;
+                if (this.filters.experience_level) params.experience_level = this.filters.experience_level;
+                if (this.filters.salary_min) params.salary_min = this.filters.salary_min;
+                if (this.filters.salary_max) params.salary_max = this.filters.salary_max;
+                if (this.filters.posted_within) params.posted_within = this.filters.posted_within;
+                if (this.filters.sort) params.sort = this.filters.sort;
+                
+                params.per_page = 100; // Get a good batch for the list
+
+                const response = await client.get('/jobs', { params });
 
                 const list =
                     response?.data ?? (Array.isArray(response) ? response : []);
@@ -191,16 +115,8 @@ export const useJobsStore = defineStore('jobs', {
             this.error = null;
             try {
                 const payload = {
-                    title: jobData.title,
-                    description: jobData.description,
-                    requirements: jobData.requirements,
-                    benefits: jobData.benefits,
-                    salary_min: jobData.salary_min,
-                    salary_max: jobData.salary_max,
-                    location: jobData.location,
-                    work_type: jobData.work_type,
-                    experience_level: jobData.experience_level,
-                    deadline: jobData.deadline,
+                    ...jobData,
+                    // Ensure categories/skills are arrays if not provided
                     categories: jobData.categories || [],
                     skills: jobData.skills || [],
                 };

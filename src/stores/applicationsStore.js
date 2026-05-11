@@ -29,11 +29,12 @@ export const useApplicationsStore = defineStore('applications', {
         myApplications: (state) => state.applications,
         applicationsForJob: (state) => (jobId) =>
             state.applications.filter((a) => a.jobId == jobId),
-        applicationsForEmployer: (state) => (employerId) =>
-            state.applications.filter(
-                (a) => a._raw?.job?.company?.user_id == employerId ||
-                       a._raw?.job?.company?.user?.id == employerId
-            ),
+        applicationsForEmployer: (state) => (employerId) => {
+            return state.applications.filter((a) => {
+                const appEmployerId = a._raw?.job?.company?.user_id || a._raw?.job?.company?.user?.id;
+                return !appEmployerId || appEmployerId == employerId;
+            });
+        },
         hasApplied: (state) => (jobId, candidateId) =>
             state.applications.some(
                 (a) => a.jobId == jobId && a.candidateId == candidateId

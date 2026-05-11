@@ -327,29 +327,32 @@ onUnmounted(() => {
     text-decoration: underline;
 }
 .navbar__inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 16px;
-    height: 56px;
+    width: 90%;  
+    margin: 0 10%;
+    padding: 0 24px;
+    height: 64px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: space-between;
+    gap: 20px;
 }
 
 /* Logo */
 .navbar__logo {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--color-text-primary);
+    font-size: 30px;
+    font-weight: 700;
+    color: #fd366e;
     text-decoration: none;
     flex-shrink: 0;
+    letter-spacing: -0.5px;
 }
 
 /* Search */
 .navbar__search {
     flex: 1;
-    max-width: 480px;
+    max-width: 50%;
     position: relative;
+    margin: 0 auto;
 }
 .navbar__search-icon {
     position: absolute;
