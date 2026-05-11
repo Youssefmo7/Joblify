@@ -50,7 +50,9 @@ client.interceptors.response.use(
 
         if (status === 401 || status === 403) {
             localStorage.removeItem('access_token');
-            window.location.href = '/login';
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
 
         // Reject with a normalized error object

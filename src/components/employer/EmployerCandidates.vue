@@ -35,27 +35,35 @@
             <h4 class="name">Candidate #{{ app.candidateId }}</h4>
             <p class="job-title">Applied for: {{ getJobTitle(app.jobId) }}</p>
             <p class="date">{{ formatDate(app.createdAt) }}</p>
+            <a 
+              v-if="app.resumeUrl" 
+              :href="app.resumeUrl" 
+              target="_blank" 
+              class="cv-link"
+            >
+              View CV
+            </a>
+            <p v-if="app.coverNote" class="cover-note">
+              "{{ app.coverNote }}"
+            </p>
           </div>
         </div>
 
         <div class="candidate-item__actions">
-          <template v-if="app.status === 'accepted'">
-            <span v-if="app.paid" class="status-badge accepted">Accepted & Paid</span>
-            <button v-else class="action-btn pay" @click="openPayment(app)">Pay for Placement</button>
-          </template>
+          <span v-if="app.status === 'accepted'" class="status-badge accepted">Accepted</span>
           <span v-else-if="app.status === 'rejected'" class="status-badge rejected">Rejected</span>
           <template v-else>
             <button
               class="action-btn reject"
               :disabled="appsStore.loading"
-              @click="respond(app.id, 'rejected')"
+              @click="openRespond(app, 'rejected')"
             >
               Reject
             </button>
             <button
               class="action-btn accept"
               :disabled="appsStore.loading"
-              @click="respond(app.id, 'accepted')"
+              @click="openRespond(app, 'accepted')"
             >
               Accept
             </button>
@@ -68,27 +76,27 @@
       </div>
     </div>
 
-    <!-- Payment Modal -->
-    <PaymentModal
-      v-if="selectedApp"
-      :show="showPaymentModal"
-      :application="selectedApp"
-      :jobTitle="getJobTitle(selectedApp.jobId)"
-      :employerId="employerId"
-      @close="closePayment"
-      @success="onPaymentSuccess"
+    <!-- Respond Modal -->
+    <ApplicationRespondModal
+      v-if="respondingApp"
+      :show="showRespondModal"
+      :application="respondingApp"
+      :jobTitle="getJobTitle(respondingApp.jobId)"
+      :status="respondStatus"
+      :loading="appsStore.loading"
+      @close="closeRespond"
+      @confirm="handleRespondConfirm"
     />
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useApplicationsStore } from '@/stores/applicationsStore';
-import PaymentModal from './PaymentModal.vue';
+import ApplicationRespondModal from './ApplicationRespondModal.vue';
 
-const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const appsStore = useApplicationsStore();
 
@@ -100,29 +108,32 @@ const tabs = [
   { label: 'All', value: 'all' },
 ];
 
-const employerId = computed(() => authStore.currentUser?.id);
 
-const showPaymentModal = ref(false);
-const selectedApp = ref(null);
+const showRespondModal = ref(false);
+const respondingApp = ref(null);
+const respondStatus = ref('');
 
-function openPayment(app) {
-  selectedApp.value = app;
-  showPaymentModal.value = true;
+function openRespond(app, status) {
+  respondingApp.value = app;
+  respondStatus.value = status;
+  showRespondModal.value = true;
 }
 
-function closePayment() {
-  showPaymentModal.value = false;
-  selectedApp.value = null;
+function closeRespond() {
+  showRespondModal.value = false;
+  respondingApp.value = null;
+  respondStatus.value = '';
 }
 
-function onPaymentSuccess() {
-  closePayment();
-  // No need to manually refresh here as store is updated ref-responsively
+async function handleRespondConfirm({ appId, status, note }) {
+  const success = await appsStore.respondToApplication(appId, status, note);
+  if (success) {
+    closeRespond();
+  }
 }
 
-const allApplications = computed(() =>
-  appsStore.applicationsForEmployer(employerId.value)
-);
+
+const allApplications = computed(() => appsStore.applications);
 
 const filteredApplications = computed(() => {
   if (filter.value === 'all') return allApplications.value;
@@ -151,15 +162,8 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-async function respond(appId, status) {
-  await appsStore.respondToApplication(appId, status);
-}
-
 onMounted(async () => {
-  const jobs = jobsStore.myJobs;
-  for (const job of jobs) {
-    await appsStore.fetchApplicationsForJob(job.id);
-  }
+  await appsStore.fetchMyApplications();
 });
 </script>
 
@@ -283,6 +287,28 @@ onMounted(async () => {
 .date {
   font-size: 11px;
   color: var(--color-text-tertiary);
+  margin-bottom: 4px;
+}
+.cv-link {
+  font-size: 11px;
+  color: #fd366e;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cv-link:hover {
+  text-decoration: underline;
+}
+.cover-note {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: 8px;
+  line-height: 1.4;
+  padding-left: 12px;
+  border-left: 2px solid var(--color-border-tertiary);
 }
 
 .candidate-item__actions {

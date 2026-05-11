@@ -37,7 +37,7 @@
               <span class="stat-box__label">New</span>
             </div>
             <div class="stat-box divider">
-              <span class="stat-box__val">{{ job.applicantsCount }}</span>
+              <span class="stat-box__val">{{ getTotalApplicants(job.id) }}</span>
               <span class="stat-box__label">Total</span>
             </div>
           </div>
@@ -47,7 +47,10 @@
           <RouterLink :to="`/employer/jobs/${job.id}/applicants`" class="action-btn primary">
             Review Applicants
           </RouterLink>
-          <button @click="deleteJob(job.id)" class="action-btn outline">
+          <RouterLink :to="`/employer/jobs/${job.id}/edit`" class="action-btn outline">
+            Edit
+          </RouterLink>
+          <button @click="deleteJob(job.id)" class="action-btn outline danger">
             Delete
           </button>
         </div>
@@ -83,6 +86,10 @@ const jobIdToDelete = ref(null);
 
 function getNewApplicants(jobId) {
   return appsStore.applicationsForJob(jobId).filter(a => a.status === 'pending').length;
+}
+
+function getTotalApplicants(jobId) {
+  return appsStore.applicationsForJob(jobId).length;
 }
 
 function formatWorkType(t) {
@@ -235,6 +242,10 @@ function closeDeleteModal() {
   color: var(--color-text-secondary);
 }
 .action-btn.outline:hover {
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+}
+.action-btn.outline.danger:hover {
   background: #fef2f2;
   color: #ef4444;
   border-color: #fecaca;

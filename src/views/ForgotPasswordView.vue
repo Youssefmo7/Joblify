@@ -7,16 +7,17 @@
                 Enter your email and we'll send you a reset link.
             </p>
 
-            <form class="auth-form" @submit.prevent="handleSubmit">
+            <form class="auth-form" @submit.prevent="handleSubmit" novalidate>
                 <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input
+                     <input
                         v-model="email"
                         class="form-input"
+                        :class="{ 'input-error': errors.email }"
                         type="email"
                         placeholder="you@example.com"
-                        required
                     />
+                    <p v-if="errors.email" class="field-error">{{ errors.email }}</p>
                 </div>
 
                 <p v-if="authStore.error" class="form-error">
@@ -49,15 +50,46 @@ import { useAuthStore } from '@/stores/authStore';
 const authStore = useAuthStore();
 const email = ref('');
 const sent = ref(false);
+const errors = ref({
+    email: '',
+})
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function validateForm() {
+    let isValid = true;
+    const nextErrors = { email: '', password: '' };
+
+    // Email validation
+    if (!email.value.trim()) {
+        nextErrors.email = 'Email is required.';
+        isValid = false;
+    } else if (!emailRegex.test(email.value.trim())) {
+        nextErrors.email = 'Please enter a valid email address.';
+        isValid = false;
+    }
+    errors.value = nextErrors;
+    return isValid;
+}
 
 async function handleSubmit() {
     authStore.error = null;
+    errors.value = { email: '',}
+    if (!validateForm()) return;
     const ok = await authStore.forgotPassword(email.value.trim());
     if (ok) sent.value = true;
+    if (!ok) return;
 }
 </script>
 
 <style scoped>
+.input-error {
+    border-color: var(--color-text-danger) !important;
+}
+.field-error {
+    font-size: 12px;
+    color: var(--color-text-danger);
+    margin: 4px 0 0;
+}
 .auth-page {
     min-height: 100vh;
     display: flex;

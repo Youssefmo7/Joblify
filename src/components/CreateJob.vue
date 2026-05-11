@@ -6,7 +6,7 @@
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
                         <router-link to="/employer/dashboard" class="text-2xl font-bold tracking-tight text-gray-900 border-r border-gray-200 pr-4 mr-4">Joblify</router-link>
-                        <span class="text-lg font-semibold text-gray-600">Post a New Job</span>
+                        <span class="text-lg font-semibold text-gray-600">{{ isEdit ? 'Edit Job' : 'Post a New Job' }}</span>
                     </div>
                     <div class="flex items-center">
                         <router-link to="/employer/dashboard" class="text-sm text-gray-600 hover:text-gray-900 font-medium mr-4">Cancel</router-link>
@@ -16,7 +16,7 @@
                             @click="publishJob"
                             :disabled="jobsStore.loading"
                         >
-                            {{ jobsStore.loading ? 'Publishing...' : 'Publish Job' }}
+                            {{ jobsStore.loading ? (isEdit ? 'Updating...' : 'Publishing...') : (isEdit ? 'Update Job' : 'Publish Job') }}
                         </button>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                                     placeholder="e.g. Senior Frontend Engineer"
                                     @blur="validateField('title')"
                                 >
-                                <p v-if="touched.title && errors.title" class="text-xs text-red-500 mt-1">Job title is required</p>
+                                <p v-if="touched.title && errors.title" class="text-xs text-red-500 mt-1">{{ errors.title }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Job Description <span class="text-red-500">*</span></label>
@@ -75,11 +75,11 @@
                                     placeholder="Describe the role, responsibilities, and what the candidate will be working on..."
                                     @blur="validateField('description')"
                                 ></textarea>
-                                <p v-if="touched.description && errors.description" class="text-xs text-red-500 mt-1">Description is required</p>
+                                <p v-if="touched.description && errors.description" class="text-xs text-red-500 mt-1">{{ errors.description }}</p>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                                     <select 
                                         v-model="form.category" 
                                         class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] bg-white transition-colors"
@@ -91,7 +91,6 @@
                                             {{ cat.name }}
                                         </option>
                                     </select>
-                                    <p v-if="touched.category && errors.category" class="text-xs text-red-500 mt-1">Category is required</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Location <span class="text-red-500">*</span></label>
@@ -103,7 +102,7 @@
                                         placeholder="e.g. Mountain View, CA"
                                         @blur="validateField('location')"
                                     >
-                                    <p v-if="touched.location && errors.location" class="text-xs text-red-500 mt-1">Location is required</p>
+                                    <p v-if="touched.location && errors.location" class="text-xs text-red-500 mt-1">{{ errors.location }}</p>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +139,7 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Application Deadline <span class="text-red-500">*</span></label>
                                     <input 
                                         v-model="form.deadline" 
                                         type="date" 
@@ -148,7 +147,7 @@
                                         :class="touched.deadline && errors.deadline ? 'border-red-500' : 'border-gray-300'"
                                         @blur="validateField('deadline')"
                                     >
-                                    <p v-if="touched.deadline && errors.deadline" class="text-xs text-red-500 mt-1">Deadline is required</p>
+                                    <p v-if="touched.deadline && errors.deadline" class="text-xs text-red-500 mt-1">{{ errors.deadline }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
@@ -174,7 +173,7 @@
                         <h2 class="text-lg font-bold text-gray-900 mb-4">Requirements &amp; Benefits</h2>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Requirements <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
                                 <textarea 
                                     v-model="form.requirementsText" 
                                     rows="4" 
@@ -183,22 +182,75 @@
                                     placeholder="List the job requirements..."
                                     @blur="validateField('requirements')"
                                 ></textarea>
-                                <p v-if="touched.requirements && errors.requirements" class="text-xs text-red-500 mt-1">Please list at least one requirement</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
                                 <textarea v-model="form.benefitsText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] resize-none transition-colors" placeholder="List the benefits offered..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Skills <span class="text-gray-400 text-xs">(comma-separated)</span></label>
-                                <input v-model="form.skillsText" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="e.g. Vue.js, TypeScript, GraphQL">
-                                <p class="text-xs text-gray-500 mt-1">Only skills already in our database will be linked.</p>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+                                <div class="space-y-3">
+                                    <div class="relative">
+                                        <input 
+                                            v-model="skillSearch" 
+                                            type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" 
+                                            placeholder="Search skills (e.g. Vue.js)..."
+                                            @input="skillsStore.suggestSkills(skillSearch)"
+                                        >
+                                        <div v-if="skillsStore.suggestions.length && skillSearch.length >= 2" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            <button 
+                                                v-for="skill in filteredSuggestions" 
+                                                :key="skill.id"
+                                                type="button"
+                                                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors border-b last:border-0 border-gray-100"
+                                                @click="addSkill(skill)"
+                                            >
+                                                {{ skill.name }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Selected Skills Pills -->
+                                    <div class="flex flex-wrap gap-2">
+                                        <div 
+                                            v-for="skill in form.selectedSkills" 
+                                            :key="skill.id"
+                                            class="flex items-center gap-1.5 px-3 py-1 bg-pink-50 text-[#fd366e] border border-pink-100 rounded-full text-xs font-medium"
+                                        >
+                                            {{ skill.name }}
+                                            <button @click="removeSkill(skill.id)" class="hover:text-pink-800 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Salary Range <span class="text-gray-400 text-xs">(in EGP)</span></label>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <input v-model.number="form.salaryMin" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Min (e.g. 50000)">
-                                    <input v-model.number="form.salaryMax" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors" placeholder="Max (e.g. 80000)">
+                                    <div>
+                                        <input 
+                                            v-model.number="form.salaryMin" 
+                                            type="number" 
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors"
+                                            :class="touched.salaryMin && errors.salaryMin ? 'border-red-500' : 'border-gray-300'"
+                                            placeholder="Min (e.g. 50000)"
+                                            @blur="validateField('salaryMin')"
+                                        >
+                                        <p v-if="touched.salaryMin && errors.salaryMin" class="text-xs text-red-500 mt-1">{{ errors.salaryMin }}</p>
+                                    </div>
+                                    <div>
+                                        <input 
+                                            v-model.number="form.salaryMax" 
+                                            type="number" 
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#fd366e] focus:border-[#fd366e] transition-colors"
+                                            :class="touched.salaryMax && errors.salaryMax ? 'border-red-500' : 'border-gray-300'"
+                                            placeholder="Max (e.g. 80000)"
+                                            @blur="validateField('salaryMax')"
+                                        >
+                                        <p v-if="touched.salaryMax && errors.salaryMax" class="text-xs text-red-500 mt-1">{{ errors.salaryMax }}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -222,20 +274,30 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between pt-4">
-                        <button type="button" @click="prevStep(2)" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50 transition-colors">Back</button>
-                        <button 
-                            type="button" 
-                            class="px-8 py-2.5 bg-[#fd366e] hover:bg-pink-600 hover:scale-[1.02] active:scale-95 text-white font-medium rounded-lg text-sm transition-all shadow-sm disabled:opacity-50"
-                            @click="publishJob"
-                            :disabled="jobsStore.loading"
-                        >
-                            {{ jobsStore.loading ? 'Publishing...' : 'Publish Job' }}
-                        </button>
+                        <div class="flex flex-col items-end gap-2 pt-4">
+                            <div class="flex justify-between w-full">
+                                <button type="button" @click="prevStep(2)" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50 transition-colors">Back</button>
+                                <button 
+                                    type="button" 
+                                    class="px-8 py-2.5 bg-[#fd366e] hover:bg-pink-600 hover:scale-[1.02] active:scale-95 text-white font-medium rounded-lg text-sm transition-all shadow-sm disabled:opacity-50"
+                                    @click="publishJob"
+                                    :disabled="jobsStore.loading"
+                                >
+                                    {{ jobsStore.loading ? (isEdit ? 'Updating...' : 'Publishing...') : (isEdit ? 'Update Job' : 'Publish Job') }}
+                                </button>
+                            </div>
+                            <div v-if="submissionError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg w-full">
+                                <p class="text-sm text-red-600 font-bold mb-1">{{ submissionError }}</p>
+                                <ul v-if="Object.keys(jobsStore.validationErrors).length" class="list-disc list-inside">
+                                    <li v-for="(errs, field) in jobsStore.validationErrors" :key="field" class="text-xs text-red-500">
+                                        {{ errs[0] }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </form>
-        </div>
+                </form>
+            </div>
         </div>
     </div>
 </template>
@@ -247,14 +309,26 @@ import { useAuthStore } from '@/stores/authStore';
 import { useJobsStore } from '@/stores/jobsStore';
 import { useCategoriesStore } from '@/stores/categoriesStore';
 import { useSkillsStore } from '@/stores/skillsStore';
+import { useCompanyStore } from '@/stores/companyStore';
+
+const props = defineProps({
+    jobId: {
+        type: [String, Number],
+        default: null
+    }
+});
 
 const router = useRouter();
 const authStore = useAuthStore();
 const jobsStore = useJobsStore();
 const categoriesStore = useCategoriesStore();
 const skillsStore = useSkillsStore();
+const companyStore = useCompanyStore();
 
 const currentStep = ref(1);
+const submissionError = ref('');
+
+const isEdit = computed(() => !!props.jobId);
 
 const form = reactive({
     title: '',
@@ -266,10 +340,25 @@ const form = reactive({
     experienceLevel: 'senior',
     requirementsText: '',
     benefitsText: '',
-    skillsText: '',
+    selectedSkills: [], // Array of {id, name}
     salaryMin: null,
     salaryMax: null,
 });
+
+const skillSearch = ref('');
+const filteredSuggestions = computed(() => {
+    return skillsStore.suggestions.filter(s => !form.selectedSkills.some(ss => ss.id === s.id));
+});
+
+function addSkill(skill) {
+    form.selectedSkills.push(skill);
+    skillSearch.value = '';
+    skillsStore.suggestions = [];
+}
+
+function removeSkill(id) {
+    form.selectedSkills = form.selectedSkills.filter(s => s.id !== id);
+}
 
 const touched = reactive({
     title: false,
@@ -278,16 +367,59 @@ const touched = reactive({
     location: false,
     deadline: false,
     requirements: false,
+    salaryMin: false,
+    salaryMax: false,
 });
 
-const errors = computed(() => ({
-    title: !form.title?.trim(),
-    description: !form.description?.trim(),
-    category: !form.category,
-    location: !form.location?.trim(),
-    deadline: !form.deadline,
-    requirements: !form.requirementsText?.trim(),
-}));
+const errors = computed(() => {
+    const errs = {};
+    
+    // Title
+    if (!form.title?.trim()) {
+        errs.title = 'Please enter a job title.';
+    } else if (form.title.length > 255) {
+        errs.title = 'Please enter a valid job title.';
+    }
+    
+    // Description
+    if (!form.description?.trim()) {
+        errs.description = 'Please enter a job description.';
+    }
+    
+    // Location
+    if (!form.location?.trim()) {
+        errs.location = 'Please enter a job location.';
+    }
+    
+    // Deadline (Required per user request, after_or_equal:today per Laravel)
+    if (!form.deadline) {
+        errs.deadline = 'The deadline must be a valid date.';
+    } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const deadlineDate = new Date(form.deadline);
+        if (isNaN(deadlineDate.getTime())) {
+            errs.deadline = 'The deadline must be a valid date.';
+        } else if (deadlineDate < today) {
+            errs.deadline = 'The deadline must be a date after or equal to today.';
+        }
+    }
+
+    // Salary Min/Max (Numeric per Laravel)
+    if (form.salaryMin !== null && form.salaryMin !== '' && (isNaN(form.salaryMin) || form.salaryMin <= 0)) {
+        errs.salaryMin = 'Please enter a valid minimum salary.';
+    }
+    if (form.salaryMax !== null && form.salaryMax !== '' && (isNaN(form.salaryMax) || form.salaryMax <= 0)) {
+        errs.salaryMax = 'Please enter a valid maximum salary.';
+    }
+    if(form.salaryMin && form.salaryMax && Number(form.salaryMin) >= Number(form.salaryMax)){
+        errs.salaryMax = 'The maximum salary must be greater than the minimum salary.';
+    }
+    
+    // Categories and Requirements are nullable in Laravel, so no error flags needed unless specifically requested.
+    
+    return errs;
+});
 
 function validateField(field) {
     touched[field] = true;
@@ -296,15 +428,16 @@ function validateField(field) {
 function validateStep1() {
     touched.title = true;
     touched.description = true;
-    touched.category = true;
     touched.location = true;
     touched.deadline = true;
-    return !(errors.value.title || errors.value.description || errors.value.category || errors.value.location || errors.value.deadline);
+    
+    return !(errors.value.title || errors.value.description || errors.value.location || errors.value.deadline);
 }
 
 function validateStep2() {
-    touched.requirements = true;
-    return !errors.value.requirements;
+    touched.salaryMin = true;
+    touched.salaryMax = true;
+    return !(errors.value.salaryMin || errors.value.salaryMax);
 }
 
 function nextStep(step) {
@@ -330,19 +463,13 @@ function stepTextClass(step) {
     return step <= currentStep.value ? 'text-gray-900' : 'text-gray-500';
 }
 
-function mapSkillsToIds() {
-    const names = form.skillsText.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
-    const ids = [];
-    for (const name of names) {
-        const skill = skillsStore.skills.find(s => s.name.toLowerCase() === name);
-        if (skill) ids.push(skill.id);
-    }
-    return ids;
-}
-
 async function publishJob() {
     if (!validateStep1() || !validateStep2()) {
-        currentStep.value = 1;
+        if (!validateStep1()) {
+            currentStep.value = 1;
+        } else {
+            currentStep.value = 2;
+        }
         return;
     }
 
@@ -352,16 +479,10 @@ async function publishJob() {
         return;
     }
 
-    const description = form.description.trim();
-    const requirements = form.requirementsText.trim();
-    const fullDescription = requirements
-        ? `${description}\n\n## Requirements\n${requirements}`
-        : description;
-
     const jobData = {
         title: form.title.trim(),
-        description: fullDescription,
-        requirements: requirements,
+        description: form.description.trim(),
+        requirements: form.requirementsText.trim(),
         benefits: form.benefitsText.trim(),
         salary_min: form.salaryMin,
         salary_max: form.salaryMax,
@@ -369,20 +490,47 @@ async function publishJob() {
         work_type: form.workType,
         experience_level: form.experienceLevel,
         deadline: form.deadline,
-        categories: form.category ? [Number(form.category)] : [],
-        skills: mapSkillsToIds(),
-        company_id: employer.company_id || 1, // TODO: fetch from companyStore in Phase 4
+        category_id: form.category ? Number(form.category) : null,
+        skills: form.selectedSkills.map(s => s.id),
+        company_id: companyStore.company?.id || employer.company_id || 1,
     };
 
-    const result = await jobsStore.postJob(jobData);
+    submissionError.value = '';
+    const result = isEdit.value 
+        ? await jobsStore.updateJob(props.jobId, jobData)
+        : await jobsStore.postJob(jobData);
+
     if (result) {
         router.push('/employer/dashboard');
+    } else {
+        submissionError.value = jobsStore.error || `Failed to ${isEdit.value ? 'update' : 'publish'} job. Please check your data.`;
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
     categoriesStore.fetchCategories();
     skillsStore.fetchSkills();
+    companyStore.fetchCompany();
+
+    if (isEdit.value) {
+        const job = await jobsStore.fetchJob(props.jobId);
+        if (job) {
+            form.title = job.title;
+            // Handle description which might contain requirements if it was combined before
+            // but the API now has them separate.
+            form.description = job._raw.description || '';
+            form.location = job.location;
+            form.workType = job.workType;
+            form.experienceLevel = job.experienceLevel;
+            form.deadline = job._raw.deadline ? job._raw.deadline.split('T')[0] : '';
+            form.salaryMin = job.salaryMin;
+            form.salaryMax = job.salaryMax;
+            form.category = job._raw.categories?.[0]?.id || '';
+            form.requirementsText = job._raw.requirements || '';
+            form.benefitsText = job._raw.benefits || '';
+            form.selectedSkills = (job._raw.skills || []).map(s => ({ id: s.id, name: s.name }));
+        }
+    }
 });
 </script>
 
