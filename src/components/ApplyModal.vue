@@ -289,10 +289,20 @@ async function handleSubmit() {
     submitting.value = true;
 
     try {
+        let resumeFile = newFile.value;
+
+        if (useProfileCv.value && hasProfileCv.value && !resumeFile) {
+            const blob = await profileStore.fetchResumeBlob();
+            if (!blob) {
+                errorMsg.value = 'Could not fetch your profile CV. Try uploading a file instead.';
+                return;
+            }
+            resumeFile = blob;
+        }
+
         const result = await appsStore.applyToJob(props.job.id, {
-            resume: newFile.value,
+            resume: resumeFile,
             coverLetter: coverLetter.value.trim(),
-            useProfileCv: useProfileCv.value && hasProfileCv.value,
         });
 
         if (result) {

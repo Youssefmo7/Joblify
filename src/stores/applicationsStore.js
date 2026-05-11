@@ -82,16 +82,12 @@ export const useApplicationsStore = defineStore('applications', {
             }
         },
 
-        async applyToJob(jobId, { resume, coverLetter, useProfileCv }) {
+        async applyToJob(jobId, { resume, coverLetter }) {
             this.loading = true;
             this.error = null;
             try {
                 const formData = new FormData();
-                if (useProfileCv) {
-                    formData.append('use_profile_cv', '1');
-                } else if (resume) {
-                    formData.append('resume', resume);
-                }
+                if (resume) formData.append('resume', resume);
                 if (coverLetter) formData.append('cover_letter', coverLetter);
 
                 const data = await client.post(`/jobs/${jobId}/apply`, formData, {
